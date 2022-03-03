@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ADDON_FILE=sds_wallpad.py
+ADDON_FILE=ezville_wallpad.py
 OPTION_FILE=options_standalone.json
 GENERATE_OPTION_SCRIPT=generate_options_standalone.py
 
