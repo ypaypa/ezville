@@ -13,7 +13,7 @@ if __name__ == "__main__":
         Options = json.load(f)["options"]
 
     # 로그 파일 경로 변경
-    Options["log"]["filename"] = "./log/sds_wallpad.log"
+    Options["log"]["filename"] = "./log/ezville_wallpad.log"
 
     # 파일 생성
     with open(option_file, "w") as f:
