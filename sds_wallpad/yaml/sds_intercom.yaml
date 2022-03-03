@@ -13,7 +13,7 @@ automation:
   - alias: public_gate_open
     trigger:
       - platform: state
-        entity_id: switch.sds_intercom_public
+        entity_id: switch.ezville_intercom_public
         from: unavailable
         to: "off"
     condition:
@@ -23,6 +23,6 @@ automation:
     action:
       - delay: '00:00:03'
       - service: switch.turn_on
-        entity_id: switch.sds_intercom_public
+        entity_id: switch.ezville_intercom_public
       - service: input_boolean.turn_off
         entity_id: input_boolean.reserve_public_open
