@@ -159,11 +159,11 @@ RS485_DEVICE = {
 }
 
 DISCOVERY_DEVICE = {
-    "ids": ["sds_wallpad",],
-    "name": "sds_wallpad",
-    "mf": "Samsung SDS",
-    "mdl": "Samsung SDS Wallpad",
-    "sw": "n-andflash/ha_addons/sds_wallpad",
+    "ids": ["ezville_wallpad",],
+    "name": "ezville_wallpad",
+    "mf": "EzVille",
+    "mdl": "EzVille Wallpad",
+    "sw": "ktdo79/ha_addons/ezville_wallpad",
 }
 
 DISCOVERY_VIRTUAL = {
@@ -358,7 +358,7 @@ mqtt_connected = False
 logger = logging.getLogger(__name__)
 
 
-class SDSSerial:
+class EzVilleSerial:
     def __init__(self):
         self._ser = serial.Serial()
         self._ser.port = Options["serial"]["port"]
@@ -403,7 +403,7 @@ class SDSSerial:
         self._ser.timeout = a
 
 
-class SDSSocket:
+class EzVilleSocket:
     def __init__(self):
         addr = Options["socket"]["address"]
         port = Options["socket"]["port"]
@@ -568,7 +568,7 @@ def mqtt_discovery(payload):
     payload["uniq_id"] = payload["name"]
 
     # discovery에 등록
-    topic = "homeassistant/{}/sds_wallpad/{}/config".format(intg, payload["name"])
+    topic = "homeassistant/{}/ezville_wallpad/{}/config".format(intg, payload["name"])
     logger.info("Add new device:  {}".format(topic))
     mqtt.publish(topic, json.dumps(payload))
 
@@ -1248,10 +1248,10 @@ if __name__ == "__main__":
 
     if Options["serial_mode"] == "socket":
         logger.info("initialize socket...")
-        conn = SDSSocket()
+        conn = EzVilleSocket()
     else:
         logger.info("initialize serial...")
-        conn = SDSSerial()
+        conn = EzVilleSerial()
 
     dump_loop()
 
