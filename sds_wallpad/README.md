@@ -1,4 +1,4 @@
-# 삼성SDS 월패드 RS485 Add-on (엘리베이터 호출 지원)
+# 이지빌 월패드 RS485 Add-on (엘리베이터 호출 지원)
 
 ![Supports aarch64 Architecture][aarch64-shield] ![Supports amd64 Architecture][amd64-shield] ![Supports armhf Architecture][armhf-shield] ![Supports armv7 Architecture][armv7-shield] ![Supports i386 Architecture][i386-shield]
 
@@ -16,7 +16,7 @@
 
 * [버전별 변경 사항](https://github.com/n-andflash/ha_addons/blob/master/sds_wallpad/CHANGELOG.md)
 
-* 삼성SDS 월패드를 사용하는 집에서, RS485를 이용해 여러 장치들을 제어할 수 있는 애드온입니다.
+*  월패드를 사용하는 집에서, RS485를 이용해 여러 장치들을 제어할 수 있는 애드온입니다.
 * 현관 스위치를 대신하여 엘리베이터를 호출하는 기능이 있습니다.
 * MQTT discovery를 이용, 장치별로 yaml 파일을 직접 작성하지 않아도 집에 있는 모든 장치가 HA에 자동으로 추가됩니다.
 
