@@ -1,4 +1,4 @@
-# SDS 월패드 공동현관 문열림 예약
+# EzVille 월패드 공동현관 문열림 예약
 
 input_boolean:
   # 예약 버튼 등록
