@@ -1,9 +1,9 @@
 {
 	"version": "8.2",
-	"slug": "sds_wallpad",
-	"name": "Samsung SDS RS485 Addon with Elevator Call",
-	"description": "삼성 SDS 월패드용 애드온입니다. 엘리베이터 호출 및 가스밸브 차단 기능을 제공합니다.",
-	"url": "https://github.com/n-andflash/ha_addons",
+	"slug": "ezville_wallpad",
+	"name": "EzVille RS485 Addon with Elevator Call",
+	"description": "이지빌용 수정된 애드온입니다.",
+	"url": "https://github.com/ktdo79/ha_addons",
 	"startup": "application",
 	"boot": "auto",
 	"arch": [ "armhf", "armv7", "aarch64", "amd64", "i386" ],
@@ -34,7 +34,7 @@
 			"user": "",
 			"passwd": "",
 			"discovery": true,
-			"prefix": "sds"
+			"prefix": "ezville"
 		},
 		"rs485": {
 			"max_retry": 20,
@@ -44,7 +44,7 @@
 		},
 		"log": {
 			"to_file": true,
-			"filename": "/share/sds_wallpad.log"
+			"filename": "/share/ezville_wallpad.log"
 		}
 	},
 	"schema": {
