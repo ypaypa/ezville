@@ -13,103 +13,111 @@ import os.path
 import re
 
 ####################
-VIRTUAL_DEVICE = {
-    # 현관스위치: 엘리베이터 호출, 가스밸브 잠금 지원
-    "entrance": {
-        "header0": 0xAD,
-        "resp_size": 4,
-        "default": {
-            "init":  { "header1": 0x5A, "resp": 0xB05A006A, }, # 처음 전기가 들어왔거나 한동안 응답을 안했을 때, 이것부터 해야 함
-            "query": { "header1": 0x41, "resp": 0xB0560066, }, # 여기에 0xB0410071로 응답하면 gas valve 상태는 전달받지 않음
-            "gas":   { "header1": 0x56, "resp": 0xB0410071, }, # 0xAD41에 항상 0xB041로 응답하면 이게 실행될 일은 없음
-            "light": { "header1": 0x52, "resp": 0xB0520163, },
+#VIRTUAL_DEVICE = {
+#    # 현관스위치: 엘리베이터 호출, 가스밸브 잠금 지원
+#    "entrance": {
+#        "header0": 0xAD,
+#        "resp_size": 4,
+#        "default": {
+#            "init":  { "header1": 0x5A, "resp": 0xB05A006A, }, # 처음 전기가 들어왔거나 한동안 응답을 안했을 때, 이것부터 해야 함
+#            "query": { "header1": 0x41, "resp": 0xB0560066, }, # 여기에 0xB0410071로 응답하면 gas valve 상태는 전달받지 않음
+#            "gas":   { "header1": 0x56, "resp": 0xB0410071, }, # 0xAD41에 항상 0xB041로 응답하면 이게 실행될 일은 없음
+#            "light": { "header1": 0x52, "resp": 0xB0520163, },
+#
+#            # 성공 시 ack들, 무시해도 상관 없지만...
+#            "gasa":  { "header1": 0x55, "resp": 0xB0410071, },
+#            "eva":   { "header1": 0x2F, "resp": 0xB0410071, },
+#        },
+#
+#        # 0xAD41에 다르게 응답하는 방법들, 이 경우 월패드가 다시 ack를 보내준다
+#        "trigger": {
+#            "gas":   { "ack": 0x55, "ON": 0xB0550164, "next": None, },
+#            "ev":    { "ack": 0x2F, "ON": 0xB02F011E, "next": None, },
+#        },
+#    },
 
-            # 성공 시 ack들, 무시해도 상관 없지만...
-            "gasa":  { "header1": 0x55, "resp": 0xB0410071, },
-            "eva":   { "header1": 0x2F, "resp": 0xB0410071, },
-        },
-
-        # 0xAD41에 다르게 응답하는 방법들, 이 경우 월패드가 다시 ack를 보내준다
-        "trigger": {
-            "gas":   { "ack": 0x55, "ON": 0xB0550164, "next": None, },
-            "ev":    { "ack": 0x2F, "ON": 0xB02F011E, "next": None, },
-        },
-    },
-
-    # 신형 현관스위치
-    "entrance2": {
-        "header0": 0xCC,
-        "resp_size": 5,
-        "default": {
-            "init":  { "header1": 0x5A, "resp": 0xB05A01006B, }, # 처음 전기가 들어왔거나 한동안 응답을 안했을 때, 이것부터 해야 함
-            "query": { "header1": 0x41, "resp": 0xB041010070, }, # keepalive
-            "date":  { "header1": 0x01, "resp": 0xB001010030, }, # 스위치로 현재 날짜, 시각 전달
-            "broad": { "header1": 0x0B, "resp": 0xB00B01003A, }, # 다른 기기 상태 전달받음
-            "ukn12": { "header1": 0x12, "resp": 0xB041010070, }, # 엘리베이터 호출 결과?
-            "ukn09": { "header1": 0x09, "resp": 0xB009010038, },
-            "ukn07": { "header1": 0x07, "resp": 0xB007010137, },
-            "ukn02": { "header1": 0x02, "resp": 0xB041010070, },
-
-            # 성공 시 ack들, 무시해도 상관 없...으려나?
-            "eva":   { "header1": 0x10, "resp": 0xB041010070, },
-        },
-
-        # 0xCC41에 다르게 응답하는 방법들, 이 경우 월패드가 다시 ack를 보내준다
-        "trigger": {
-            "ev":    { "ack": 0x10, "ON": 0xB010010120, "next": None, },
-        },
-    },
-
-    # 인터폰: 공동현관 문열림 기능 지원
-    "intercom": {
-        "header0": 0xA4,
-        "resp_size": 4,
-        "default": {
-            "init":    { "header1": 0x5A, "resp": 0xB05A006A, }, # 처음 전기가 들어왔거나 한동안 응답을 안했을 때, 이것부터 해야 함
-            "query":   { "header1": 0x41, "resp": 0xB0410071, }, # 평상시
-            "block":   { "header1": 0x42, "resp": 0xB0410071, }, # 다른 인터폰이 통화중이라던지 해서 조작 거부중인 상태
-            "public":  { "header1": 0x32, "resp": 0xB0320002, }, # 공동현관 초인종 눌림
-            "private": { "header1": 0x31, "resp": 0xB0310001, }, # 현관 초인종 눌림
-            "opena":   { "header1": 0x36, "resp": 0xB0420072, }, # 통화 시작 요청 성공, 통화중이라고 ack 보내기
-            "vopena":  { "header1": 0x38, "resp": 0xB0420072, }, # 영상통화 시작 요청 성공, 통화중이라고 ack 보내기
-            "vconna":  { "header1": 0x35, "resp": 0xB0350005, }, # 영상 전송 시작됨
-            "open2a":  { "header1": 0x3B, "resp": 0xB0420072, }, # 문열림 요청 성공, 통화중이라고 ack 보내기
-            "end":     { "header1": 0x3E, "resp": 0xB03EFFFF, }, # 상황 종료, Byte[2] 가 반드시 일치해야 함
-        },
-
-        "trigger": {
-            "public":  { "ack": 0x36, "ON": 0xB0360204, "next": ("public2", "ON"), }, # 통화 시작
-            "public2": { "ack": 0x3B, "ON": 0xB03B010A, "next": ("end", "ON"), }, # 문열림
-            "priv_a":  { "ack": 0x36, "ON": 0xB0360107, "next": ("privat2", "ON"), }, # 현관 통화 시작 (초인종 울렸을 때)
-            "priv_b":  { "ack": 0x35, "ON": 0xB0380008, "next": ("privat2", "ON"), }, # 현관 통화 시작 (평상시)
-            "private": { "ack": 0x35, "ON": 0xB0380008, "next": ("privat2", "ON"), }, # 현관 통화 시작 (평상시)
-            "privat2": { "ack": 0x3B, "ON": 0xB03B000B, "next": ("end", "ON"), }, # 현관 문열림
-            "end":     { "ack": 0x3E, "ON": 0xB0420072, "next": None, }, # 문열림 후, 통화 종료 알려줄때까지 통화상태로 유지
-        },
-    },
-}
+#    # 신형 현관스위치
+#    "entrance2": {
+#        "header0": 0xCC,
+#        "resp_size": 5,
+#        "default": {
+#            "init":  { "header1": 0x5A, "resp": 0xB05A01006B, }, # 처음 전기가 들어왔거나 한동안 응답을 안했을 때, 이것부터 해야 함
+#            "query": { "header1": 0x41, "resp": 0xB041010070, }, # keepalive
+#            "date":  { "header1": 0x01, "resp": 0xB001010030, }, # 스위치로 현재 날짜, 시각 전달
+#            "broad": { "header1": 0x0B, "resp": 0xB00B01003A, }, # 다른 기기 상태 전달받음
+#            "ukn12": { "header1": 0x12, "resp": 0xB041010070, }, # 엘리베이터 호출 결과?
+#            "ukn09": { "header1": 0x09, "resp": 0xB009010038, },
+#            "ukn07": { "header1": 0x07, "resp": 0xB007010137, },
+#            "ukn02": { "header1": 0x02, "resp": 0xB041010070, },
+#
+#            # 성공 시 ack들, 무시해도 상관 없...으려나?
+#            "eva":   { "header1": 0x10, "resp": 0xB041010070, },
+#        },
+#
+#        # 0xCC41에 다르게 응답하는 방법들, 이 경우 월패드가 다시 ack를 보내준다
+#        "trigger": {
+#            "ev":    { "ack": 0x10, "ON": 0xB010010120, "next": None, },
+#        },
+#    },
+#
+#    # 인터폰: 공동현관 문열림 기능 지원
+#    "intercom": {
+#        "header0": 0xA4,
+#        "resp_size": 4,
+#        "default": {
+#            "init":    { "header1": 0x5A, "resp": 0xB05A006A, }, # 처음 전기가 들어왔거나 한동안 응답을 안했을 때, 이것부터 해야 함
+#            "query":   { "header1": 0x41, "resp": 0xB0410071, }, # 평상시
+#            "block":   { "header1": 0x42, "resp": 0xB0410071, }, # 다른 인터폰이 통화중이라던지 해서 조작 거부중인 상태
+#            "public":  { "header1": 0x32, "resp": 0xB0320002, }, # 공동현관 초인종 눌림
+#            "private": { "header1": 0x31, "resp": 0xB0310001, }, # 현관 초인종 눌림
+#            "opena":   { "header1": 0x36, "resp": 0xB0420072, }, # 통화 시작 요청 성공, 통화중이라고 ack 보내기
+#            "vopena":  { "header1": 0x38, "resp": 0xB0420072, }, # 영상통화 시작 요청 성공, 통화중이라고 ack 보내기
+#            "vconna":  { "header1": 0x35, "resp": 0xB0350005, }, # 영상 전송 시작됨
+#            "open2a":  { "header1": 0x3B, "resp": 0xB0420072, }, # 문열림 요청 성공, 통화중이라고 ack 보내기
+#            "end":     { "header1": 0x3E, "resp": 0xB03EFFFF, }, # 상황 종료, Byte[2] 가 반드시 일치해야 함
+#        },
+#
+#        "trigger": {
+#            "public":  { "ack": 0x36, "ON": 0xB0360204, "next": ("public2", "ON"), }, # 통화 시작
+#            "public2": { "ack": 0x3B, "ON": 0xB03B010A, "next": ("end", "ON"), }, # 문열림
+#            "priv_a":  { "ack": 0x36, "ON": 0xB0360107, "next": ("privat2", "ON"), }, # 현관 통화 시작 (초인종 울렸을 때)
+#            "priv_b":  { "ack": 0x35, "ON": 0xB0380008, "next": ("privat2", "ON"), }, # 현관 통화 시작 (평상시)
+#            "private": { "ack": 0x35, "ON": 0xB0380008, "next": ("privat2", "ON"), }, # 현관 통화 시작 (평상시)
+#            "privat2": { "ack": 0x3B, "ON": 0xB03B000B, "next": ("end", "ON"), }, # 현관 문열림
+#            "end":     { "ack": 0x3E, "ON": 0xB0420072, "next": None, }, # 문열림 후, 통화 종료 알려줄때까지 통화상태로 유지
+#        },
+#    },
+#}
 
 ####################
 # 기존 월패드 애드온의 역할하는 부분
 RS485_DEVICE = {
     # 전등 스위치
     "light": {
-        "query":    { "header": 0xAC79, "length":  5, "id": 2, },
-        "state":    { "header": 0xB079, "length":  5, "id": 2, "parse": {("power", 3, "bitmap")} },
+        "query":    { "header": 0xF70E79, "length":  5, "id": 2, },
+        "state":    { "header": 0xF70E79, "length":  5, "id": 2, "parse": {("power", 3, "bitmap")} },
         "last":     { },
 
-        "power":    { "header": 0xAC7A, "length":  5, "id": 2, "pos": 3, },
+        "power":    { "header": 0xF7AC7A, "length":  5, "id": 2, "pos": 3, },
+        
+# KTDO: 기존 코드
+#        "query":    { "header": 0xAC79, "length":  5, "id": 2, },
+#        "state":    { "header": 0xB079, "length":  5, "id": 2, "parse": {("power", 3, "bitmap")} },
+#        "last":     { },
+#
+#        "power":    { "header": 0xAC7A, "length":  5, "id": 2, "pos": 3, },
     },
 
-    # 환기장치 (전열교환기)
-    "fan": {
-        "query":    { "header": 0xC24E, "length":  6, },
-        "state":    { "header": 0xB04E, "length":  6, "parse": {("power", 4, "fan_toggle"), ("speed", 2, "value")} },
-        "last":     { },
-
-        "power":    { "header": 0xC24F, "length":  6, "pos": 2, },
-        "speed":    { "header": 0xC24F, "length":  6, "pos": 2, },
-    },
+# KTDO: 전열교환기 연결되지 않음    
+#    # 환기장치 (전열교환기)
+#    "fan": {
+#        "query":    { "header": 0xC24E, "length":  6, },
+#        "state":    { "header": 0xB04E, "length":  6, "parse": {("power", 4, "fan_toggle"), ("speed", 2, "value")} },
+#        "last":     { },
+#
+#        "power":    { "header": 0xC24F, "length":  6, "pos": 2, },
+#        "speed":    { "header": 0xC24F, "length":  6, "pos": 2, },
+#    },
 
     # 각방 난방 제어
     "thermostat": {
@@ -166,73 +174,73 @@ DISCOVERY_DEVICE = {
     "sw": "ktdo79/ha_addons/ezville_wallpad",
 }
 
-DISCOVERY_VIRTUAL = {
-    "entrance": [
-        {
-            "_intg": "switch",
-            "~": "{}/virtual/entrance/ev",
-            "name": "{}_elevator",
-            "stat_t": "~/state",
-            "cmd_t": "~/command",
-            "icon": "mdi:elevator",
-        },
-        {
-            "_intg": "switch",
-            "~": "{}/virtual/entrance/gas",
-            "name": "{}_gas_cutoff",
-            "stat_t": "~/state",
-            "cmd_t": "~/command",
-            "icon": "mdi:valve",
-        },
-    ],
-    "entrance2": [
-        {
-            "_intg": "switch",
-            "~": "{}/virtual/entrance2/ev",
-            "name": "{}_new_elevator",
-            "stat_t": "~/state",
-            "cmd_t": "~/command",
-            "icon": "mdi:elevator",
-        },
-    ],
-    "intercom": [
-        {
-            "_intg": "switch",
-            "~": "{}/virtual/intercom/public",
-            "name": "{}_intercom_public",
-            "avty_t": "~/available",
-            "stat_t": "~/state",
-            "cmd_t": "~/command",
-            "icon": "mdi:door-closed",
-        },
-        {
-            "_intg": "switch",
-            "~": "{}/virtual/intercom/private",
-            "name": "{}_intercom_private",
-            "stat_t": "~/state",
-            "cmd_t": "~/command",
-            "icon": "mdi:door-closed",
-        },
-        {
-            "_intg": "binary_sensor",
-            "~": "{}/virtual/intercom/public",
-            "name": "{}_intercom_public",
-            "dev_cla": "sound",
-            "stat_t": "~/available",
-            "pl_on": "online",
-            "pl_off": "offline",
-        },
-        {
-            "_intg": "binary_sensor",
-            "~": "{}/virtual/intercom/private",
-            "name": "{}_intercom_private",
-            "dev_cla": "sound",
-            "stat_t": "~/available",
-            "pl_on": "online",
-            "pl_off": "offline",
-        },
-    ],
-}
+#DISCOVERY_VIRTUAL = {
+#    "entrance": [
+#        {
+#            "_intg": "switch",
+#            "~": "{}/virtual/entrance/ev",
+#            "name": "{}_elevator",
+#            "stat_t": "~/state",
+#            "cmd_t": "~/command",
+#            "icon": "mdi:elevator",
+#        },
+#        {
+#            "_intg": "switch",
+#            "~": "{}/virtual/entrance/gas",
+#            "name": "{}_gas_cutoff",
+#            "stat_t": "~/state",
+#            "cmd_t": "~/command",
+#            "icon": "mdi:valve",
+#        },
+#    ],
+#    "entrance2": [
+#        {
+#            "_intg": "switch",
+#            "~": "{}/virtual/entrance2/ev",
+#            "name": "{}_new_elevator",
+#            "stat_t": "~/state",
+#            "cmd_t": "~/command",
+#            "icon": "mdi:elevator",
+#        },
+#    ],
+#    "intercom": [
+#        {
+#            "_intg": "switch",
+#            "~": "{}/virtual/intercom/public",
+#            "name": "{}_intercom_public",
+#            "avty_t": "~/available",
+#            "stat_t": "~/state",
+#            "cmd_t": "~/command",
+#            "icon": "mdi:door-closed",
+#        },
+#        {
+#            "_intg": "switch",
+#            "~": "{}/virtual/intercom/private",
+#            "name": "{}_intercom_private",
+#            "stat_t": "~/state",
+#            "cmd_t": "~/command",
+#            "icon": "mdi:door-closed",
+#        },
+#        {
+#            "_intg": "binary_sensor",
+#            "~": "{}/virtual/intercom/public",
+#            "name": "{}_intercom_public",
+#            "dev_cla": "sound",
+#            "stat_t": "~/available",
+#            "pl_on": "online",
+#            "pl_off": "offline",
+#        },
+#        {
+#            "_intg": "binary_sensor",
+#            "~": "{}/virtual/intercom/private",
+#            "name": "{}_intercom_private",
+#            "dev_cla": "sound",
+#            "stat_t": "~/available",
+#            "pl_on": "online",
+#            "pl_off": "offline",
+#        },
+#    ],
+#}
 
 DISCOVERY_PAYLOAD = {
     "light": [ {
@@ -332,7 +340,8 @@ QUERY_HEADER = {
 
 HEADER_0_STATE = 0xB0
 HEADER_0_FIRST = 0xA1
-header_0_virtual = {}
+# KTDO: Virtual은 Skip
+#header_0_virtual = {}
 HEADER_1_SCAN = 0x5A
 header_0_first_candidate = [ 0xAB, 0xAC, 0xAD, 0xAE, 0xC2, 0xA5 ]
 
@@ -341,10 +350,11 @@ header_0_first_candidate = [ 0xAB, 0xAC, 0xAD, 0xAE, 0xC2, 0xA5 ]
 #SUB_LIST = { "{}/{}/+/+/command".format(Options["mqtt"]["prefix"], device) for device in RS485_DEVICE } |\
 #           { "{}/virtual/{}/+/command".format(Options["mqtt"]["prefix"], device) for device in VIRTUAL_DEVICE }
 
-virtual_watch = {}
-virtual_trigger = {}
-virtual_ack = {}
-virtual_avail = []
+# KTDO: Virtual은 Skip
+#virtual_watch = {}
+#virtual_trigger = {}
+#virtual_ack = {}
+#virtual_avail = []
 
 serial_queue = {}
 serial_ack = {}
@@ -521,43 +531,43 @@ def init_option(argv):
     Options["mqtt"]["_discovery"] = Options["mqtt"]["discovery"]
 
 
-def init_virtual_device():
-    global virtual_watch
-
-    if Options["entrance_mode"] == "full" or Options["entrance_mode"] == "new":
-        if Options["entrance_mode"] == "new":
-            ent = "entrance2"
-        else:
-            ent = "entrance"
-
-        header_0_virtual[VIRTUAL_DEVICE[ent]["header0"]] = ent
-        virtual_trigger[ent] = {}
-
-        # 평상시 응답할 항목 등록
-        virtual_watch.update({
-            (VIRTUAL_DEVICE[ent]["header0"] << 8) + prop["header1"]: prop["resp"].to_bytes(VIRTUAL_DEVICE[ent]["resp_size"], "big")
-            for prop in VIRTUAL_DEVICE[ent]["default"].values()
-        })
-
-        # full 모드에서 일괄소등 지원 안함
-        STATE_HEADER.pop(RS485_DEVICE["cutoff"]["state"]["header"])
-        RS485_DEVICE.pop("cutoff")
-
-    if Options["intercom_mode"] == "on":
-        VIRTUAL_DEVICE["intercom"]["header0"] = int(Options["rs485"]["intercom_header"][:2], 16)
-
-        header_0_virtual[VIRTUAL_DEVICE["intercom"]["header0"]] = "intercom"
-        virtual_trigger["intercom"] = {}
-
-        # 평상시 응답할 항목 등록
-        virtual_watch.update({
-            (VIRTUAL_DEVICE["intercom"]["header0"] << 8) + prop["header1"]: prop["resp"].to_bytes(4, "big")
-            for prop in VIRTUAL_DEVICE["intercom"]["default"].values()
-        })
-
-        # availability 관련
-        for header_1 in (0x31, 0x32, 0x36, 0x3E):
-            virtual_avail.append((VIRTUAL_DEVICE["intercom"]["header0"] << 8) + header_1)
+#def init_virtual_device():
+#    global virtual_watch
+#
+#    if Options["entrance_mode"] == "full" or Options["entrance_mode"] == "new":
+#        if Options["entrance_mode"] == "new":
+#            ent = "entrance2"
+#        else:
+#            ent = "entrance"
+#
+#        header_0_virtual[VIRTUAL_DEVICE[ent]["header0"]] = ent
+#        virtual_trigger[ent] = {}
+#
+#        # 평상시 응답할 항목 등록
+#        virtual_watch.update({
+#            (VIRTUAL_DEVICE[ent]["header0"] << 8) + prop["header1"]: prop["resp"].to_bytes(VIRTUAL_DEVICE[ent]["resp_size"], "big")
+#            for prop in VIRTUAL_DEVICE[ent]["default"].values()
+#        })
+#
+#        # full 모드에서 일괄소등 지원 안함
+#        STATE_HEADER.pop(RS485_DEVICE["cutoff"]["state"]["header"])
+#        RS485_DEVICE.pop("cutoff")
+#
+#    if Options["intercom_mode"] == "on":
+#        VIRTUAL_DEVICE["intercom"]["header0"] = int(Options["rs485"]["intercom_header"][:2], 16)
+#
+#        header_0_virtual[VIRTUAL_DEVICE["intercom"]["header0"]] = "intercom"
+#        virtual_trigger["intercom"] = {}
+#
+#        # 평상시 응답할 항목 등록
+#        virtual_watch.update({
+#            (VIRTUAL_DEVICE["intercom"]["header0"] << 8) + prop["header1"]: prop["resp"].to_bytes(4, "big")
+#            for prop in VIRTUAL_DEVICE["intercom"]["default"].values()
+#        })
+#
+#        # availability 관련
+#        for header_1 in (0x31, 0x32, 0x36, 0x3E):
+#            virtual_avail.append((VIRTUAL_DEVICE["intercom"]["header0"] << 8) + header_1)
 
 
 def mqtt_discovery(payload):
@@ -573,88 +583,88 @@ def mqtt_discovery(payload):
     mqtt.publish(topic, json.dumps(payload))
 
 
-def mqtt_add_virtual():
-    # 현관스위치 장치 등록
-    if Options["entrance_mode"] != "off":
-        if Options["entrance_mode"] == "new":
-            ent = "entrance2"
-        else:
-            ent = "entrance"
+#def mqtt_add_virtual():
+#    # 현관스위치 장치 등록
+#    if Options["entrance_mode"] != "off":
+#        if Options["entrance_mode"] == "new":
+#            ent = "entrance2"
+#        else:
+#            ent = "entrance"
+#
+#        prefix = Options["mqtt"]["prefix"]
+#        for payloads in DISCOVERY_VIRTUAL[ent]:
+#            payload = payloads.copy()
+#            payload["~"] = payload["~"].format(prefix)
+#            payload["name"] = payload["name"].format(prefix)
+#
+#            mqtt_discovery(payload)
+#
+#            # 트리거 초기 상태 설정
+#            topic = payload["~"] + "/state"
+#            logger.info("initial state:   {} = OFF".format(topic))
+#            mqtt.publish(topic, "OFF")
+#
+#    # 인터폰 장치 등록
+#    if Options["intercom_mode"] != "off":
+#        prefix = Options["mqtt"]["prefix"]
+#        for payloads in DISCOVERY_VIRTUAL["intercom"]:
+#            payload = payloads.copy()
+#            payload["~"] = payload["~"].format(prefix)
+#            payload["name"] = payload["name"].format(prefix)
+#
+#            mqtt_discovery(payload)
+#
+#            # 트리거 초기 상태 설정
+#            topic = payload["~"] + "/state"
+#            logger.info("initial state:   {} = OFF".format(topic))
+#            mqtt.publish(topic, "OFF")
+#
+#        # 초인종 울리기 전까지 문열림 스위치 offline으로 설정
+#        payload = "offline"
+#        topic = "{}/virtual/intercom/public/available".format(prefix)
+#        logger.info("doorlock state:  {} = {}".format(topic, payload))
+#        mqtt.publish(topic, payload)
+#        topic = "{}/virtual/intercom/private/available".format(prefix)
+#        logger.info("doorlock state:  {} = {}".format(topic, payload))
+#        mqtt.publish(topic, payload)
 
-        prefix = Options["mqtt"]["prefix"]
-        for payloads in DISCOVERY_VIRTUAL[ent]:
-            payload = payloads.copy()
-            payload["~"] = payload["~"].format(prefix)
-            payload["name"] = payload["name"].format(prefix)
 
-            mqtt_discovery(payload)
-
-            # 트리거 초기 상태 설정
-            topic = payload["~"] + "/state"
-            logger.info("initial state:   {} = OFF".format(topic))
-            mqtt.publish(topic, "OFF")
-
-    # 인터폰 장치 등록
-    if Options["intercom_mode"] != "off":
-        prefix = Options["mqtt"]["prefix"]
-        for payloads in DISCOVERY_VIRTUAL["intercom"]:
-            payload = payloads.copy()
-            payload["~"] = payload["~"].format(prefix)
-            payload["name"] = payload["name"].format(prefix)
-
-            mqtt_discovery(payload)
-
-            # 트리거 초기 상태 설정
-            topic = payload["~"] + "/state"
-            logger.info("initial state:   {} = OFF".format(topic))
-            mqtt.publish(topic, "OFF")
-
-        # 초인종 울리기 전까지 문열림 스위치 offline으로 설정
-        payload = "offline"
-        topic = "{}/virtual/intercom/public/available".format(prefix)
-        logger.info("doorlock state:  {} = {}".format(topic, payload))
-        mqtt.publish(topic, payload)
-        topic = "{}/virtual/intercom/private/available".format(prefix)
-        logger.info("doorlock state:  {} = {}".format(topic, payload))
-        mqtt.publish(topic, payload)
-
-
-def mqtt_virtual(topics, payload):
-    device = topics[2]
-    trigger = topics[3]
-    triggers = VIRTUAL_DEVICE[device]["trigger"]
-
-    # HA에서 잘못 보내는 경우 체크
-    if len(topics) != 5:
-        logger.error("    invalid topic length!"); return
-    if trigger not in triggers:
-        logger.error("    invalid trigger!"); return
-
-    # OFF가 없는데(ev, gas) OFF가 오면, 이전 ON 명령의 시도 중지
-    if payload not in triggers[trigger]:
-        virtual_pop(device, trigger, "ON")
-        return
-
-    # 오류 체크 끝났으면 queue 에 넣어둠
-    virtual_trigger[device][(trigger, payload)] = time.time()
-
-    # ON만 있는 명령은, 명령이 queue에 있는 동안 switch를 ON으로 표시
-    prefix = Options["mqtt"]["prefix"]
-    if "OFF" not in triggers[trigger]:
-        topic = "{}/virtual/{}/{}/state".format(prefix, device, trigger)
-        logger.info("publish to HA:   {} = {}".format(topic, "ON"))
-        mqtt.publish(topic, "ON")
-
-    # ON/OFF 있는 명령은, 마지막으로 받은 명령대로 표시
-    else:
-        topic = "{}/virtual/{}/{}/state".format(prefix, device, trigger)
-        logger.info("publish to HA:   {} = {}".format(topic, payload))
-        mqtt.publish(topic, payload)
-
-    # 그동안 조용히 있었어도, 이젠 가로채서 응답해야 함
-    if device == "entrance" and Options["entrance_mode"] == "minimal":
-        query = VIRTUAL_DEVICE["entrance"]["default"]["query"]
-        virtual_watch[query["header"]] = query["resp"]
+#def mqtt_virtual(topics, payload):
+#    device = topics[2]
+#    trigger = topics[3]
+#    triggers = VIRTUAL_DEVICE[device]["trigger"]
+#
+#    # HA에서 잘못 보내는 경우 체크
+#    if len(topics) != 5:
+#        logger.error("    invalid topic length!"); return
+#    if trigger not in triggers:
+#        logger.error("    invalid trigger!"); return
+#
+#    # OFF가 없는데(ev, gas) OFF가 오면, 이전 ON 명령의 시도 중지
+#    if payload not in triggers[trigger]:
+#        virtual_pop(device, trigger, "ON")
+#        return
+#
+#    # 오류 체크 끝났으면 queue 에 넣어둠
+#    virtual_trigger[device][(trigger, payload)] = time.time()
+#
+#    # ON만 있는 명령은, 명령이 queue에 있는 동안 switch를 ON으로 표시
+#    prefix = Options["mqtt"]["prefix"]
+#    if "OFF" not in triggers[trigger]:
+#        topic = "{}/virtual/{}/{}/state".format(prefix, device, trigger)
+#        logger.info("publish to HA:   {} = {}".format(topic, "ON"))
+#        mqtt.publish(topic, "ON")
+#
+#    # ON/OFF 있는 명령은, 마지막으로 받은 명령대로 표시
+#    else:
+#        topic = "{}/virtual/{}/{}/state".format(prefix, device, trigger)
+#        logger.info("publish to HA:   {} = {}".format(topic, payload))
+#        mqtt.publish(topic, payload)
+#
+#    # 그동안 조용히 있었어도, 이젠 가로채서 응답해야 함
+#    if device == "entrance" and Options["entrance_mode"] == "minimal":
+#        query = VIRTUAL_DEVICE["entrance"]["default"]["query"]
+#        virtual_watch[query["header"]] = query["resp"]
 
 
 def mqtt_debug(topics, payload):
@@ -711,7 +721,8 @@ def mqtt_device(topics, payload):
 def mqtt_init_discovery():
     # HA가 재시작됐을 때 모든 discovery를 다시 수행한다
     Options["mqtt"]["_discovery"] = Options["mqtt"]["discovery"]
-    mqtt_add_virtual()
+# KTDO: Virtual Device는 Skip
+#    mqtt_add_virtual()
     for device in RS485_DEVICE:
         RS485_DEVICE[device]["last"] = {}
 
@@ -729,8 +740,9 @@ def mqtt_on_message(mqtt, userdata, msg):
     if device == "status":
         if payload == "online":
             mqtt_init_discovery()
-    elif device == "virtual":
-        mqtt_virtual(topics, payload)
+# KTDO: Virtual Device는 Skip
+#    elif device == "virtual":
+#        mqtt_virtual(topics, payload)
     elif device == "debug":
         mqtt_debug(topics, payload)
     else:
@@ -793,116 +805,116 @@ def start_mqtt_loop():
         delay = min(delay * 2, 10)
 
 
-def virtual_enable(header_0, header_1):
-    prefix = Options["mqtt"]["prefix"]
-
-    # 마무리만 하드코딩으로 좀 하자... 슬슬 귀찮다
-    if header_1 == 0x32:
-        payload = "online"
-        topic = "{}/virtual/intercom/public/available".format(prefix)
-        logger.info("doorlock status: {} = {}".format(topic, payload))
-        mqtt.publish(topic, payload)
-
-    elif header_1 == 0x31:
-        payload = "online"
-        topic = "{}/virtual/intercom/private/available".format(prefix)
-        logger.info("doorlock status: {} = {}".format(topic, payload))
-        mqtt.publish(topic, payload)
-        VIRTUAL_DEVICE["intercom"]["trigger"]["private"] = VIRTUAL_DEVICE["intercom"]["trigger"]["priv_a"]
-
-    elif header_1 == 0x36 or header_1 == 0x3E:
-        payload = "offline"
-        topic = "{}/virtual/intercom/public/available".format(prefix)
-        logger.info("doorlock status: {} = {}".format(topic, payload))
-        mqtt.publish(topic, payload)
-        topic = "{}/virtual/intercom/private/available".format(prefix)
-        logger.info("doorlock status: {} = {}".format(topic, payload))
-        mqtt.publish(topic, payload)
-        VIRTUAL_DEVICE["intercom"]["trigger"]["private"] = VIRTUAL_DEVICE["intercom"]["trigger"]["priv_b"]
-
-
-def virtual_pop(device, trigger, cmd):
-    query = VIRTUAL_DEVICE[device]["default"]["query"]
-    triggers = VIRTUAL_DEVICE[device]["trigger"]
-
-    virtual_trigger[device].pop((trigger, cmd), None)
-    virtual_ack.pop((VIRTUAL_DEVICE[device]["header0"] << 8) + triggers[trigger]["ack"], None)
-
-    # 명령이 queue에서 빠지면 OFF로 표시
-    prefix = Options["mqtt"]["prefix"]
-    topic = "{}/virtual/{}/{}/state".format(prefix, device, trigger)
-    logger.info("publish to HA:   {} = {}".format(topic, "OFF"))
-    mqtt.publish(topic, "OFF")
-
-    # minimal 모드일 때, 조용해질지 여부
-    if not virtual_trigger[device] and Options["entrance_mode"] == "minimal":
-        entrance_watch.pop(query["header"], None)
+#def virtual_enable(header_0, header_1):
+#    prefix = Options["mqtt"]["prefix"]
+#
+#    # 마무리만 하드코딩으로 좀 하자... 슬슬 귀찮다
+#    if header_1 == 0x32:
+#        payload = "online"
+#        topic = "{}/virtual/intercom/public/available".format(prefix)
+#        logger.info("doorlock status: {} = {}".format(topic, payload))
+#        mqtt.publish(topic, payload)
+#
+#    elif header_1 == 0x31:
+#        payload = "online"
+#        topic = "{}/virtual/intercom/private/available".format(prefix)
+#        logger.info("doorlock status: {} = {}".format(topic, payload))
+#        mqtt.publish(topic, payload)
+#        VIRTUAL_DEVICE["intercom"]["trigger"]["private"] = VIRTUAL_DEVICE["intercom"]["trigger"]["priv_a"]
+#
+#    elif header_1 == 0x36 or header_1 == 0x3E:
+#        payload = "offline"
+#        topic = "{}/virtual/intercom/public/available".format(prefix)
+#        logger.info("doorlock status: {} = {}".format(topic, payload))
+#        mqtt.publish(topic, payload)
+#        topic = "{}/virtual/intercom/private/available".format(prefix)
+#        logger.info("doorlock status: {} = {}".format(topic, payload))
+#        mqtt.publish(topic, payload)
+#        VIRTUAL_DEVICE["intercom"]["trigger"]["private"] = VIRTUAL_DEVICE["intercom"]["trigger"]["priv_b"]
 
 
-def virtual_query(header_0, header_1):
-    device = header_0_virtual[header_0]
-    query = VIRTUAL_DEVICE[device]["default"]["query"]["header1"]
-    triggers = VIRTUAL_DEVICE[device]["trigger"]
-    resp_size = VIRTUAL_DEVICE[device]["resp_size"]
-
-    # pending이 남은 상태면 지금 시도해봐야 가망이 없음
-    if conn.check_pending_recv():
-        return
-
-    # 아직 2Byte 덜 받았으므로 올때까지 기다리는게 정석 같지만,
-    # 조금 일찍 시작하는게 성공률이 더 높은거 같기도 하다.
-    length = 2 - Options["rs485"]["early_response"]
-    if length > 0:
-        while conn.check_in_waiting() < length: pass
-
-    if virtual_trigger[device] and header_1 == query:
-        # 하나 뽑아서 보내봄
-        trigger, cmd = next(iter(virtual_trigger[device]))
-        resp = triggers[trigger][cmd].to_bytes(resp_size, "big")
-        conn.send(resp)
-
-        # retry time 관리, 초과했으면 제거
-        elapsed = time.time() - virtual_trigger[device][trigger, cmd]
-        if elapsed > Options["rs485"]["max_retry"]:
-            logger.error("send to wallpad: {} max retry time exceeded!".format(resp.hex()))
-            virtual_pop(device, trigger, cmd)
-        elif elapsed > 3:
-            logger.warning("send to wallpad: {}, try another {:.01f} seconds...".format(resp.hex(), Options["rs485"]["max_retry"] - elapsed))
-            virtual_ack[(header_0 << 8) + triggers[trigger]["ack"]] = (device, trigger, cmd)
-        else:
-            logger.info("send to wallpad: {}".format(resp.hex()))
-            virtual_ack[(header_0 << 8) + triggers[trigger]["ack"]] = (device, trigger, cmd)
-
-    # full 모드일 때, 일상 응답
-    else:
-        header = (header_0 << 8) | header_1
-        if header in virtual_watch:
-            resp = virtual_watch[header]
-
-            # Byte[2] 가 wallpad를 따라가야 하는 경우
-            if resp[2] == 0xFF:
-                ba = bytearray(resp)
-                ba[2] = conn.recv(1)[0]
-                ba[3] = serial_generate_checksum(ba)
-                resp = bytes(ba)
-
-            conn.send(resp)
+#def virtual_pop(device, trigger, cmd):
+#    query = VIRTUAL_DEVICE[device]["default"]["query"]
+#    triggers = VIRTUAL_DEVICE[device]["trigger"]
+#
+#    virtual_trigger[device].pop((trigger, cmd), None)
+#    virtual_ack.pop((VIRTUAL_DEVICE[device]["header0"] << 8) + triggers[trigger]["ack"], None)
+#
+#    # 명령이 queue에서 빠지면 OFF로 표시
+#    prefix = Options["mqtt"]["prefix"]
+#    topic = "{}/virtual/{}/{}/state".format(prefix, device, trigger)
+#    logger.info("publish to HA:   {} = {}".format(topic, "OFF"))
+#    mqtt.publish(topic, "OFF")
+#
+#    # minimal 모드일 때, 조용해질지 여부
+#    if not virtual_trigger[device] and Options["entrance_mode"] == "minimal":
+#        entrance_watch.pop(query["header"], None)
 
 
-def virtual_clear(header):
-    logger.info("ack frm wallpad: {}".format(hex(header)))
+#def virtual_query(header_0, header_1):
+#    device = header_0_virtual[header_0]
+#    query = VIRTUAL_DEVICE[device]["default"]["query"]["header1"]
+#    triggers = VIRTUAL_DEVICE[device]["trigger"]
+#    resp_size = VIRTUAL_DEVICE[device]["resp_size"]
+#
+#    # pending이 남은 상태면 지금 시도해봐야 가망이 없음
+#    if conn.check_pending_recv():
+#        return
+#
+#    # 아직 2Byte 덜 받았으므로 올때까지 기다리는게 정석 같지만,
+#    # 조금 일찍 시작하는게 성공률이 더 높은거 같기도 하다.
+#    length = 2 - Options["rs485"]["early_response"]
+#    if length > 0:
+#        while conn.check_in_waiting() < length: pass
+#
+#    if virtual_trigger[device] and header_1 == query:
+#        # 하나 뽑아서 보내봄
+#        trigger, cmd = next(iter(virtual_trigger[device]))
+#        resp = triggers[trigger][cmd].to_bytes(resp_size, "big")
+#        conn.send(resp)
+#
+#        # retry time 관리, 초과했으면 제거
+#        elapsed = time.time() - virtual_trigger[device][trigger, cmd]
+#        if elapsed > Options["rs485"]["max_retry"]:
+#            logger.error("send to wallpad: {} max retry time exceeded!".format(resp.hex()))
+#            virtual_pop(device, trigger, cmd)
+#        elif elapsed > 3:
+#            logger.warning("send to wallpad: {}, try another {:.01f} seconds...".format(resp.hex(), Options["rs485"]["max_retry"] - elapsed))
+#            virtual_ack[(header_0 << 8) + triggers[trigger]["ack"]] = (device, trigger, cmd)
+#        else:
+#            logger.info("send to wallpad: {}".format(resp.hex()))
+#            virtual_ack[(header_0 << 8) + triggers[trigger]["ack"]] = (device, trigger, cmd)
+#
+#    # full 모드일 때, 일상 응답
+#    else:
+#        header = (header_0 << 8) | header_1
+#        if header in virtual_watch:
+#            resp = virtual_watch[header]
+#
+#            # Byte[2] 가 wallpad를 따라가야 하는 경우
+#            if resp[2] == 0xFF:
+#                ba = bytearray(resp)
+#                ba[2] = conn.recv(1)[0]
+#                ba[3] = serial_generate_checksum(ba)
+#                resp = bytes(ba)
+#
+#            conn.send(resp)
 
-    device, trigger, cmd = virtual_ack[header]
-    triggers = VIRTUAL_DEVICE[device]["trigger"]
 
-    # 성공한 명령을 지움
-    virtual_pop(*virtual_ack[header])
-    virtual_ack.pop(header, None)
-
-    # 다음 트리거로 이어지면 추가
-    if triggers[trigger]["next"] != None:
-        next_trigger = triggers[trigger]["next"]
-        virtual_trigger[device][next_trigger] = time.time()
+#def virtual_clear(header):
+#    logger.info("ack frm wallpad: {}".format(hex(header)))
+#
+#    device, trigger, cmd = virtual_ack[header]
+#    triggers = VIRTUAL_DEVICE[device]["trigger"]
+#
+#    # 성공한 명령을 지움
+#    virtual_pop(*virtual_ack[header])
+#    virtual_ack.pop(header, None)
+#
+#    # 다음 트리거로 이어지면 추가
+#    if triggers[trigger]["next"] != None:
+#        next_trigger = triggers[trigger]["next"]
+#        virtual_trigger[device][next_trigger] = time.time()
 
 
 def serial_verify_checksum(packet):
@@ -1114,17 +1126,18 @@ def serial_loop():
         header_0, header_1 = serial_get_header()
         header = (header_0 << 8) | header_1
 
-        # 요청했던 동작의 ack 왔는지 확인
-        if header in virtual_ack:
-            virtual_clear(header)
-
-        # 인터폰 availability 관련 헤더인지 확인
-        if header in virtual_avail:
-            virtual_enable(header_0, header_1)
-
-        # 가상 장치로써 응답해야 할 header인지 확인
-        if header_0 in header_0_virtual:
-            virtual_query(header_0, header_1)
+# KTDO: Virtual Device는 Skip
+#        # 요청했던 동작의 ack 왔는지 확인
+#        if header in virtual_ack:
+#            virtual_clear(header)
+#
+#        # 인터폰 availability 관련 헤더인지 확인
+#        if header in virtual_avail:
+#            virtual_enable(header_0, header_1)
+#
+#        # 가상 장치로써 응답해야 할 header인지 확인
+#        if header_0 in header_0_virtual:
+#            virtual_query(header_0, header_1)
 
         # device로부터의 state 응답이면 확인해서 필요시 HA로 전송해야 함
         if header in STATE_HEADER:
@@ -1244,7 +1257,8 @@ if __name__ == "__main__":
     init_option(sys.argv)
     init_logger_file()
 
-    init_virtual_device()
+# KTDO: Virtual Device는 Skip
+#    init_virtual_device()
 
     if Options["serial_mode"] == "socket":
         logger.info("initialize socket...")
