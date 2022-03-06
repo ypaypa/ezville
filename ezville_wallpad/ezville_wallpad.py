@@ -93,12 +93,40 @@ import re
 # 기존 월패드 애드온의 역할하는 부분
 RS485_DEVICE = {
     # 전등 스위치
-    "light": {
-        "query":    { "header": 0xF70E79, "length":  5, "id": 2, },
-        "state":    { "header": 0xF70E79, "length":  5, "id": 2, "parse": {("power", 3, "bitmap")} },
+    "light_1": {
+        "query":    { "header": 0xF70E1101, "length":  7, "id": 2, },
+        "state":    { "header": 0xF70E1181, "length":  11, "id": 2, "parse": {("power", 3, "bitmap")} },
         "last":     { },
 
-        "power":    { "header": 0xF7AC7A, "length":  5, "id": 2, "pos": 3, },
+        "power":    { "header": 0xF70E1141, "length":  10, "id": 2, "pos": 3, },
+        
+    "light_2": {
+        "query":    { "header": 0xF70E1201, "length":  7, "id": 2, },
+        "state":    { "header": 0xF70E1281, "length":  10, "id": 2, "parse": {("power", 3, "bitmap")} },
+        "last":     { },
+
+        "power":    { "header": 0xF70E1241, "length":  10, "id": 2, "pos": 3, },
+
+    "light_3": {
+        "query":    { "header": 0xF70E1301, "length":  7, "id": 2, },
+        "state":    { "header": 0xF70E1381, "length":  9, "id": 2, "parse": {("power", 3, "bitmap")} },
+        "last":     { },
+
+        "power":    { "header": 0xF70E1341, "length":  10, "id": 2, "pos": 3, },
+        
+    "light_4": {
+        "query":    { "header": 0xF70E1401, "length":  7, "id": 2, },
+        "state":    { "header": 0xF70E1481, "length":  9, "id": 2, "parse": {("power", 3, "bitmap")} },
+        "last":     { },
+
+        "power":    { "header": 0xF70E1441, "length":  10, "id": 2, "pos": 3, },
+
+    "light_5": {
+        "query":    { "header": 0xF70E1501, "length":  7, "id": 2, },
+        "state":    { "header": 0xF70E1581, "length":  9, "id": 2, "parse": {("power", 3, "bitmap")} },
+        "last":     { },
+
+        "power":    { "header": 0xF70E1541, "length":  10, "id": 2, "pos": 3, },
         
 # KTDO: 기존 코드
 #        "query":    { "header": 0xAC79, "length":  5, "id": 2, },
@@ -119,6 +147,16 @@ RS485_DEVICE = {
 #        "speed":    { "header": 0xC24F, "length":  6, "pos": 2, },
 #    },
 
+    # 각방 난방 제어
+    "thermostat": {
+        "query":    { "header": 0xAE7C, "length":  8, "id": 2, },
+        "state":    { "header": 0xB07C, "length":  8, "id": 2, "parse": {("power", 3, "heat_toggle"), ("target", 4, "value"), ("current", 5, "value")} },
+        "last":     { },
+
+        "power":    { "header": 0xAE7D, "length":  8, "id": 2, "pos": 3, },
+        "target":   { "header": 0xAE7F, "length":  8, "id": 2, "pos": 3, },
+    },
+        
     # 각방 난방 제어
     "thermostat": {
         "query":    { "header": 0xAE7C, "length":  8, "id": 2, },
@@ -243,7 +281,39 @@ DISCOVERY_DEVICE = {
 #}
 
 DISCOVERY_PAYLOAD = {
-    "light": [ {
+    "light_1": [ {
+        "_intg": "light",
+        "~": "{prefix}/light",
+        "name": "_",
+        "opt": True,
+        "stat_t": "~/{idn}/power{bit}/state",
+        "cmd_t": "~/{id2}/power/command",
+    } ],    
+    "light_2": [ {
+        "_intg": "light",
+        "~": "{prefix}/light",
+        "name": "_",
+        "opt": True,
+        "stat_t": "~/{idn}/power{bit}/state",
+        "cmd_t": "~/{id2}/power/command",
+    } ],    
+    "light_3": [ {
+        "_intg": "light",
+        "~": "{prefix}/light",
+        "name": "_",
+        "opt": True,
+        "stat_t": "~/{idn}/power{bit}/state",
+        "cmd_t": "~/{id2}/power/command",
+    } ],    
+    "light_4": [ {
+        "_intg": "light",
+        "~": "{prefix}/light",
+        "name": "_",
+        "opt": True,
+        "stat_t": "~/{idn}/power{bit}/state",
+        "cmd_t": "~/{id2}/power/command",
+    } ],        
+    "light_5": [ {
         "_intg": "light",
         "~": "{prefix}/light",
         "name": "_",
@@ -1062,14 +1132,18 @@ def serial_receive_state(device, packet):
 def serial_get_header():
     try:
         # 0x80보다 큰 byte가 나올 때까지 대기
+        # KTDO: 시작 F7 찾기
         while 1:
             header_0 = conn.recv(1)[0]
-            if header_0 >= 0x80: break
+            #if header_0 >= 0x80: break
+            if header_0 == 0xF7: break
 
         # 중간에 corrupt되는 data가 있으므로 연속으로 0x80보다 큰 byte가 나오면 먼젓번은 무시한다
+        # KTDO:                                     0xF7                                           
         while 1:
             header_1 = conn.recv(1)[0]
-            if header_1 < 0x80: break
+            #if header_1 < 0x80: break
+            if header_1 != 0xF7: break
             header_0 = header_1
 
     except (OSError, serial.SerialException):
