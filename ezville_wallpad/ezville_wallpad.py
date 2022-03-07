@@ -94,8 +94,8 @@ import re
 RS485_DEVICE = {
     # 전등 스위치
     "light_1": {
-        "query":    { "header": 0xF70E1101, "length":  7, "id": 2, },
-        "state":    { "header": 0xF70E1181, "length":  11, "id": 2, "parse": {("power", 3, "bitmap")} },
+        "query":    { "header": 0x01, "length":  7, "id": 2, },
+        "state":    { "header": 0x81, "length":  11, "id": 2, "parse": {("power", 3, "bitmap")} },
         "last":     { },
 
         "power":    { "header": 0xF70E1141, "length":  10, "id": 2, "pos": 3, },
@@ -834,10 +834,11 @@ def mqtt_on_connect(mqtt, userdata, flags, rc):
     mqtt.subscribe(topic, 0)
 
     prefix = Options["mqtt"]["prefix"]
-    if Options["entrance_mode"] != "off" or Options["intercom_mode"] != "off":
-        topic = "{}/virtual/+/+/command".format(prefix)
-        logger.info("subscribe {}".format(topic))
-        mqtt.subscribe(topic, 0)
+# KTDO: Virtual 관련 일단 comment
+#    if Options["entrance_mode"] != "off" or Options["intercom_mode"] != "off":
+#        topic = "{}/virtual/+/+/command".format(prefix)
+#        logger.info("subscribe {}".format(topic))
+#        mqtt.subscribe(topic, 0)
     if Options["wallpad_mode"] != "off":
         topic = "{}/+/+/+/command".format(prefix)
         logger.info("subscribe {}".format(topic))
@@ -1011,9 +1012,19 @@ def serial_generate_checksum(packet):
     for b in packet[:-1]:
         checksum ^= b
 
-    # parity의 최상위 bit는 항상 0
-    if checksum >= 0x80: checksum -= 0x80
+# KTDO: EzVille은 그냥 XOR
+#    # parity의 최상위 bit는 항상 0
+#    if checksum >= 0x80: checksum -= 0x80
 
+    return checksum
+        
+# KTDO added: EzVille은 [XOR] 다음 [ADD] checksum 사용
+def serial_generate_checksum2(packet):
+    # 마지막 제외하고 모든 byte를 ADD
+    checksum = 0
+    for b in packet[:-1]:
+        checksum += b
+        
     return checksum
 
 
@@ -1139,19 +1150,22 @@ def serial_get_header():
             if header_0 == 0xF7: break
 
         # 중간에 corrupt되는 data가 있으므로 연속으로 0x80보다 큰 byte가 나오면 먼젓번은 무시한다
-        # KTDO:                                     0xF7                                           
+        # KTDO: 연속 0xF7 무시                                           
         while 1:
             header_1 = conn.recv(1)[0]
             #if header_1 < 0x80: break
             if header_1 != 0xF7: break
             header_0 = header_1
-
+        
+        header_2 = conn.recv(1)[0]
+        header_3 = conn.recv(1)[0]
+        
     except (OSError, serial.SerialException):
         logger.error("ignore exception!")
-        header_0 = header_1 = 0
+        header_0 = header_1 = header_2 = header_3 = 0
 
     # 헤더 반환
-    return header_0, header_1
+    return header_0, header_1, header_2, header_3
 
 
 def serial_ack_command(packet):
@@ -1197,7 +1211,7 @@ def serial_loop():
         sys.stdout.flush()
 
         # 첫 Byte만 0x80보다 큰 두 Byte를 찾음
-        header_0, header_1 = serial_get_header()
+        header_0, header_1, header_2, header_3 = serial_get_header()
         header = (header_0 << 8) | header_1
 
 # KTDO: Virtual Device는 Skip
@@ -1213,6 +1227,7 @@ def serial_loop():
 #        if header_0 in header_0_virtual:
 #            virtual_query(header_0, header_1)
 
+        # KTDO: int('20', base=16)
         # device로부터의 state 응답이면 확인해서 필요시 HA로 전송해야 함
         if header in STATE_HEADER:
             packet = bytes([header_0, header_1])
