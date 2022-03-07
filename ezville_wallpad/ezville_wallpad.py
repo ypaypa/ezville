@@ -93,40 +93,13 @@ import re
 # 기존 월패드 애드온의 역할하는 부분
 RS485_DEVICE = {
     # 전등 스위치
-    "light_1": {
-        "query":    { "header": 0x01, "length":  7, "id": 2, },
-        "state":    { "header": 0x81, "length":  11, "id": 2, "parse": {("power", 3, "bitmap")} },
+    "light": {
+        "query":    { "id": 0x0E, "cmd": 0x01, },
+        "state":    { "id": 0x0E, "cmd": 0x81, },
         "last":     { },
 
-        "power":    { "header": 0xF70E1141, "length":  10, "id": 2, "pos": 3, },
-        
-    "light_2": {
-        "query":    { "header": 0xF70E1201, "length":  7, "id": 2, },
-        "state":    { "header": 0xF70E1281, "length":  10, "id": 2, "parse": {("power", 3, "bitmap")} },
-        "last":     { },
+        "power":    { "id": 0x0E, "cmd": 0x41, },
 
-        "power":    { "header": 0xF70E1241, "length":  10, "id": 2, "pos": 3, },
-
-    "light_3": {
-        "query":    { "header": 0xF70E1301, "length":  7, "id": 2, },
-        "state":    { "header": 0xF70E1381, "length":  9, "id": 2, "parse": {("power", 3, "bitmap")} },
-        "last":     { },
-
-        "power":    { "header": 0xF70E1341, "length":  10, "id": 2, "pos": 3, },
-        
-    "light_4": {
-        "query":    { "header": 0xF70E1401, "length":  7, "id": 2, },
-        "state":    { "header": 0xF70E1481, "length":  9, "id": 2, "parse": {("power", 3, "bitmap")} },
-        "last":     { },
-
-        "power":    { "header": 0xF70E1441, "length":  10, "id": 2, "pos": 3, },
-
-    "light_5": {
-        "query":    { "header": 0xF70E1501, "length":  7, "id": 2, },
-        "state":    { "header": 0xF70E1581, "length":  9, "id": 2, "parse": {("power", 3, "bitmap")} },
-        "last":     { },
-
-        "power":    { "header": 0xF70E1541, "length":  10, "id": 2, "pos": 3, },
         
 # KTDO: 기존 코드
 #        "query":    { "header": 0xAC79, "length":  5, "id": 2, },
@@ -398,12 +371,12 @@ DISCOVERY_PAYLOAD = {
 }
 
 STATE_HEADER = {
-    prop["state"]["header"]: (device, prop["state"]["length"] - 2)
+    prop["state"]["id"]: (device, prop["state"]["cmd"])
     for device, prop in RS485_DEVICE.items()
     if "state" in prop
 }
 QUERY_HEADER = {
-    prop["query"]["header"]: (device, prop["query"]["length"] - 2)
+    prop["query"]["id"]: (device, prop["query"]["cmd"])
     for device, prop in RS485_DEVICE.items()
     if "query" in prop
 }
@@ -995,7 +968,8 @@ def serial_verify_checksum(packet):
         checksum ^= b
 
     # parity의 최상위 bit는 항상 0
-    if checksum >= 0x80: checksum -= 0x80
+    # KTDO: EzVille은 아님
+    #if checksum >= 0x80: checksum -= 0x80
 
     # checksum이 안맞으면 로그만 찍고 무시
     if checksum:
@@ -1212,7 +1186,8 @@ def serial_loop():
 
         # 첫 Byte만 0x80보다 큰 두 Byte를 찾음
         header_0, header_1, header_2, header_3 = serial_get_header()
-        header = (header_0 << 8) | header_1
+        # KTDO: 패킷단위로 분석할 것이라 합치지 않음.
+        # header = (header_0 << 8) | header_1
 
 # KTDO: Virtual Device는 Skip
 #        # 요청했던 동작의 ack 왔는지 확인
@@ -1229,14 +1204,21 @@ def serial_loop():
 
         # KTDO: int('20', base=16)
         # device로부터의 state 응답이면 확인해서 필요시 HA로 전송해야 함
-        if header in STATE_HEADER:
-            packet = bytes([header_0, header_1])
+        if header_1 in STATE_HEADER and header_3 in STATE_HEADER[header_1]:
+            #packet = bytes([header_0, header_1])
 
             # 몇 Byte짜리 패킷인지 확인
-            device, remain = STATE_HEADER[header]
-
+            #device, remain = STATE_HEADER[header]
+            # KTDO: 데이터 길이는 다음 패킷에서 확인
+            header_4 = conn.recv(1)[0]
+            data_length = int(header_4, base=16)
+            
+            # KTDO: packet 위치 변경
+            packet = bytes([header_0, header_1, header_2, header_3, header_4])
+            
             # 해당 길이만큼 읽음
-            packet += conn.recv(remain)
+            # KTDO: 데이터 길이 + 2 만큼 읽음
+            packet += conn.recv(data_length + 2)
 
             # checksum 오류 없는지 확인
             if not serial_verify_checksum(packet):
