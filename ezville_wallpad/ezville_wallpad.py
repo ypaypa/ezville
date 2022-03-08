@@ -99,7 +99,17 @@ RS485_DEVICE = {
         "last":     { },
 
         "power":    { "id": 0x0E, "cmd": 0x41, },
+    },
+    # 각방 난방 제어
+    "thermostat": {
+        "query":    { "id": 0x36, "cmd": 0x01, },
+        "state":    { "id": 0x36, "cmd": 0x81, },
+        "last":     { },
 
+        "power":    { "header": 0xAE7D, "length":  8, "id": 2, "pos": 3, },
+        "target":   { "id": 0x36, "cmd": 0x44, },
+        "target_ack":   { "id": 0x36, "cmd": 0xC4, },
+    },
         
 # KTDO: 기존 코드
 #        "query":    { "header": 0xAC79, "length":  5, "id": 2, },
@@ -107,9 +117,8 @@ RS485_DEVICE = {
 #        "last":     { },
 #
 #        "power":    { "header": 0xAC7A, "length":  5, "id": 2, "pos": 3, },
-    },
-
-# KTDO: 전열교환기 연결되지 않음    
+#    },
+#   
 #    # 환기장치 (전열교환기)
 #    "fan": {
 #        "query":    { "header": 0xC24E, "length":  6, },
@@ -119,62 +128,62 @@ RS485_DEVICE = {
 #        "power":    { "header": 0xC24F, "length":  6, "pos": 2, },
 #        "speed":    { "header": 0xC24F, "length":  6, "pos": 2, },
 #    },
-
-    # 각방 난방 제어
-    "thermostat": {
-        "query":    { "header": 0xAE7C, "length":  8, "id": 2, },
-        "state":    { "header": 0xB07C, "length":  8, "id": 2, "parse": {("power", 3, "heat_toggle"), ("target", 4, "value"), ("current", 5, "value")} },
-        "last":     { },
-
-        "power":    { "header": 0xAE7D, "length":  8, "id": 2, "pos": 3, },
-        "target":   { "header": 0xAE7F, "length":  8, "id": 2, "pos": 3, },
-    },
-        
-    # 각방 난방 제어
-    "thermostat": {
-        "query":    { "header": 0xAE7C, "length":  8, "id": 2, },
-        "state":    { "header": 0xB07C, "length":  8, "id": 2, "parse": {("power", 3, "heat_toggle"), ("target", 4, "value"), ("current", 5, "value")} },
-        "last":     { },
-
-        "power":    { "header": 0xAE7D, "length":  8, "id": 2, "pos": 3, },
-        "target":   { "header": 0xAE7F, "length":  8, "id": 2, "pos": 3, },
-    },
-
-    # 대기전력차단 스위치 (전력사용량 확인)
-    "plug": {
-        "query":    { "header": 0xC64A, "length": 10, "id": 2, },
-        "state":    { "header": 0xB04A, "length": 10, "id": 2, "parse": {("power", 3, "toggle"), ("idlecut", 3, "toggle2"), ("current", 5, "2Byte")} },
-        "last":     { },
-
-        "power":    { "header": 0xC66E, "length": 10, "id": 2, "pos": 3, },
-        "idlecut":  { "header": 0xC64B, "length": 10, "id": 2, "pos": 3, },
-    },
-
-    # 일괄조명: 현관 스위치 살아있으면...
-    "cutoff": {
-        "query":    { "header": 0xAD52, "length":  4, },
-        "state":    { "header": 0xB052, "length":  4, "parse": {("power", 2, "toggle")} }, # 1: 정상, 0: 일괄소등
-        "last":     { },
-
-        "power":    { "header": 0xAD53, "length":  4, "pos": 2, },
-    },
-
-    # 부엌 가스 밸브
-    "gas_valve": {
-        "query":    { "header": 0xAB41, "length":  4, },
-        #"state":    { "header": 0xB041, "length":  4, "parse": {("power", 2, "toggle")} }, # 0: 정상, 1: 차단; 0xB041은 공용 ack이므로 처리하기 복잡함
-        "state":    { "header": 0xAD56, "length":  4, "parse": {("power", 2, "gas_toggle")} }, # 0: 정상, 1: 차단; 월패드가 현관 스위치에 보내주는 정보로 확인 가능
-        "last":     { },
-
-        "power":    { "header": 0xAB78, "length":  4, }, # 0 으로 잠그기만 가능
-    },
-
-    # 실시간에너지 0:전기, 1:가스, 2:수도
-    "energy": {
-        "query":    { "header": 0xAA6F, "length":  4, "id": 2, },
-        "state":    { "header": 0xB06F, "length":  7, "id": 2, "parse": {("current", 3, "6decimal")} },
-        "last":     { },
-    },
+#
+#    # 각방 난방 제어
+#    "thermostat": {
+#        "query":    { "header": 0xAE7C, "length":  8, "id": 2, },
+#        "state":    { "header": 0xB07C, "length":  8, "id": 2, "parse": {("power", 3, "heat_toggle"), ("target", 4, "value"), ("current", 5, "value")} },
+#        "last":     { },
+#
+#        "power":    { "header": 0xAE7D, "length":  8, "id": 2, "pos": 3, },
+#        "target":   { "header": 0xAE7F, "length":  8, "id": 2, "pos": 3, },
+#    },
+#        
+#    # 각방 난방 제어
+#    "thermostat": {
+#        "query":    { "header": 0xAE7C, "length":  8, "id": 2, },
+#        "state":    { "header": 0xB07C, "length":  8, "id": 2, "parse": {("power", 3, "heat_toggle"), ("target", 4, "value"), ("current", 5, "value")} },
+#        "last":     { },
+#
+#        "power":    { "header": 0xAE7D, "length":  8, "id": 2, "pos": 3, },
+#        "target":   { "header": 0xAE7F, "length":  8, "id": 2, "pos": 3, },
+#    },
+#
+#    # 대기전력차단 스위치 (전력사용량 확인)
+#    "plug": {
+#        "query":    { "header": 0xC64A, "length": 10, "id": 2, },
+#        "state":    { "header": 0xB04A, "length": 10, "id": 2, "parse": {("power", 3, "toggle"), ("idlecut", 3, "toggle2"), ("current", 5, "2Byte")} },
+#        "last":     { },
+#
+#        "power":    { "header": 0xC66E, "length": 10, "id": 2, "pos": 3, },
+#        "idlecut":  { "header": 0xC64B, "length": 10, "id": 2, "pos": 3, },
+#    },
+#
+#    # 일괄조명: 현관 스위치 살아있으면...
+#    "cutoff": {
+#        "query":    { "header": 0xAD52, "length":  4, },
+#        "state":    { "header": 0xB052, "length":  4, "parse": {("power", 2, "toggle")} }, # 1: 정상, 0: 일괄소등
+#        "last":     { },
+#
+#        "power":    { "header": 0xAD53, "length":  4, "pos": 2, },
+#    },
+#
+#    # 부엌 가스 밸브
+#    "gas_valve": {
+#        "query":    { "header": 0xAB41, "length":  4, },
+#        #"state":    { "header": 0xB041, "length":  4, "parse": {("power", 2, "toggle")} }, # 0: 정상, 1: 차단; 0xB041은 공용 ack이므로 처리하기 복잡함
+#        "state":    { "header": 0xAD56, "length":  4, "parse": {("power", 2, "gas_toggle")} }, # 0: 정상, 1: 차단; 월패드가 현관 스위치에 보내주는 정보로 확인 가능
+#        "last":     { },
+#
+#        "power":    { "header": 0xAB78, "length":  4, }, # 0 으로 잠그기만 가능
+#    },
+#
+#    # 실시간에너지 0:전기, 1:가스, 2:수도
+#    "energy": {
+#        "query":    { "header": 0xAA6F, "length":  4, "id": 2, },
+#        "state":    { "header": 0xB06F, "length":  7, "id": 2, "parse": {("current", 3, "6decimal")} },
+#        "last":     { },
+#    },
 }
 
 DISCOVERY_DEVICE = {
@@ -262,22 +271,22 @@ DISCOVERY_PAYLOAD = {
         "stat_t": "~/{grp}_{rm}_{count}/power/state",
         "cmd_t": "~/{grp}_{rm}_{count}/power/command",
     } ],
-    "fan": [ {
-        "_intg": "fan",
-        "~": "{prefix}/fan/{idn}",
-        "name": "{prefix}_fan_{idn}",
-        "opt": True,
-        "stat_t": "~/power/state",
-        "cmd_t": "~/power/command",
-        "spd_stat_t": "~/speed/state",
-        "spd_cmd_t": "~/speed/command",
-        "pl_on": 5,
-        "pl_off": 6,
-        "pl_lo_spd": 3,
-        "pl_med_spd": 2,
-        "pl_hi_spd": 1,
-        "spds": ["low", "medium", "high"],
-    } ],
+ #   "fan": [ {
+ #       "_intg": "fan",
+ #       "~": "{prefix}/fan/{idn}",
+ #       "name": "{prefix}_fan_{idn}",
+ #       "opt": True,
+ #       "stat_t": "~/power/state",
+ #       "cmd_t": "~/power/command",
+ #       "spd_stat_t": "~/speed/state",
+ #       "spd_cmd_t": "~/speed/command",
+ #       "pl_on": 5,
+ #       "pl_off": 6,
+ #       "pl_lo_spd": 3,
+ #       "pl_med_spd": 2,
+ #       "pl_hi_spd": 1,
+ #       "spds": ["low", "medium", "high"],
+ #   } ],
     "thermostat": [ {
         "_intg": "climate",
         "~": "{prefix}/thermostat/{idn}",
@@ -291,51 +300,51 @@ DISCOVERY_PAYLOAD = {
         "min_temp": 10,
         "max_temp": 30,
     } ],
-    "plug": [ {
-        "_intg": "switch",
-        "~": "{prefix}/plug/{idn}/power",
-        "name": "{prefix}_plug_{idn}",
-        "stat_t": "~/state",
-        "cmd_t": "~/command",
-        "icon": "mdi:power-plug",
-    },
-    {
-        "_intg": "switch",
-        "~": "{prefix}/plug/{idn}/idlecut",
-        "name": "{prefix}_plug_{idn}_standby_cutoff",
-        "stat_t": "~/state",
-        "cmd_t": "~/command",
-        "icon": "mdi:leaf",
-    },
-    {
-        "_intg": "sensor",
-        "~": "{prefix}/plug/{idn}",
-        "name": "{prefix}_plug_{idn}_power_usage",
-        "stat_t": "~/current/state",
-        "unit_of_meas": "W",
-    } ],
-    "cutoff": [ {
-        "_intg": "switch",
-        "~": "{prefix}/cutoff/{idn}/power",
-        "name": "{prefix}_light_cutoff_{idn}",
-        "stat_t": "~/state",
-        "cmd_t": "~/command",
-    } ],
-    "gas_valve": [ {
-        "_intg": "sensor",
-        "~": "{prefix}/gas_valve/{idn}",
-        "name": "{prefix}_gas_valve_{idn}",
-        "stat_t": "~/power/state",
-        "icon": "mdi:valve",
-    } ],
-    "energy": [ {
-        "_intg": "sensor",
-        "~": "{prefix}/energy/{idn}",
-        "name": "_",
-        "stat_t": "~/current/state",
-        "unit_of_meas": "_",
-        "val_tpl": "_",
-    } ],
+#    "plug": [ {
+#        "_intg": "switch",
+#        "~": "{prefix}/plug/{idn}/power",
+#        "name": "{prefix}_plug_{idn}",
+#        "stat_t": "~/state",
+#        "cmd_t": "~/command",
+#        "icon": "mdi:power-plug",
+#    },
+#    {
+#        "_intg": "switch",
+#        "~": "{prefix}/plug/{idn}/idlecut",
+#        "name": "{prefix}_plug_{idn}_standby_cutoff",
+#        "stat_t": "~/state",
+#        "cmd_t": "~/command",
+#        "icon": "mdi:leaf",
+#    },
+#    {
+#        "_intg": "sensor",
+#        "~": "{prefix}/plug/{idn}",
+#        "name": "{prefix}_plug_{idn}_power_usage",
+#        "stat_t": "~/current/state",
+#        "unit_of_meas": "W",
+#    } ],
+#    "cutoff": [ {
+#        "_intg": "switch",
+#        "~": "{prefix}/cutoff/{idn}/power",
+#        "name": "{prefix}_light_cutoff_{idn}",
+#        "stat_t": "~/state",
+#        "cmd_t": "~/command",
+#    } ],
+#    "gas_valve": [ {
+#        "_intg": "sensor",
+#        "~": "{prefix}/gas_valve/{idn}",
+#        "name": "{prefix}_gas_valve_{idn}",
+#        "stat_t": "~/power/state",
+#        "icon": "mdi:valve",
+#    } ],
+#    "energy": [ {
+#        "_intg": "sensor",
+#        "~": "{prefix}/energy/{idn}",
+#        "name": "_",
+#        "stat_t": "~/current/state",
+#        "unit_of_meas": "_",
+#        "val_tpl": "_",
+#    } ],
 }
 
 STATE_HEADER = {
