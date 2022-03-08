@@ -254,45 +254,13 @@ DISCOVERY_DEVICE = {
 #}
 
 DISCOVERY_PAYLOAD = {
-    "light_1": [ {
+    "light": [ {
         "_intg": "light",
-        "~": "{prefix}/light",
+        "~": "{prefix}/light/{grp}_{rm}_{count}",
         "name": "_",
         "opt": True,
-        "stat_t": "~/{idn}/power{bit}/state",
-        "cmd_t": "~/{id2}/power/command",
-    } ],    
-    "light_2": [ {
-        "_intg": "light",
-        "~": "{prefix}/light",
-        "name": "_",
-        "opt": True,
-        "stat_t": "~/{idn}/power{bit}/state",
-        "cmd_t": "~/{id2}/power/command",
-    } ],    
-    "light_3": [ {
-        "_intg": "light",
-        "~": "{prefix}/light",
-        "name": "_",
-        "opt": True,
-        "stat_t": "~/{idn}/power{bit}/state",
-        "cmd_t": "~/{id2}/power/command",
-    } ],    
-    "light_4": [ {
-        "_intg": "light",
-        "~": "{prefix}/light",
-        "name": "_",
-        "opt": True,
-        "stat_t": "~/{idn}/power{bit}/state",
-        "cmd_t": "~/{id2}/power/command",
-    } ],        
-    "light_5": [ {
-        "_intg": "light",
-        "~": "{prefix}/light",
-        "name": "_",
-        "opt": True,
-        "stat_t": "~/{idn}/power{bit}/state",
-        "cmd_t": "~/{id2}/power/command",
+        "stat_t": "~/{grp}_{rm}_{count}/power/state",
+        "cmd_t": "~/{grp}_{rm}_{count}/power/command",
     } ],
     "fan": [ {
         "_intg": "fan",
@@ -963,17 +931,22 @@ def start_mqtt_loop():
 
 def serial_verify_checksum(packet):
     # 모든 byte를 XOR
+    # KTDO: 마지막 ADD 빼고 XOR
     checksum = 0
-    for b in packet:
+    for b in packet[:-1]:
         checksum ^= b
+        
+    # KTDO: ADD 계산
+    add = sum(packet[:-1]) & 0xFF
 
     # parity의 최상위 bit는 항상 0
     # KTDO: EzVille은 아님
     #if checksum >= 0x80: checksum -= 0x80
 
     # checksum이 안맞으면 로그만 찍고 무시
-    if checksum:
-        logger.warning("checksum fail! {}, {:02x}".format(packet.hex(), checksum))
+    # KTDO: ADD 까지 맞아야함.
+    if checksum or add != packet[-1]
+        logger.warning("checksum fail! {}, {:02x}, {:02x}".format(packet.hex(), checksum, add))
         return False
 
     # 정상
@@ -985,22 +958,17 @@ def serial_generate_checksum(packet):
     checksum = 0
     for b in packet[:-1]:
         checksum ^= b
+        
+    # KTDO: add 추가 생성 
+    add = (sum(packet) + checksum) & 0xFF 
+    
 
 # KTDO: EzVille은 그냥 XOR
 #    # parity의 최상위 bit는 항상 0
 #    if checksum >= 0x80: checksum -= 0x80
+    checksumadd = (checksum << 8) | add
 
-    return checksum
-        
-# KTDO added: EzVille은 [XOR] 다음 [ADD] checksum 사용
-def serial_generate_checksum2(packet):
-    # 마지막 제외하고 모든 byte를 ADD
-    checksum = 0
-    for b in packet[:-1]:
-        checksum += b
-        
-    return checksum
-
+    return checksumadd
 
 def serial_peek_value(parse, packet):
     attr, pos, pattern = parse
@@ -1037,23 +1005,30 @@ def serial_peek_value(parse, packet):
     return [(attr, value)]
 
 
-def serial_new_device(device, idn, packet):
+def serial_new_device(device, packet):
     prefix = Options["mqtt"]["prefix"]
 
     # 조명은 두 id를 조합해서 개수와 번호를 정해야 함
     if device == "light":
-        id2 = last_query[3]
-        num = idn >> 4
-        idn = int("{:x}".format(idn))
+        # KTDO: EzVille에 맞게 수정
+        group_id = int("{:x}".format(packet[2] >> 4))
+        room_id = int("{:x}".format(packet[2] & 0x0F))
+        light_count = int("{:x}".format(packet[4]))
+        
+        #id2 = last_query[3]
+        #num = idn >> 4
+        #idn = int("{:x}".format(idn))
 
-        for bit in range(0, num):
+        for id in range(1, light_count):
             payload = DISCOVERY_PAYLOAD[device][0].copy()
-            payload["~"] = payload["~"].format(prefix=prefix, idn=idn)
-            payload["name"] = "{}_light_{}".format(prefix, id2+bit)
-            payload["stat_t"] = payload["stat_t"].format(idn=idn, bit=bit+1)
-            payload["cmd_t"] = payload["cmd_t"].format(id2=id2+bit)
+            payload["~"] = payload["~"].format(prefix=prefix, group_id=group_id, room_id=room_id, id=id)
+            payload["name"] = "{}_light_{}_{}_{}".format(prefix, group_id, room_id, id)
+            payload["stat_t"] = payload["stat_t"].format(group_id=group_id, room_id=room_id, id=id)
+            payload["cmd_t"] = payload["cmd_t"].format(group_id=group_id, room_id=room_id, id=id)
 
             mqtt_discovery(payload)
+    if device == "thermostate":
+        
 
     elif device in DISCOVERY_PAYLOAD:
         for payloads in DISCOVERY_PAYLOAD[device]:
@@ -1062,6 +1037,7 @@ def serial_new_device(device, idn, packet):
             payload["name"] = payload["name"].format(prefix=prefix, idn=idn)
 
             # 실시간 에너지 사용량에는 적절한 이름과 단위를 붙여준다 (단위가 없으면 그래프로 출력이 안됨)
+            # KTDO: Ezville에 에너지 확인 쿼리 없음
             if device == "energy":
                 payload["name"] = "{}_{}_consumption".format(prefix, ("power", "gas", "water")[idn])
                 payload["unit_of_meas"] = ("W", "m³/h", "m³/h")[idn]
@@ -1087,9 +1063,12 @@ def serial_receive_state(device, packet):
     if Options["mqtt"]["_discovery"] and not last.get(idn):
         # 전등 때문에 last query도 필요... 지금 패킷과 일치하는지 검증
         # gas valve는 일치하지 않는다
-        if last_query[1] == packet[1] or device == "gas_valve":
-            serial_new_device(device, idn, packet)
-            last[idn] = True
+        # KTDO: EzVille은 표준 기반이라 Query와 비교 필요 없음.
+        #if last_query[1] == packet[1] or device == "gas_valve":
+        #    serial_new_device(device, idn, packet)
+        #    last[idn] = True
+        
+        serial_new_device(device, idn, packet)
 
         # 장치 등록 먼저 하고, 상태 등록은 그 다음 턴에 한다. (난방 상태 등록 무시되는 현상 방지)
         return
@@ -1156,7 +1135,8 @@ def serial_send_command():
     conn.send(cmd)
 
     ack = bytearray(cmd[0:3])
-    ack[0] = 0xB0
+    # KTDO: 다시 봐야함
+    ack[0] = 0xF7
     ack = int.from_bytes(ack, "big")
 
     # retry time 관리, 초과했으면 제거
@@ -1213,14 +1193,15 @@ def serial_loop():
             header_4 = conn.recv(1)[0]
             data_length = int(header_4, base=16)
             
-            # KTDO: packet 위치 변경
+            # KTDO: packet 생성 위치 변경
             packet = bytes([header_0, header_1, header_2, header_3, header_4])
             
             # 해당 길이만큼 읽음
-            # KTDO: 데이터 길이 + 2 만큼 읽음
+            # KTDO: 데이터 길이 + 2 (XOR + ADD) 만큼 읽음
             packet += conn.recv(data_length + 2)
 
             # checksum 오류 없는지 확인
+            # KTDO: checksum 및 ADD 오류 없는지 확인 
             if not serial_verify_checksum(packet):
                 continue
 
