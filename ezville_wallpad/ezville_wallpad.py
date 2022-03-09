@@ -702,7 +702,8 @@ def mqtt_debug(topics, payload):
             logger.info("prepare packet:  {}".format(packet.hex()))
             serial_queue[packet] = time.time()
 
-
+            
+# KTDO: 수정 완료
 def mqtt_device(topics, payload):
     device = topics[1]
     idn = topics[2]
@@ -724,7 +725,17 @@ def mqtt_device(topics, payload):
 
     # 오류 체크 끝났으면 serial 메시지 생성
     cmd = RS485_DEVICE[device][cmd]
-
+    
+    if device == "light":
+        length = 10
+    elif device == "thermostat":
+        length = 8
+    
+    packet = bytearray(length)
+    packet[0] = 0xF7
+    
+    
+    # KTDO: 상기 코드로 대체
     packet = bytearray(cmd["length"])
     packet[0] = cmd["header"] >> 8
     packet[1] = cmd["header"] & 0xFF
@@ -751,7 +762,8 @@ def mqtt_init_discovery():
     global last_topic_list
     last_topic_list = {}
 
-
+    
+# KTDO: 수정 완료
 def mqtt_on_message(mqtt, userdata, msg):
     topics = msg.topic.split("/")
     payload = msg.payload.decode()
@@ -770,7 +782,8 @@ def mqtt_on_message(mqtt, userdata, msg):
     else:
         mqtt_device(topics, payload)
 
-
+        
+# KTDO: 수정 완료
 def mqtt_on_connect(mqtt, userdata, flags, rc):
     if rc == 0:
         logger.info("MQTT connect successful!")
@@ -796,7 +809,8 @@ def mqtt_on_connect(mqtt, userdata, flags, rc):
         logger.info("subscribe {}".format(topic))
         mqtt.subscribe(topic, 0)
 
-
+        
+# KTDO: 수정 완료
 def mqtt_on_disconnect(mqtt, userdata, rc):
     logger.warning("MQTT disconnected! ({})".format(rc))
     global mqtt_connected
@@ -1095,7 +1109,8 @@ def serial_receive_state(device, packet):
 
     else:
         last[idn] = packet
-        
+
+# KTDO: 아래 코드로 값을 바로 판별
     prefix = Options["mqtt"]["prefix"]
     
     if device == "light":
@@ -1105,7 +1120,16 @@ def serial_receive_state(device, packet):
         
         for id in range(1, light_count):
             topic = "{}/{}/{}_{}_{}/power/state".format(prefix, device, grp_id, rm_id, id)
-            value = 
+            
+            if packet[5+id] & 1:
+                value = "ON"
+            else
+                value = "OFF
+                
+            if last_topic_list.get(topic) != value:
+                logger.info("publish to HA:   {} = {} ({})".format(topic, value, packet.hex()))
+                mqtt.publish(topic, value)
+                last_topic_list[topic] = value
             
     elif device == "thermostate":
         grp_id = int("{:x}".format(packet[2] >> 4))
@@ -1113,27 +1137,54 @@ def serial_receive_state(device, packet):
         
         for id in range(1, room_count):
             topic1 = "{}/{}/{}_{}/power/state".format(prefix, device, grp_id, id)
-            topic2 = "{}/{}/{}_{}/target/state".format(prefix, device, grp_id, id)
-            topic3 = "{}/{}/{}_{}/current/state".format(prefix, device, grp_id, id)
-            topic4 = "{}/{}/{}_{}/out/state".format(prefix, device, grp_id, id)
+            topic2 = "{}/{}/{}_{}/out/state".format(prefix, device, grp_id, id)
+            topic3 = "{}/{}/{}_{}/target/state".format(prefix, device, grp_id, id)
+            topic4 = "{}/{}/{}_{}/current/state".format(prefix, device, grp_id, id)
             
+            if ((packet[6] & 0x1F) >> (room_count - id)) & 1:
+                value1 = "ON"
+            else
+                value1 = "OFF"
+            if ((packet[7] & 0x1F) >> (room_count - id)) & 1:
+                value2 = "ON"
+            else
+                value2 = "OFF"
+            value3 = packet[9 + id]
+            value4 = packet[10 + id]
             
-
-    # device 종류에 따라 전송할 데이터 정리
-    value_list = []
-    for parse in form["parse"]:
-        value_list += serial_peek_value(parse, packet)
-
-    # MQTT topic 형태로 변환, 이전 상태와 같은지 한번 더 확인해서 무시하거나 publish
-    for attr, value in value_list:
-        prefix = Options["mqtt"]["prefix"]
-        topic = "{}/{}/{:x}/{}/state".format(prefix, device, idn, attr)
-        if last_topic_list.get(topic) == value: continue
-
+            if last_topic_list.get(topic1) != value1:
+                logger.info("publish to HA:   {} = {} ({})".format(topic1, value1, packet.hex()))
+                mqtt.publish(topic1, value1)
+                last_topic_list[topic1] = value1
+            if last_topic_list.get(topic2) != value2:
+                logger.info("publish to HA:   {} = {} ({})".format(topic2, value2, packet.hex()))
+                mqtt.publish(topic2, value2)
+                last_topic_list[topic2] = value2
+            if last_topic_list.get(topic3) != value3:
+                logger.info("publish to HA:   {} = {} ({})".format(topic3, value3, packet.hex()))
+                mqtt.publish(topic3, value3)
+                last_topic_list[topic3] = value3
+            if last_topic_list.get(topic4) != value4:
+                logger.info("publish to HA:   {} = {} ({})".format(topic4, value4, packet.hex()))
+                mqtt.publish(topic4, value4)
+                last_topic_list[topic4] = value4
+                
+# KTDO: 위의 코드로 대체                        
+#    # device 종류에 따라 전송할 데이터 정리
+#    value_list = []
+#    for parse in form["parse"]:
+#        value_list += serial_peek_value(parse, packet)
+#
+#    # MQTT topic 형태로 변환, 이전 상태와 같은지 한번 더 확인해서 무시하거나 publish
+#    for attr, value in value_list:
+#        prefix = Options["mqtt"]["prefix"]
+#        topic = "{}/{}/{:x}/{}/state".format(prefix, device, idn, attr)
+#        if last_topic_list.get(topic) == value: continue
+#
 #        if attr != "current":  # 전력사용량이나 현재온도는 너무 자주 바뀌어서 로그 제외
 #            logger.info("publish to HA:   {} = {} ({})".format(topic, value, packet.hex()))
-        mqtt.publish(topic, value)
-        last_topic_list[topic] = value
+#        mqtt.publish(topic, value)
+#        last_topic_list[topic] = value
 
         
 # KTDO: 수정 완료
