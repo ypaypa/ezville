@@ -35,7 +35,7 @@ import re
 #            "ev":    { "ack": 0x2F, "ON": 0xB02F011E, "next": None, },
 #        },
 #    },
-
+#
 #    # 신형 현관스위치
 #    "entrance2": {
 #        "header0": 0xCC,
@@ -265,11 +265,11 @@ DISCOVERY_DEVICE = {
 DISCOVERY_PAYLOAD = {
     "light": [ {
         "_intg": "light",
-        "~": "{prefix}/light/{grp}_{rm}_{count}",
-        "name": "_",
+        "~": "{prefix}/light/{grp}_{rm}_{id}",
+        "name": "{prefix}_light_{grp}_{rm}_{id}",
         "opt": True,
-        "stat_t": "~/{grp}_{rm}_{count}/power/state",
-        "cmd_t": "~/{grp}_{rm}_{count}/power/command",
+        "stat_t": "~/power/state",
+        "cmd_t": "~/power/command",
     } ],
  #   "fan": [ {
  #       "_intg": "fan",
@@ -289,16 +289,17 @@ DISCOVERY_PAYLOAD = {
  #   } ],
     "thermostat": [ {
         "_intg": "climate",
-        "~": "{prefix}/thermostat/{idn}",
-        "name": "{prefix}_thermostat_{idn}",
+        "~": "{prefix}/thermostat/{grp}_{id}",
+        "name": "{prefix}_thermostat_{grp}_{id}",
         "mode_stat_t": "~/power/state",
         "mode_cmd_t": "~/power/command",
         "temp_stat_t": "~/target/state",
         "temp_cmd_t": "~/target/command",
         "curr_temp_t": "~/current/state",
-        "modes": [ "off", "heat" ],
-        "min_temp": 10,
-        "max_temp": 30,
+        "out_stat_t": "~/out/state",
+        "modes": [ "off", "out", "heat" ],
+        "min_temp": 5,
+        "max_temp": 40,
     } ],
 #    "plug": [ {
 #        "_intg": "switch",
@@ -387,7 +388,7 @@ mqtt_connected = False
 
 logger = logging.getLogger(__name__)
 
-
+# KTDO: 수정 완료
 class EzVilleSerial:
     def __init__(self):
         self._ser = serial.Serial()
@@ -432,7 +433,7 @@ class EzVilleSerial:
     def set_timeout(self, a):
         self._ser.timeout = a
 
-
+# KTDO: 수정 완료
 class EzVilleSocket:
     def __init__(self):
         addr = Options["socket"]["address"]
@@ -486,7 +487,7 @@ class EzVilleSocket:
     def set_timeout(self, a):
         self._soc.settimeout(a)
 
-
+# KTDO: 수정 완료
 def init_logger():
     logger.setLevel(logging.INFO)
 
@@ -495,7 +496,7 @@ def init_logger():
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-
+# KTDO: 수정 완료
 def init_logger_file():
     if Options["log"]["to_file"]:
         filename = Options["log"]["filename"]
@@ -507,7 +508,7 @@ def init_logger_file():
         handler.suffix = '%Y%m%d'
         logger.addHandler(handler)
 
-
+# KTDO: 수정 완료
 def init_option(argv):
     # option 파일 선택
     if len(argv) == 1:
@@ -589,7 +590,7 @@ def init_option(argv):
 #        for header_1 in (0x31, 0x32, 0x36, 0x3E):
 #            virtual_avail.append((VIRTUAL_DEVICE["intercom"]["header0"] << 8) + header_1)
 
-
+# KTDO: 수정 완료
 def mqtt_discovery(payload):
     intg = payload.pop("_intg")
 
@@ -738,6 +739,7 @@ def mqtt_device(topics, payload):
     serial_queue[packet] = time.time()
 
 
+# KTDO: 수정 완료
 def mqtt_init_discovery():
     # HA가 재시작됐을 때 모든 discovery를 다시 수행한다
     Options["mqtt"]["_discovery"] = Options["mqtt"]["discovery"]
@@ -800,7 +802,7 @@ def mqtt_on_disconnect(mqtt, userdata, rc):
     global mqtt_connected
     mqtt_connected = False
 
-
+# KTDO: 수정 완료
 def start_mqtt_loop():
     logger.info("initialize mqtt...")
 
@@ -937,7 +939,7 @@ def start_mqtt_loop():
 #        next_trigger = triggers[trigger]["next"]
 #        virtual_trigger[device][next_trigger] = time.time()
 
-
+# KTDO: 수정 완료
 def serial_verify_checksum(packet):
     # 모든 byte를 XOR
     # KTDO: 마지막 ADD 빼고 XOR
@@ -961,7 +963,7 @@ def serial_verify_checksum(packet):
     # 정상
     return True
 
-
+# KTDO: 수정 완료
 def serial_generate_checksum(packet):
     # 마지막 제외하고 모든 byte를 XOR
     checksum = 0
@@ -979,50 +981,51 @@ def serial_generate_checksum(packet):
 
     return checksumadd
 
-def serial_peek_value(parse, packet):
-    attr, pos, pattern = parse
-    value = packet[pos]
+# KTDO: 코멘트 처리 
+#def serial_peek_value(device, packet):
+#    attr, pos, pattern = parse
+#    value = packet[pos]
+#    
+#    if device == "light":
+#        res = []
+#        for i in range(1, 8+1):
+#            res += [("{}{}".format(attr, i), "ON" if value & 1 else "OFF")]
+#            value >>= 1
+#        return res
+#    elif pattern == "toggle":
+#        value = "ON" if value & 1 else "OFF"
+#    elif pattern == "toggle2":
+#        value = "ON" if value & 0x10 else "OFF"
+#    elif pattern == "fan_toggle":
+#        value = 5 if value == 0 else 6
+#    elif pattern == "heat_toggle":
+#        value = "heat" if value & 1 else "off"
+#    elif pattern == "gas_toggle":
+#        value = "차단" if value & 1 else "열림"
+#    elif pattern == "value":
+#        pass
+#    elif pattern == "2Byte":
+#        value += packet[pos-1] << 8
+#    elif pattern == "6decimal":
+#        try:
+#            value = packet[pos : pos+3].hex()
+#        except:
+#            # 어쩌다 깨지면 뻗음...
+#            logger.warning("invalid packet, {} is not decimal".format(packet.hex()))
+#            value = 0
+#
+#    return [(attr, value)]
 
-    if pattern == "bitmap":
-        res = []
-        for i in range(1, 8+1):
-            res += [("{}{}".format(attr, i), "ON" if value & 1 else "OFF")]
-            value >>= 1
-        return res
-    elif pattern == "toggle":
-        value = "ON" if value & 1 else "OFF"
-    elif pattern == "toggle2":
-        value = "ON" if value & 0x10 else "OFF"
-    elif pattern == "fan_toggle":
-        value = 5 if value == 0 else 6
-    elif pattern == "heat_toggle":
-        value = "heat" if value & 1 else "off"
-    elif pattern == "gas_toggle":
-        value = "차단" if value & 1 else "열림"
-    elif pattern == "value":
-        pass
-    elif pattern == "2Byte":
-        value += packet[pos-1] << 8
-    elif pattern == "6decimal":
-        try:
-            value = packet[pos : pos+3].hex()
-        except:
-            # 어쩌다 깨지면 뻗음...
-            logger.warning("invalid packet, {} is not decimal".format(packet.hex()))
-            value = 0
-
-    return [(attr, value)]
-
-
+# KTDO: 수정 완료
 def serial_new_device(device, packet):
     prefix = Options["mqtt"]["prefix"]
 
     # 조명은 두 id를 조합해서 개수와 번호를 정해야 함
     if device == "light":
         # KTDO: EzVille에 맞게 수정
-        group_id = int("{:x}".format(packet[2] >> 4))
-        room_id = int("{:x}".format(packet[2] & 0x0F))
-        light_count = int("{:x}".format(packet[4]))
+        grp_id = int("{:x}".format(packet[2] >> 4))
+        rm_id = int("{:x}".format(packet[2] & 0x0F))
+        light_count = int("{:x}".format(packet[4])) - 1
         
         #id2 = last_query[3]
         #num = idn >> 4
@@ -1030,39 +1033,47 @@ def serial_new_device(device, packet):
 
         for id in range(1, light_count):
             payload = DISCOVERY_PAYLOAD[device][0].copy()
-            payload["~"] = payload["~"].format(prefix=prefix, group_id=group_id, room_id=room_id, id=id)
-            payload["name"] = "{}_light_{}_{}_{}".format(prefix, group_id, room_id, id)
-            payload["stat_t"] = payload["stat_t"].format(group_id=group_id, room_id=room_id, id=id)
-            payload["cmd_t"] = payload["cmd_t"].format(group_id=group_id, room_id=room_id, id=id)
+            payload["~"] = payload["~"].format(prefix=prefix, grp=grp_id, rm=rm_id, id=id)
+            payload["name"] = payload["name"].format(prefix=prefix, grp=grp_id, rm=rm_id, id=id)
 
             mqtt_discovery(payload)
-    if device == "thermostate":
+    elif device == "thermostate":
+        # KTDO: EzVille에 맞게 수정
+        grp_id = int("{:x}".format(packet[2] >> 4))
+        room_count = (int("{:x}".format(packet[4])) - 5) / 2
         
-
-    elif device in DISCOVERY_PAYLOAD:
-        for payloads in DISCOVERY_PAYLOAD[device]:
-            payload = payloads.copy()
-            payload["~"] = payload["~"].format(prefix=prefix, idn=idn)
-            payload["name"] = payload["name"].format(prefix=prefix, idn=idn)
-
-            # 실시간 에너지 사용량에는 적절한 이름과 단위를 붙여준다 (단위가 없으면 그래프로 출력이 안됨)
-            # KTDO: Ezville에 에너지 확인 쿼리 없음
-            if device == "energy":
-                payload["name"] = "{}_{}_consumption".format(prefix, ("power", "gas", "water")[idn])
-                payload["unit_of_meas"] = ("W", "m³/h", "m³/h")[idn]
-                payload["val_tpl"] = ("{{ value }}", "{{ value | float / 100 }}", "{{ value | float / 100 }}")[idn]
+        for id in range(1, room_count):
+            payload = DISCOVERY_PAYLOAD[device][0].copy()
+            payload["~"] = payload["~"].format(prefix=prefix, grp=grp_id, id=id)
+            payload["name"] = payload["name"].format(prefix=prefix, grp=grp_id, id=id)
 
             mqtt_discovery(payload)
+
+#    elif device in DISCOVERY_PAYLOAD:
+#        for payloads in DISCOVERY_PAYLOAD[device]:
+#            payload = payloads.copy()
+#            payload["~"] = payload["~"].format(prefix=prefix, idn=idn)
+#            payload["name"] = payload["name"].format(prefix=prefix, idn=idn)
+#
+#            # 실시간 에너지 사용량에는 적절한 이름과 단위를 붙여준다 (단위가 없으면 그래프로 출력이 안됨)
+#            # KTDO: Ezville에 에너지 확인 쿼리 없음
+#            if device == "energy":
+#                payload["name"] = "{}_{}_consumption".format(prefix, ("power", "gas", "water")[idn])
+#                payload["unit_of_meas"] = ("W", "m³/h", "m³/h")[idn]
+#                payload["val_tpl"] = ("{{ value }}", "{{ value | float / 100 }}", "{{ value | float / 100 }}")[idn]
+#
+#            mqtt_discovery(payload)
 
 
 def serial_receive_state(device, packet):
     form = RS485_DEVICE[device]["state"]
     last = RS485_DEVICE[device]["last"]
 
-    if form.get("id") != None:
-        idn = packet[form["id"]]
-    else:
-        idn = 1
+    #if form.get("id") != None:
+    #    idn = packet[form["id"]]
+    #else:
+    #    idn = 1
+    idn = (packet[1] << 8) | packet[2]
 
     # 해당 ID의 이전 상태와 같은 경우 바로 무시
     if last.get(idn) == packet:
@@ -1077,13 +1088,36 @@ def serial_receive_state(device, packet):
         #    serial_new_device(device, idn, packet)
         #    last[idn] = True
         
-        serial_new_device(device, idn, packet)
+        serial_new_device(device, packet)
 
         # 장치 등록 먼저 하고, 상태 등록은 그 다음 턴에 한다. (난방 상태 등록 무시되는 현상 방지)
         return
 
     else:
         last[idn] = packet
+        
+    prefix = Options["mqtt"]["prefix"]
+    
+    if device == "light":
+        grp_id = int("{:x}".format(packet[2] >> 4))
+        rm_id = int("{:x}".format(packet[2] & 0x0F))
+        light_count = int("{:x}".format(packet[4])) - 1
+        
+        for id in range(1, light_count):
+            topic = "{}/{}/{}_{}_{}/power/state".format(prefix, device, grp_id, rm_id, id)
+            value = 
+            
+    elif device == "thermostate":
+        grp_id = int("{:x}".format(packet[2] >> 4))
+        room_count = (int("{:x}".format(packet[4])) - 5) / 2
+        
+        for id in range(1, room_count):
+            topic1 = "{}/{}/{}_{}/power/state".format(prefix, device, grp_id, id)
+            topic2 = "{}/{}/{}_{}/target/state".format(prefix, device, grp_id, id)
+            topic3 = "{}/{}/{}_{}/current/state".format(prefix, device, grp_id, id)
+            topic4 = "{}/{}/{}_{}/out/state".format(prefix, device, grp_id, id)
+            
+            
 
     # device 종류에 따라 전송할 데이터 정리
     value_list = []
@@ -1096,12 +1130,13 @@ def serial_receive_state(device, packet):
         topic = "{}/{}/{:x}/{}/state".format(prefix, device, idn, attr)
         if last_topic_list.get(topic) == value: continue
 
-        if attr != "current":  # 전력사용량이나 현재온도는 너무 자주 바뀌어서 로그 제외
-            logger.info("publish to HA:   {} = {} ({})".format(topic, value, packet.hex()))
+#        if attr != "current":  # 전력사용량이나 현재온도는 너무 자주 바뀌어서 로그 제외
+#            logger.info("publish to HA:   {} = {} ({})".format(topic, value, packet.hex()))
         mqtt.publish(topic, value)
         last_topic_list[topic] = value
 
-
+        
+# KTDO: 수정 완료
 def serial_get_header():
     try:
         # 0x80보다 큰 byte가 나올 때까지 대기
@@ -1130,6 +1165,7 @@ def serial_get_header():
     return header_0, header_1, header_2, header_3
 
 
+# KTDO: 수정 완료
 def serial_ack_command(packet):
     logger.info("ack from device: {} ({:x})".format(serial_ack[packet].hex(), packet))
 
@@ -1222,6 +1258,7 @@ def serial_loop():
             # 적절히 처리한다
             serial_receive_state(device, packet)
 
+        # KTDO: 수정 필요 생각중
         elif header_0 == HEADER_0_STATE:
             # 한 byte 더 뽑아서, 보냈던 명령의 ack인지 확인
             header_2 = conn.recv(1)[0]
@@ -1229,22 +1266,25 @@ def serial_loop():
 
             if header in serial_ack:
                 serial_ack_command(header)
-
+        
+        # KTDO: 필요 없음.
         # 마지막으로 받은 query를 저장해둔다 (조명 discovery에 필요)
-        elif header in QUERY_HEADER:
-            # 나머지 더 뽑아서 저장
-            global last_query
-            packet = conn.recv(QUERY_HEADER[header][1])
-            packet = header.to_bytes(2, "big") + packet
-            last_query = packet
+        #elif header in QUERY_HEADER:
+        #    # 나머지 더 뽑아서 저장
+        #    global last_query
+        #    packet = conn.recv(QUERY_HEADER[header][1])
+        #    packet = header.to_bytes(2, "big") + packet
+        #    last_query = packet
 
         # 명령을 보낼 타이밍인지 확인: 0xXX5A 는 장치가 있는지 찾는 동작이므로,
         # 아직도 이러고 있다는건 아무도 응답을 안할걸로 예상, 그 타이밍에 끼어든다.
-        if header_1 == HEADER_1_SCAN or send_aggressive:
-            scan_count += 1
-            if serial_queue and not conn.check_pending_recv():
-                serial_send_command()
-                conn.set_pending_recv()
+        # KTDO: EzVille은 표준에 따라 Ack 이후 다음 Request 까지의 시간 활용하여 command 전송
+        #       즉 State 확인 후에만 전달
+        #if header_1 == HEADER_1_SCAN or send_aggressive:
+        #    scan_count += 1
+        #    if serial_queue and not conn.check_pending_recv():
+        #        serial_send_command()
+        #        conn.set_pending_recv()
 
         # 전체 루프 수 카운트
         global HEADER_0_FIRST
@@ -1298,12 +1338,9 @@ def dump_loop():
 
             if data:
                 for b in data:
-                    if b == 0xA1 or len(logs) > 500:
+                    if b == 0xF7 or len(logs) > 500:
                         logger.info("".join(logs))
                         logs = ["{:02X}".format(b)]
-                    elif b <= 0xA0: logs.append(   "{:02X}".format(b))
-                    elif b == 0xFF: logs.append(   "{:02X}".format(b))
-                    elif b == 0xB0: logs.append( ": {:02X}".format(b))
                     else:           logs.append(",  {:02X}".format(b))
         logger.info("".join(logs))
         logger.warning("dump done.")
