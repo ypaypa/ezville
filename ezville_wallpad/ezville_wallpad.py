@@ -106,9 +106,8 @@ RS485_DEVICE = {
         "state":    { "id": 0x36, "cmd": 0x81, },
         "last":     { },
 
-        "power":    { "header": 0xAE7D, "length":  8, "id": 2, "pos": 3, },
+        "out":    { "id": 0x36, "cmd": 0x45, },
         "target":   { "id": 0x36, "cmd": 0x44, },
-        "target_ack":   { "id": 0x36, "cmd": 0xC4, },
     },
         
 # KTDO: 기존 코드
@@ -733,6 +732,9 @@ def mqtt_device(topics, payload):
     
     packet = bytearray(length)
     packet[0] = 0xF7
+    packet[1] = cmd["id"]
+    packet[]
+    packet[3] = cmd["cmd"]
     
     
     # KTDO: 상기 코드로 대체
