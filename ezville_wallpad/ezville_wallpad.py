@@ -1074,9 +1074,9 @@ def serial_new_device(device, packet):
     # 조명은 두 id를 조합해서 개수와 번호를 정해야 함
     if device == "light":
         # KTDO: EzVille에 맞게 수정
-        grp_id = int("{:x}".format(packet[2] >> 4))
-        rm_id = int("{:x}".format(packet[2] & 0x0F))
-        light_count = int("{:x}".format(packet[4])) - 1
+        grp_id = int(packet[2] >> 4)
+        rm_id = int(packet[2] & 0x0F)
+        light_count = int(packet[4]) - 1
         
         #id2 = last_query[3]
         #num = idn >> 4
@@ -1091,8 +1091,8 @@ def serial_new_device(device, packet):
             
     elif device == "thermostat":
         # KTDO: EzVille에 맞게 수정
-        grp_id = int("{:x}".format(packet[2] >> 4))
-        room_count = (int("{:x}".format(packet[4])) - 5) / 2
+        grp_id = int(packet[2] >> 4)
+        room_count = (int(packet[4]) - 5) / 2
         
         for id in range(1, room_count + 1):
             payload = DISCOVERY_PAYLOAD[device][0].copy()
@@ -1153,9 +1153,9 @@ def serial_receive_state(device, packet):
     prefix = Options["mqtt"]["prefix"]
     
     if device == "light":
-        grp_id = int("{:x}".format(packet[2] >> 4))
-        rm_id = int("{:x}".format(packet[2] & 0x0F))
-        light_count = int("{:x}".format(packet[4])) - 1
+        grp_id = int(packet[2] >> 4)
+        rm_id = int(packet[2])
+        light_count = int(packet[4]) - 1
         
         for id in range(1, light_count + 1):
             topic = "{}/{}/{}_{}_{}/power/state".format(prefix, device, grp_id, rm_id, id)
@@ -1171,8 +1171,8 @@ def serial_receive_state(device, packet):
                 last_topic_list[topic] = value
             
     elif device == "thermostat":
-        grp_id = int("{:x}".format(packet[2] >> 4))
-        room_count = (int("{:x}".format(packet[4])) - 5) / 2
+        grp_id = int(packet[2] >> 4))
+        room_count = (int(packet[4]) - 5) / 2
         
         for id in range(1, room_count + 1):
             topic1 = "{}/{}/{}_{}/power/state".format(prefix, device, grp_id, id)
