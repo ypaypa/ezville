@@ -1329,6 +1329,7 @@ def serial_loop():
 
             # 몇 Byte짜리 패킷인지 확인
             #device, remain = STATE_HEADER[header]
+            device = STATE_HEADER[header_1][0]
             # KTDO: 데이터 길이는 다음 패킷에서 확인
             header_4 = conn.recv(1)[0]
             data_length = int(header_4)
