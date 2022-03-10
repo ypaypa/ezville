@@ -1092,7 +1092,7 @@ def serial_new_device(device, packet):
     elif device == "thermostat":
         # KTDO: EzVille에 맞게 수정
         grp_id = int(packet[2] >> 4)
-        room_count = (int(packet[4]) - 5) / 2
+        room_count = int((int(packet[4]) - 5) / 2)
         
         for id in range(1, room_count + 1):
             payload = DISCOVERY_PAYLOAD[device][0].copy()
@@ -1172,7 +1172,7 @@ def serial_receive_state(device, packet):
             
     elif device == "thermostat":
         grp_id = int(packet[2] >> 4)
-        room_count = (int(packet[4]) - 5) / 2
+        room_count = int((int(packet[4]) - 5) / 2)
         
         for id in range(1, room_count + 1):
             topic1 = "{}/{}/{}_{}/power/state".format(prefix, device, grp_id, id)
