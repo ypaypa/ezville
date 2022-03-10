@@ -1274,7 +1274,7 @@ def serial_send_command():
     ack = bytearray(cmd[0:4])
     ack[3] = ACK_MAP[cmd[1]][cmd[3]]
     waive_ack = false
-    if ack[3] = 0x00:
+    if ack[3] == 0x00:
         waive_ack = true
     ack = int.from_bytes(ack, "big")
 
