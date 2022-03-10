@@ -1272,7 +1272,10 @@ def serial_send_command():
     #ack = bytearray(cmd[0:3])
     # KTDO: Ezville은 4 Byte까지 확인 필요
     ack = bytearray(cmd[0:4])
-    ack[3] = ACK_MAP[cmd[1]][cmd[3]]    
+    ack[3] = ACK_MAP[cmd[1]][cmd[3]]
+    waive_ack = false
+    if ack[3] = 0x00:
+        waive_ack = true
     ack = int.from_bytes(ack, "big")
 
     # retry time 관리, 초과했으면 제거
@@ -1284,6 +1287,10 @@ def serial_send_command():
     elif elapsed > 3:
         logger.warning("send to device:  {}, try another {:.01f} seconds...".format(cmd.hex(), Options["rs485"]["max_retry"] - elapsed))
         serial_ack[ack] = cmd
+    elif waive_ack:
+        logger.info("waive ack:  {}".format(cmd.hex()))
+        serial_queue.pop(cmd)
+        serial_ack.pop(ack, None)
     else:
         logger.info("send to device:  {}".format(cmd.hex()))
         serial_ack[ack] = cmd
