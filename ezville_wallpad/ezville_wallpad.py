@@ -1071,8 +1071,6 @@ def serial_generate_checksum(packet):
 def serial_new_device(device, packet):
     prefix = Options["mqtt"]["prefix"]
 
-    logger.info("serial receive state: {} = {}".format(device, packet))
-
     # 조명은 두 id를 조합해서 개수와 번호를 정해야 함
     if device == "light":
         # KTDO: EzVille에 맞게 수정
@@ -1122,12 +1120,15 @@ def serial_new_device(device, packet):
 def serial_receive_state(device, packet):
     form = RS485_DEVICE[device]["state"]
     last = RS485_DEVICE[device]["last"]
+    
+    logger.info("serial receive state: {} = {}".format(device, packet.hex()))
 
     #if form.get("id") != None:
     #    idn = packet[form["id"]]
     #else:
     #    idn = 1
     idn = (packet[1] << 8) | packet[2]
+    logger.info("serial receive state: idn = {}".format(idn))
 
     # 해당 ID의 이전 상태와 같은 경우 바로 무시
     if last.get(idn) == packet:
@@ -1141,6 +1142,7 @@ def serial_receive_state(device, packet):
         #if last_query[1] == packet[1] or device == "gas_valve":
         #    serial_new_device(device, idn, packet)
         #    last[idn] = True
+        logger.info("serial receive state - inside: {} = {}".format(device, packet.hex()))
         
         serial_new_device(device, packet)
 
