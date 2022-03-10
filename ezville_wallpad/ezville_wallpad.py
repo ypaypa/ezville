@@ -1089,7 +1089,7 @@ def serial_new_device(device, packet):
 
             mqtt_discovery(payload)
             
-    elif device == "thermostate":
+    elif device == "thermostat":
         # KTDO: EzVille에 맞게 수정
         grp_id = int("{:x}".format(packet[2] >> 4))
         room_count = (int("{:x}".format(packet[4])) - 5) / 2
@@ -1141,6 +1141,7 @@ def serial_receive_state(device, packet):
         #    last[idn] = True
         
         serial_new_device(device, packet)
+        last[idn] = True
 
         # 장치 등록 먼저 하고, 상태 등록은 그 다음 턴에 한다. (난방 상태 등록 무시되는 현상 방지)
         return
@@ -1169,7 +1170,7 @@ def serial_receive_state(device, packet):
                 mqtt.publish(topic, value)
                 last_topic_list[topic] = value
             
-    elif device == "thermostate":
+    elif device == "thermostat":
         grp_id = int("{:x}".format(packet[2] >> 4))
         room_count = (int("{:x}".format(packet[4])) - 5) / 2
         
