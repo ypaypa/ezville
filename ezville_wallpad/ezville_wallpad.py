@@ -1082,7 +1082,7 @@ def serial_new_device(device, packet):
         #num = idn >> 4
         #idn = int("{:x}".format(idn))
 
-        for id in range(1, light_count):
+        for id in range(1, light_count + 1):
             payload = DISCOVERY_PAYLOAD[device][0].copy()
             payload["~"] = payload["~"].format(prefix=prefix, grp=grp_id, rm=rm_id, id=id)
             payload["name"] = payload["name"].format(prefix=prefix, grp=grp_id, rm=rm_id, id=id)
@@ -1094,7 +1094,7 @@ def serial_new_device(device, packet):
         grp_id = int("{:x}".format(packet[2] >> 4))
         room_count = (int("{:x}".format(packet[4])) - 5) / 2
         
-        for id in range(1, room_count):
+        for id in range(1, room_count + 1):
             payload = DISCOVERY_PAYLOAD[device][0].copy()
             payload["~"] = payload["~"].format(prefix=prefix, grp=grp_id, id=id)
             payload["name"] = payload["name"].format(prefix=prefix, grp=grp_id, id=id)
@@ -1128,7 +1128,7 @@ def serial_receive_state(device, packet):
     #else:
     #    idn = 1
     idn = (packet[1] << 8) | packet[2]
-    logger.info("serial receive state: idn = {}".format(idn))
+    logger.info("serial receive state: idn = {}".format(idn.hex()))
 
     # 해당 ID의 이전 상태와 같은 경우 바로 무시
     if last.get(idn) == packet:
@@ -1160,7 +1160,7 @@ def serial_receive_state(device, packet):
         rm_id = int("{:x}".format(packet[2] & 0x0F))
         light_count = int("{:x}".format(packet[4])) - 1
         
-        for id in range(1, light_count):
+        for id in range(1, light_count + 1):
             topic = "{}/{}/{}_{}_{}/power/state".format(prefix, device, grp_id, rm_id, id)
             
             if packet[5+id] & 1:
@@ -1177,7 +1177,7 @@ def serial_receive_state(device, packet):
         grp_id = int("{:x}".format(packet[2] >> 4))
         room_count = (int("{:x}".format(packet[4])) - 5) / 2
         
-        for id in range(1, room_count):
+        for id in range(1, room_count + 1):
             topic1 = "{}/{}/{}_{}/power/state".format(prefix, device, grp_id, id)
             topic2 = "{}/{}/{}_{}/out/state".format(prefix, device, grp_id, id)
             topic3 = "{}/{}/{}_{}/target/state".format(prefix, device, grp_id, id)
