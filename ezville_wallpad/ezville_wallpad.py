@@ -1006,7 +1006,7 @@ def serial_verify_checksum(packet):
 
     # checksum이 안맞으면 로그만 찍고 무시
     # KTDO: ADD 까지 맞아야함.
-    if checksum or add != packet[-1]
+    if checksum or add != packet[-1]:
         logger.warning("checksum fail! {}, {:02x}, {:02x}".format(packet.hex(), checksum, add))
         return False
 
@@ -1161,7 +1161,7 @@ def serial_receive_state(device, packet):
             
             if packet[5+id] & 1:
                 value = "ON"
-            else
+            else:
                 value = "OFF"
                 
             if last_topic_list.get(topic) != value:
@@ -1181,11 +1181,11 @@ def serial_receive_state(device, packet):
             
             if ((packet[6] & 0x1F) >> (room_count - id)) & 1:
                 value1 = "ON"
-            else
+            else:
                 value1 = "OFF"
             if ((packet[7] & 0x1F) >> (room_count - id)) & 1:
                 value2 = "ON"
-            else
+            else:
                 value2 = "OFF"
             value3 = packet[9 + id]
             value4 = packet[10 + id]
