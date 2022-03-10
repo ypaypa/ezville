@@ -1171,7 +1171,7 @@ def serial_receive_state(device, packet):
                 last_topic_list[topic] = value
             
     elif device == "thermostat":
-        grp_id = int(packet[2] >> 4))
+        grp_id = int(packet[2] >> 4)
         room_count = (int(packet[4]) - 5) / 2
         
         for id in range(1, room_count + 1):
