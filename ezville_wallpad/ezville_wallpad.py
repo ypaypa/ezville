@@ -98,7 +98,7 @@ RS485_DEVICE = {
         "state":    { "id": 0x0E, "cmd": 0x81, },
         "last":     { },
 
-        "power":    { "id": 0x0E, "cmd": 0x41, },
+        "power":    { "id": 0x0E, "cmd": 0x41, "ack": 0xC1, },
     },
     # 각방 난방 제어
     "thermostat": {
@@ -106,8 +106,8 @@ RS485_DEVICE = {
         "state":    { "id": 0x36, "cmd": 0x81, },
         "last":     { },
 
-        "out":    { "id": 0x36, "cmd": 0x45, },
-        "target":   { "id": 0x36, "cmd": 0x44, },
+        "out":    { "id": 0x36, "cmd": 0x45, "ack": 0x00, },
+        "target":   { "id": 0x36, "cmd": 0x44, "ack": 0xC4, },
     },
         
 # KTDO: 기존 코드
@@ -291,11 +291,11 @@ DISCOVERY_PAYLOAD = {
         "~": "{prefix}/thermostat/{grp}_{id}",
         "name": "{prefix}_thermostat_{grp}_{id}",
         "mode_stat_t": "~/power/state",
-        "mode_cmd_t": "~/power/command",
         "temp_stat_t": "~/target/state",
         "temp_cmd_t": "~/target/command",
         "curr_temp_t": "~/current/state",
         "out_stat_t": "~/out/state",
+        "out_cmd_t": "~/out/command",
         "modes": [ "off", "out", "heat" ],
         "min_temp": 5,
         "max_temp": 40,
@@ -357,13 +357,32 @@ QUERY_HEADER = {
     for device, prop in RS485_DEVICE.items()
     if "query" in prop
 }
+# 제어 명령의 ACK header만 모음
+ACK_HEADER = {
+    prop[cmd]["id"]: (device, prop[cmd]["ack"])
+    for device, prop in RS485_DEVICE.items()
+        for cmd, code in prop.items()
+            if "ack" in code
+}
 
-HEADER_0_STATE = 0xB0
-HEADER_0_FIRST = 0xA1
+# KTDO: 제어 명령과 ACK의 Pair 저장
+ACK_MAP = {}
+for device, prop in RS485_DEVICE.items():
+    for cmd, code in prop.items():
+        if "ack" in code:
+            ACK_MAP[code["id"]] = {}
+            ACK_MAP[code["id"]][code["cmd"]] = {}
+            ACK_MAP[code["id"]][code["cmd"]] = code["ack"]
+
+# KTDO: 아래 미사용으로 코멘트 처리
+#HEADER_0_STATE = 0xB0
+# KTDO: Ezville에서는 가스밸브 STATE Query 코드로 처리
+HEADER_0_FIRST = [ [0x12, 0x01], [0x12, 0x0F] ]
 # KTDO: Virtual은 Skip
 #header_0_virtual = {}
-HEADER_1_SCAN = 0x5A
-header_0_first_candidate = [ 0xAB, 0xAC, 0xAD, 0xAE, 0xC2, 0xA5 ]
+# KTDO: 아래 미사용으로 코멘트 처리
+#HEADER_1_SCAN = 0x5A
+header_0_first_candidate = [ [[0x33, 0x01], [0x33, 0x0F]], [[0x36, 0x01], [0x36, 0x0F]] ]
 
 
 # human error를 로그로 찍기 위해서 그냥 전부 구독하자
@@ -687,6 +706,7 @@ def mqtt_discovery(payload):
 #        virtual_watch[query["header"]] = query["resp"]
 
 
+# KTDO: 수정 완료
 def mqtt_debug(topics, payload):
     device = topics[2]
     command = topics[3]
@@ -695,7 +715,7 @@ def mqtt_debug(topics, payload):
         if (command == "send"):
             # parity는 여기서 재생성
             packet = bytearray.fromhex(payload)
-            packet[-1] = serial_generate_checksum(packet)
+            packet[-2], packet[-1] = serial_generate_checksum(packet)
             packet = bytes(packet)
 
             logger.info("prepare packet:  {}".format(packet.hex()))
@@ -727,28 +747,42 @@ def mqtt_device(topics, payload):
     
     if device == "light":
         length = 10
+        packet = bytearray(length)
+        packet[0] = 0xF7
+        packet[1] = cmd["id"]
+        packet[2] = int(idn.split("_")[0]) << 4 | int(idn.split("_")[1])
+        packet[3] = cmd["cmd"]
+        packet[4] = 0x03
+        packet[5] = int(idn.split("_")[2])
+        packet[6] = int(float(payload))
+        packet[7] = 0x00
+        packet[8], packet[9] = serial_generate_checksum(packet)
+
     elif device == "thermostat":
         length = 8
+        packet = bytearray(length)
+        packet[0] = 0xF7
+        packet[1] = cmd["id"]
+        packet[2] = int(idn.split("_")[0]) << 4 | int(idn.split("_")[1])
+        packet[3] = cmd["cmd"]
+        packet[4] = 0x01
+        packet[6] = int(float(payload))
+        packet[7], packet[8] = serial_generate_checksum(packet)
     
-    packet = bytearray(length)
-    packet[0] = 0xF7
-    packet[1] = cmd["id"]
-    packet[]
-    packet[3] = cmd["cmd"]
-    
+    packet = bytes(packet)
     
     # KTDO: 상기 코드로 대체
-    packet = bytearray(cmd["length"])
-    packet[0] = cmd["header"] >> 8
-    packet[1] = cmd["header"] & 0xFF
-    packet[cmd["pos"]] = int(float(payload))
-
-    if "id" in cmd: packet[cmd["id"]] = int(idn)
-
-    # parity 생성 후 queue 에 넣어둠
-    packet[-1] = serial_generate_checksum(packet)
-    packet = bytes(packet)
-
+    #packet = bytearray(cmd["length"])
+    #packet[0] = cmd["header"] >> 8
+    #packet[1] = cmd["header"] & 0xFF
+    #packet[cmd["pos"]] = int(float(payload))
+    #
+    #if "id" in cmd: packet[cmd["id"]] = int(idn)
+    #
+    ## parity 생성 후 queue 에 넣어둠
+    #packet[-1] = serial_generate_checksum(packet)
+    #packet = bytes(packet)
+    
     serial_queue[packet] = time.time()
 
 
@@ -993,9 +1027,10 @@ def serial_generate_checksum(packet):
 # KTDO: EzVille은 그냥 XOR
 #    # parity의 최상위 bit는 항상 0
 #    if checksum >= 0x80: checksum -= 0x80
-    checksumadd = (checksum << 8) | add
+#    checksumadd = (checksum << 8) | add
 
-    return checksumadd
+#    return checksumadd
+    return checksum, add
 
 # KTDO: 코멘트 처리 
 #def serial_peek_value(device, packet):
@@ -1053,6 +1088,7 @@ def serial_new_device(device, packet):
             payload["name"] = payload["name"].format(prefix=prefix, grp=grp_id, rm=rm_id, id=id)
 
             mqtt_discovery(payload)
+            
     elif device == "thermostate":
         # KTDO: EzVille에 맞게 수정
         grp_id = int("{:x}".format(packet[2] >> 4))
@@ -1080,7 +1116,7 @@ def serial_new_device(device, packet):
 #
 #            mqtt_discovery(payload)
 
-
+# KTDO: 수정 완료
 def serial_receive_state(device, packet):
     form = RS485_DEVICE[device]["state"]
     last = RS485_DEVICE[device]["last"]
@@ -1226,15 +1262,17 @@ def serial_ack_command(packet):
     serial_queue.pop(serial_ack[packet], None)
     serial_ack.pop(packet)
 
-
+    
+# KTDO: 수정 완료
 def serial_send_command():
     # 한번에 여러개 보내면 응답이랑 꼬여서 망함
     cmd = next(iter(serial_queue))
     conn.send(cmd)
 
-    ack = bytearray(cmd[0:3])
-    # KTDO: 다시 봐야함
-    ack[0] = 0xF7
+    #ack = bytearray(cmd[0:3])
+    # KTDO: Ezville은 4 Byte까지 확인 필요
+    ack = bytearray(cmd[0:4])
+    ack[3] = ACK_MAP[cmd[1]][cmd[3]]    
     ack = int.from_bytes(ack, "big")
 
     # retry time 관리, 초과했으면 제거
@@ -1250,7 +1288,7 @@ def serial_send_command():
         logger.info("send to device:  {}".format(cmd.hex()))
         serial_ack[ack] = cmd
 
-
+# KTDO: 수정 완료
 def serial_loop():
     logger.info("start loop ...")
     loop_count = 0
@@ -1311,11 +1349,12 @@ def serial_loop():
             # 적절히 처리한다
             serial_receive_state(device, packet)
 
-        # KTDO: 수정 필요 생각중
-        elif header_0 == HEADER_0_STATE:
+        # KTDO: 이전 명령의 ACK 경우
+        elif header_1 in ACK_HEADER and header_3 in ACK_HEADER[header_1]:
             # 한 byte 더 뽑아서, 보냈던 명령의 ack인지 확인
-            header_2 = conn.recv(1)[0]
-            header = (header << 8) | header_2
+            #header_2 = conn.recv(1)[0]
+            #header = (header << 8) | header_2
+            header = header_0 << 24 | header_1 << 16 | header_2 << 8 | header_3
 
             if header in serial_ack:
                 serial_ack_command(header)
@@ -1340,8 +1379,10 @@ def serial_loop():
         #        conn.set_pending_recv()
 
         # 전체 루프 수 카운트
+        # 가스 밸브 쿼리로 확인
         global HEADER_0_FIRST
-        if header_0 == HEADER_0_FIRST:
+        # KTDO: 2번째 Header가 장치 Header임
+        if header_1 == HEADER_0_FIRST[0][0] and (header_3 == HEADER_0_FIRST[0][1] or header_3 == HEADER_0_FIRST[1][1]):
             loop_count += 1
 
             # 돌만큼 돌았으면 상황 판단
@@ -1364,12 +1405,12 @@ def serial_loop():
 
         # 루프 카운트 세는데 실패하면 다른 걸로 시도해봄
         if loop_count == 0 and time.time() - start_time > 6:
-            logger.warning("check loop count fail: there are no {:X}! try {:X}...".format(HEADER_0_FIRST, header_0_first_candidate[-1]))
+            print("check loop count fail: there are no F7 {:02X} ** {:02X} or F7 {:02X} ** {:02X}! try F7 {:02X} ** {:02X} or F7 {:02X} ** {:02X}...".format(HEADER_0_FIRST[0][0],HEADER_0_FIRST[0][1],HEADER_0_FIRST[1][0],HEADER_0_FIRST[1][1],header_0_first_candidate[-1][0][0],header_0_first_candidate[-1][0][1],header_0_first_candidate[-1][1][0],header_0_first_candidate[-1][1][1]))
             HEADER_0_FIRST = header_0_first_candidate.pop()
             start_time = time.time()
             scan_count = 0
 
-
+# KTDO: 수정 완료
 def dump_loop():
     dump_time = Options["rs485"]["dump_time"]
 
