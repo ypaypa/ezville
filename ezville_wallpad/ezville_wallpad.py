@@ -1162,7 +1162,7 @@ def serial_receive_state(device, packet):
             if packet[5+id] & 1:
                 value = "ON"
             else
-                value = "OFF
+                value = "OFF"
                 
             if last_topic_list.get(topic) != value:
                 logger.info("publish to HA:   {} = {} ({})".format(topic, value, packet.hex()))
