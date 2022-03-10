@@ -1274,9 +1274,9 @@ def serial_send_command():
     # KTDO: Ezville은 4 Byte까지 확인 필요
     ack = bytearray(cmd[0:4])
     ack[3] = ACK_MAP[cmd[1]][cmd[3]]
-    waive_ack = false
+    waive_ack = False
     if ack[3] == 0x00:
-        waive_ack = true
+        waive_ack = True
     ack = int.from_bytes(ack, "big")
 
     # retry time 관리, 초과했으면 제거
