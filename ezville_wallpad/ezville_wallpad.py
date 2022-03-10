@@ -1188,8 +1188,8 @@ def serial_receive_state(device, packet):
                 value2 = "ON"
             else:
                 value2 = "OFF"
-            value3 = packet[9 + id]
-            value4 = packet[10 + id]
+            value3 = packet[8 + id * 2]
+            value4 = packet[9 + id * 2]
             
             if last_topic_list.get(topic1) != value1:
                 logger.info("publish to HA:   {} = {} ({})".format(topic1, value1, packet.hex()))
@@ -1381,14 +1381,16 @@ def serial_loop():
         # 아직도 이러고 있다는건 아무도 응답을 안할걸로 예상, 그 타이밍에 끼어든다.
         # KTDO: EzVille은 표준에 따라 Ack 이후 다음 Request 까지의 시간 활용하여 command 전송
         #       즉 State 확인 후에만 전달
+        elif (header_3 == 0x81 or 0x8F or 0x0F) or send_aggressive:
+        
         #if header_1 == HEADER_1_SCAN or send_aggressive:
-        #    scan_count += 1
-        #    if serial_queue and not conn.check_pending_recv():
-        #        serial_send_command()
-        #        conn.set_pending_recv()
+            scan_count += 1
+            if serial_queue and not conn.check_pending_recv():
+                serial_send_command()
+                conn.set_pending_recv()
 
         # 전체 루프 수 카운트
-        # 가스 밸브 쿼리로 확인
+        # KTDO: 가스 밸브 쿼리로 확인
         global HEADER_0_FIRST
         # KTDO: 2번째 Header가 장치 Header임
         if header_1 == HEADER_0_FIRST[0][0] and (header_3 == HEADER_0_FIRST[0][1] or header_3 == HEADER_0_FIRST[1][1]):
