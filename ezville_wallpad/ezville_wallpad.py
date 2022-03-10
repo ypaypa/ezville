@@ -1121,6 +1121,7 @@ def serial_receive_state(device, packet):
     form = RS485_DEVICE[device]["state"]
     last = RS485_DEVICE[device]["last"]
 
+    logger.info("serial receive state: {} = {:x}".format(device, packet))
     #if form.get("id") != None:
     #    idn = packet[form["id"]]
     #else:
