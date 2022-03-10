@@ -1327,7 +1327,7 @@ def serial_loop():
             #device, remain = STATE_HEADER[header]
             # KTDO: 데이터 길이는 다음 패킷에서 확인
             header_4 = conn.recv(1)[0]
-            data_length = int(header_4, base=16)
+            data_length = int(header_4)
             
             # KTDO: packet 생성 위치 변경
             packet = bytes([header_0, header_1, header_2, header_3, header_4])
