@@ -766,8 +766,8 @@ def mqtt_device(topics, payload):
         packet[2] = int(idn.split("_")[0]) << 4 | int(idn.split("_")[1])
         packet[3] = cmd["cmd"]
         packet[4] = 0x01
-        packet[6] = int(float(payload))
-        packet[7], packet[8] = serial_generate_checksum(packet)
+        packet[5] = int(float(payload))
+        packet[6], packet[7] = serial_generate_checksum(packet)
     
     packet = bytes(packet)
     
