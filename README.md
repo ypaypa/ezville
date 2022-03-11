@@ -1,4 +1,4 @@
-# Korean Community Add-ons for Hassio KT
+# KT Add-ons for HAOS
  
 HAKorea Addon 및 일부 Addon을 개인 환경(Ezville)에 맞춰 수정 중
 
