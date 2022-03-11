@@ -1,27 +1,27 @@
 {
   "Light": {
     "Number": 3,
-    "commandOFF": "3101000000000032",
-    "commandON": "3101010000000033",
+    "commandOFF": "F70EGG4103NN0000PPAA",
+    "commandON": "F70EGG4103NN0100PPAA",
     "commandNUM": 4,
 
-    "stateOFF": "B0000100000000B1",
-    "stateON": "B0010100000000B2",
+    "stateOFF": "F70EGG81CC00FFFFFFPPAA",
+    "stateON": "F70EGG81CC00OOOOOOPPA",
     "stateNUM": 6
   },
   "Thermo": {
     "Number": 5,
-    "commandOFF": "0401040000000009",
-    "commandON": "040104810000008A",
-    "commandCHANGE": "040103220000002A",
+    "commandOFF": "F736GG450101PPAA",
+    "commandON": "F736GG450100PPAA",
+    "commandCHANGE": "F736GG4401TTPPAA",
     "commandNUM": 4,
 
     "curTemp": 7,
     "setTemp": 9,
     "chaTemp": 7,
 
-    "stateOFF": "8280012322000048",
-    "stateON": "8281012322000049",
+    "stateOFF": "F7361F810F80PPAA0000TTCCTTCCTTCCTTCCTTCCPPAA",
+    "stateON": "F7361F810F80PPAA0000TTCCTTCCTTCCTTCCTTCCPPAA",
     "stateNUM": 6,
     "stateONOFFNUM": 4
   },
