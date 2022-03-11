@@ -106,7 +106,7 @@ RS485_DEVICE = {
         "state":    { "id": 0x36, "cmd": 0x81, },
         "last":     { },
 
-        "out":    { "id": 0x36, "cmd": 0x45, "ack": 0x00, },
+        "away":    { "id": 0x36, "cmd": 0x45, "ack": 0x00, },
         "target":   { "id": 0x36, "cmd": 0x44, "ack": 0xC4, },
     },
         
@@ -294,9 +294,9 @@ DISCOVERY_PAYLOAD = {
         "temp_stat_t": "~/target/state",
         "temp_cmd_t": "~/target/command",
         "curr_temp_t": "~/current/state",
-        "out_stat_t": "~/out/state",
-        "out_cmd_t": "~/out/command",
-        "modes": [ "off", "out", "heat" ],
+        "away_stat_t": "~/away/state",
+        "away_cmd_t": "~/away/command",
+        "modes": [ "off", "heat" ],
         "min_temp": 5,
         "max_temp": 40,
     } ],
@@ -1176,7 +1176,7 @@ def serial_receive_state(device, packet):
         
         for id in range(1, room_count + 1):
             topic1 = "{}/{}/{}_{}/power/state".format(prefix, device, grp_id, id)
-            topic2 = "{}/{}/{}_{}/out/state".format(prefix, device, grp_id, id)
+            topic2 = "{}/{}/{}_{}/away/state".format(prefix, device, grp_id, id)
             topic3 = "{}/{}/{}_{}/target/state".format(prefix, device, grp_id, id)
             topic4 = "{}/{}/{}_{}/current/state".format(prefix, device, grp_id, id)
             
