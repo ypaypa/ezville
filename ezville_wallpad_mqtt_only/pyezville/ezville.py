@@ -6,7 +6,7 @@ import telnetlib
 
 share_dir = '/share'
 config_dir = '/data'
-data_dir = '/pycommax'
+data_dir = '/pyezville'
 
 HA_TOPIC = 'homenet'
 STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
@@ -22,19 +22,27 @@ def log(string):
 
 def checksum(input_hex):
     try:
-        input_hex = input_hex[:14]
-        s1 = sum([int(input_hex[val], 16) for val in range(0, 14, 2)])
-        s2 = sum([int(input_hex[val + 1], 16) for val in range(0, 14, 2)])
-        s1 = s1 + int(s2 // 16)
-        s1 = s1 % 16
-        s2 = s2 % 16
-        return input_hex + format(s1, 'X') + format(s2, 'X')
+        input_hex = input_hex[:-4]
+        
+        # 문자열 bytearray로 변환
+        packet = bytes.fromhex(input_hex)
+        
+        # checksum 생성
+        checksum = 0
+        for b in packet:
+            checksum ^= b
+        
+        # add 생성
+        add = (sum(packet) + checksum) & 0xFF 
+        
+        # checksum add 합쳐서 return
+        return input_hex + format(checksum, 'X') + format(add, 'X')
     except:
         return None
 
 
 def find_device(config):
-    with open(data_dir + '/commax_devinfo.json') as file:
+    with open(data_dir + '/ezville_devinfo.json') as file:
         dev_info = json.load(file)
     statePrefix = {dev_info[name]['stateON'][:2]: name for name in dev_info if dev_info[name].get('stateON')}
     device_num = {statePrefix[prefix]: 0 for prefix in statePrefix}
@@ -69,7 +77,7 @@ def find_device(config):
                 else:
                     device_num[name] = 1
 
-    mqtt_client = mqtt.Client('mqtt2elfin-commax')
+    mqtt_client = mqtt.Client('mqtt2elfin-ezville')
     mqtt_client.username_pw_set(config['mqtt_id'], config['mqtt_password'])
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
@@ -93,9 +101,9 @@ def find_device(config):
         log('-------------------')
     log('======================================')
     log('기기의 숫자만 변경하였습니다. 상태 패킷은 직접 수정하여야 합니다.')
-    with open(share_dir + '/commax_found_device.json', 'w', encoding='utf-8') as make_file:
+    with open(share_dir + '/ezville_found_device.json', 'w', encoding='utf-8') as make_file:
         json.dump(dev_info, make_file, indent="\t")
-        log('기기리스트 저장 중 : /share/commax_found_device.json')
+        log('기기리스트 저장 중 : /share/ezville_found_device.json')
     return dev_info
 
 
@@ -446,7 +454,7 @@ def do_work(config, device_list):
         except:
             pass
 
-    mqtt_client = mqtt.Client('mqtt2elfin-commax')
+    mqtt_client = mqtt.Client('mqtt2elfin-ezville')
     mqtt_client.username_pw_set(config['mqtt_id'], config['mqtt_password'])
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
@@ -504,11 +512,11 @@ if __name__ == '__main__':
     with open(config_dir + '/options.json') as file:
         CONFIG = json.load(file)
     try:
-        with open(share_dir + '/commax_found_device.json') as file:
-            log('기기 정보 파일을 찾음: /share/commax_found_device.json')
+        with open(share_dir + '/ezville_found_device.json') as file:
+            log('기기 정보 파일을 찾음: /share/ezville_found_device.json')
             OPTION = json.load(file)
     except IOError:
-        log('기기 정보 파일이 없습니다.: /share/commax_found_device.json')
+        log('기기 정보 파일이 없습니다.: /share/ezville_found_device.json')
         OPTION = find_device(CONFIG)
     while True:
         do_work(CONFIG, OPTION)
