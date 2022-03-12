@@ -13,6 +13,33 @@ STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
 ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
 
+##################################################################
+# Device 정보 여기에 추가
+
+RS485_DEVICE = {
+    "light": {
+        "query":    { "id": "0E", "cmd": "01", },
+        "state":    { "id": "0E", "cmd": "81", },
+
+        "power":    { "id": "0E", "cmd": "41", "ack": "C1", },
+    },
+    "thermostat": {
+        "query":    { "id": "36", "cmd": "01", },
+        "state":    { "id": "36", "cmd": "81", },
+
+        "away":    { "id": "36", "cmd": "45", "ack": "00", },
+        "target":   { "id": "36", "cmd": "44", "ack": "C4", },
+    },
+}
+
+STATE_HEADER = {
+    prop["state"]["id"]: (device, prop["state"]["cmd"])
+    for device, prop in RS485_DEVICE.items()
+    if "state" in prop
+}
+
+##################################################################
+
 
 def log(string):
     date = time.strftime('%Y-%m-%d %p %I:%M:%S', time.localtime(time.time()))
@@ -42,11 +69,13 @@ def checksum(input_hex):
 
 
 def find_device(config):
-    with open(data_dir + '/ezville_devinfo.json') as file:
-        dev_info = json.load(file)
-    statePrefix = {dev_info[name]['stateON'][:2]: name for name in dev_info if dev_info[name].get('stateON')}
-    device_num = {statePrefix[prefix]: 0 for prefix in statePrefix}
-    collect_data = {statePrefix[prefix]: set() for prefix in statePrefix}
+    #with open(data_dir + '/ezville_devinfo.json') as file:
+    #    dev_info = json.load(file)
+    #statePrefix = {dev_info[name]['stateON'][:2]: name for name in dev_info if dev_info[name].get('stateON')}
+    #device_num = {statePrefix[prefix]: 0 for prefix in statePrefix}
+    #collect_data = {statePrefix[prefix]: set() for prefix in statePrefix}
+    device_num = {STATE_HEADER[prefix]: 0 for prefix in STATE_HEADER}
+    collect_data = {STATE_HEADER[prefix]: set() for prefix in STATE_HEADER}
 
     target_time = time.time() + 20
 
@@ -66,16 +95,42 @@ def find_device(config):
 
     def on_message(client, userdata, msg):
         raw_data = msg.payload.hex().upper()
-        for k in range(0, len(raw_data), 16):
-            data = raw_data[k:k + 16]
-            # log(data)
-            if data == checksum(data) and data[:2] in statePrefix:
-                name = statePrefix[data[:2]]
-                collect_data[name].add(data)
-                if dev_info[name].get('stateNUM'):
-                    device_num[name] = max([device_num[name], int(data[int(dev_info[name]['stateNUM']) - 1])])
-                else:
-                    device_num[name] = 1
+        
+        k = 0
+        while k < len(raw_data):
+            if raw_data[k:k + 2] == "F7":
+                data_length = int(raw_data[k + 8:k + 10], 16)
+                packet_length = 10 + data_length * 2 + 4 
+                packet = raw_data[k:k + packet_length]
+                
+                    if packet != checksum(packet):
+                        k+=1
+                        continue
+                    else:
+                        if packet[3:5] in STATE_HEADER and packet[7:9] in STATE_HEADER[packet[3:5]]:
+                            name = STATE_HEADER(packet[3:5])
+                            collect_data[name].add(packet)
+                            
+                            # KTDO 수정 필요
+                            if dev_info[name].get('stateNUM'):
+                                device_num[name] = max([device_num[name], int(data[int(dev_info[name]['stateNUM']) - 1])])
+                            else:
+                                device_num[name] = 1
+
+                k = k + packet_length
+            else:
+                k+=1
+            
+        #for k in range(0, len(raw_data), 16):
+        #    data = raw_data[k:k + 16]
+        #    # log(data)
+        #    if data == checksum(data) and data[:2] in statePrefix:
+        #        name = statePrefix[data[:2]]
+        #        collect_data[name].add(data)
+        #        if dev_info[name].get('stateNUM'):
+        #            device_num[name] = max([device_num[name], int(data[int(dev_info[name]['stateNUM']) - 1])])
+        #        else:
+        #            device_num[name] = 1
 
     mqtt_client = mqtt.Client('mqtt2elfin-ezville')
     mqtt_client.username_pw_set(config['mqtt_id'], config['mqtt_password'])
@@ -159,12 +214,12 @@ def do_work(config, device_list):
         if num > 0:
             arr = {k + 1: {cmd + onoff: make_hex(k, device.get(cmd + onoff), device.get(cmd + 'NUM'))
                            for cmd in ['command', 'state'] for onoff in ['ON', 'OFF']} for k in range(num)}
-            if dev_name == 'Fan':
-                tmp_hex = arr[1]['stateON']
-                change = device_list['Fan'].get('speedNUM')
-                arr[1]['stateON'] = [make_hex(k, tmp_hex, change) for k in range(3)]
-                tmp_hex = device_list['Fan'].get('commandCHANGE')
-                arr[1]['CHANGE'] = [make_hex(k, tmp_hex, change) for k in range(3)]
+#            if dev_name == 'Fan':
+#                tmp_hex = arr[1]['stateON']
+#                change = device_list['Fan'].get('speedNUM')
+#                arr[1]['stateON'] = [make_hex(k, tmp_hex, change) for k in range(3)]
+#                tmp_hex = device_list['Fan'].get('commandCHANGE')
+#                arr[1]['CHANGE'] = [make_hex(k, tmp_hex, change) for k in range(3)]
 
             arr['Num'] = num
             return arr
