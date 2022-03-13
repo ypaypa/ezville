@@ -1154,7 +1154,7 @@ def serial_receive_state(device, packet):
     
     if device == "light":
         grp_id = int(packet[2] >> 4)
-        rm_id = int(packet[2])
+        rm_id = int(packet[2] & 0x0F)
         light_count = int(packet[4]) - 1
         
         for id in range(1, light_count + 1):
