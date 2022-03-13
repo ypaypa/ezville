@@ -1,70 +1,28 @@
 {
   "Light": {
     "Number": 3,
-    "commandOFF": "F70EGG4103NN0000",
-    "commandON": "F70EGG4103NN0100",
+    "commandOFF": "F70EGG4103NN00000000",
+    "commandON": "F70EGG4103NN01000000",
     "commandNUM": 4,
 
-    "stateOFF": "F70EGG81CC00FFFFFF",
-    "stateON": "F70EGG81CC00OOOOOO",
+    "stateOFF": "F70EGG81CC00FFFFFF0000",
+    "stateON": "F70EGG81CC00OOOOOO0000",
     "stateNUM": 6
   },
   "Thermo": {
     "Number": 5,
-    "commandOFF": "F736GG450101",
-    "commandON": "F736GG450100",
-    "commandCHANGE": "F736GG4401TT",
+    "commandOFF": "F736GG4501010000",
+    "commandON": "F736GG4501000000",
+    "commandCHANGE": "F736GG4401TT0000",
     "commandNUM": 4,
 
     "curTemp": 7,
     "setTemp": 9,
     "chaTemp": 7,
 
-    "stateOFF": "F7361F810F80PPAA0000TTCCTTCCTTCCTTCCTTCC",
-    "stateON": "F7361F810F80PPAA0000TTCCTTCCTTCCTTCCTTCC",
+    "stateOFF": "F7361F810F80PPAA0000TTCCTTCCTTCCTTCCTTCC0000",
+    "stateON": "F7361F810F80PPAA0000TTCCTTCCTTCCTTCCTTCC0000",
     "stateNUM": 6,
     "stateONOFFNUM": 4
-  },
-  "LightBreaker": {
-    "Number": 1,
-    "commandOFF": "2201000100000024",
-    "commandON": "2201010100000025",
-
-    "stateOFF": "A0000100001500B6",
-    "stateON": "A0010100001500B7"
-  },
-  "Gas": {
-    "Number": 1,
-    "commandOFF": "1101800000000092",
-
-    "stateOFF": "9050500000000030",
-    "stateON": "90A0A000000000D0"
-  },
-  "Outlet": {
-    "Number": 2,
-    "commandOFF": "7A0101000000007C",
-    "commandON": "7A0101010000007D",
-    "commandNUM": 4,
-
-    "stateOFF": "F90001110000000B",
-    "stateON": "F90101110000000C",
-    "stateNUM": 6
-  },
-  "Fan": {
-    "Number": 0,
-    "commandOFF": "780101000000007A",
-    "commandON": "780101040000007C",
-    "commandCHANGE": "780102010000007C",
-    "speedNUM": 8,
-
-    "stateOFF": "F6000100000000F7",
-    "stateON": "F6040101000000FC"
-  },
-  "EV": {
-    "Number": 1,
-    "commandON": "A0010100081500BF",
-
-    "stateON": "2301000000000024",
-    "BasementFloor": 2
   }
 }
