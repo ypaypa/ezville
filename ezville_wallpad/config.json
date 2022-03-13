@@ -12,7 +12,7 @@
 	"map": [ "share:rw" ],
 
 	"options": {
-		"serial_mode": "serial",
+		"serial_mode": "socket",
 		"entrance_mode": "off",
 		"wallpad_mode": "on",
 		"intercom_mode": "off",
@@ -27,16 +27,10 @@
 			"address": "192.168.1.1",
 			"port": 8899
 		},
-		"mqtt-ew11": {
-			"address": "192.168.1.1",
-			"port": 8899,
-			"user": "",
-			"passwd": ""
-		},
 		"mqtt": {
 			"server": "127.0.0.1",
 			"port": 1883,
-			"need_login": false,
+			"need_login": true,
 			"user": "",
 			"passwd": "",
 			"discovery": true,
