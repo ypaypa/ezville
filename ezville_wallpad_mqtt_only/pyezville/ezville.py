@@ -295,7 +295,7 @@ def do_work(config, device_list):
                     if debug:
                         log('[DEBUG] {} is already set: {}'.format(key, value))
                 else:
-                    if device == 'Thermo':
+                    if device == 'thermostat':
                         curTemp = HOMESTATE.get(topics[1] + 'curTemp')
                         setTemp = HOMESTATE.get(topics[1] + 'setTemp')
                         if topics[2] == 'power':
@@ -389,19 +389,23 @@ def do_work(config, device_list):
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1]:
                     device_count = device_num[device_name]
                     for id in range(device_count):
-                        curT = data[18 + 2 * id:20 + 2 * id]
-                        setT = data[20 + 2 * id:22 + 2 * id]
+                        curT = data[18 + 4 * id:20 + 4 * id]
+                        setT = data[20 + 4 * id:22 + 4 * id]
                         index = id
                         onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - id) & 1 else 'OFF'
                         await update_state(device_name, index, onoff)
                         await update_temperature(index, curT, setT)
             if device_name == 'light':
                 device_count = device_num[device_name]
-                state = [DEVICE_LISTS[device_name][k + 1]['stateOFF'] for k in range(num)] + [
-                    DEVICE_LISTS[device_name][k + 1]['stateON'] for k in range(num)]
-                if data in state:
-                    index = state.index(data)
-                    onoff, index = ['OFF', index] if index < num else ['ON', index - num]
+                light_count = device_subnum[device_name][int(packet[5], 16)]
+                 
+                base_index = 0
+                for c in range(int(packet[5], 16):
+                    base_index += device_subnum[device_name][c+1]
+                
+                for id in range(light_count):
+                    index = base_index + id
+                    onoff = 'ON' if int(data[12 + 2 * id: 14 + 2 * id], 16) > 0 else 'OFF'
                     await update_state(device_name, index, onoff)
 #            elif device_name == 'Fan':
 #                if data in DEVICE_LISTS['Fan'][1]['stateON']:
