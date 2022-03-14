@@ -53,7 +53,7 @@ for device, prop in RS485_DEVICE.items():
             
 device_num = {STATE_HEADER[prefix][0]: 0 for prefix in STATE_HEADER}
 device_subnum = {STATE_HEADER[prefix][0]: {} for prefix in STATE_HEADER}
-collect_data = {STATE_HEADER[prefix][0]: set() for prefix in STATE_HEADER}
+#collect_data = {STATE_HEADER[prefix][0]: set() for prefix in STATE_HEADER}
 
 ##################################################################
 
@@ -93,7 +93,7 @@ def find_device(config):
     #collect_data = {statePrefix[prefix]: set() for prefix in statePrefix}
     device_num = {STATE_HEADER[prefix][0]: 0 for prefix in STATE_HEADER}
     device_subnum = {STATE_HEADER[prefix][0]: {} for prefix in STATE_HEADER}
-    collect_data = {STATE_HEADER[prefix][0]: set() for prefix in STATE_HEADER}
+#    collect_data = {STATE_HEADER[prefix][0]: set() for prefix in STATE_HEADER}
 
     target_time = time.time() + 20
 
@@ -127,7 +127,7 @@ def find_device(config):
                     else:
                         if packet[2:4] in STATE_HEADER and packet[6:8] in STATE_HEADER[packet[2:4]]:
                             name = STATE_HEADER[packet[2:4]][0]
-                            collect_data[name].add(packet)
+ #                           collect_data[name].add(packet)
                             
                             if name == 'light':
                                 l_count = int(packet[5], 16)
@@ -165,16 +165,16 @@ def find_device(config):
 
     mqtt_client.loop_stop()
 
-    log('다음의 데이터를 찾았습니다...')
-    log('======================================')
+#    log('다음의 데이터를 찾았습니다...')
+#    log('======================================')
 
-    for name in collect_data:
-        collect_data[name] = sorted(collect_data[name])
+#    for name in collect_data:
+#        collect_data[name] = sorted(collect_data[name])
 #        dev_info[name]['Number'] = device_num[name]
-        log('DEVICE: {}'.format(name))
-        log('Packets: {}'.format(collect_data[name]))
-        log('-------------------')
-    log('======================================')
+#        log('DEVICE: {}'.format(name))
+#        log('Packets: {}'.format(collect_data[name]))
+#        log('-------------------')
+#    log('======================================')
 #    log('기기의 숫자만 변경하였습니다. 상태 패킷은 직접 수정하여야 합니다.')
 #    with open(share_dir + '/ezville_found_device.json', 'w', encoding='utf-8') as make_file:
 #        json.dump(dev_info, make_file, indent="\t")
@@ -230,49 +230,48 @@ def do_work(config, device_list):
 #            else:
 #                return None
 
-    def make_device_info(dev_name, device):
-        num = device.get('Number', 0)
-        if num > 0:
-            arr = {k + 1: {cmd + onoff: make_hex(k, device.get(cmd + onoff), device.get(cmd + 'NUM'))
-                           for cmd in ['command', 'state'] for onoff in ['ON', 'OFF']} for k in range(num)}
+#    def make_device_info(dev_name, device):
+#        num = device.get('Number', 0)
+#        if num > 0:
+#            arr = {k + 1: {cmd + onoff: make_hex(k, device.get(cmd + onoff), device.get(cmd + 'NUM'))
+#                           for cmd in ['command', 'state'] for onoff in ['ON', 'OFF']} for k in range(num)}
 #            if dev_name == 'Fan':
 #                tmp_hex = arr[1]['stateON']
 #                change = device_list['Fan'].get('speedNUM')
 #                arr[1]['stateON'] = [make_hex(k, tmp_hex, change) for k in range(3)]
 #                tmp_hex = device_list['Fan'].get('commandCHANGE')
 #                arr[1]['CHANGE'] = [make_hex(k, tmp_hex, change) for k in range(3)]
-                
-
-            arr['Num'] = num
-            return arr
-        else:
-            return None
+#               
+#            arr['Num'] = num
+#            return arr
+#        else:
+#            return None
         
-    DEVICE_LISTS = {}
-    for name in device_num:
-        device_info = make_device_info(name, device_list[name])
+#    DEVICE_LISTS = {}
+#    for name in device_num:
+#        device_info = make_device_info(name, device_list[name])
         
-        if name == 'light':
-            arg = {k + 1: {cmd + onoff: make_hex(k, device.get(cmd + onoff), device.get(cmd + 'NUM')) 
-                           for cmd in ['command', 'state'] for onoff in ['ON', 'OFF']} for k in range(num)}
-        elif name == 'thermostat':
-            arg = {k + 1: {cmd + onoff: make_hex(k, device.get(cmd + onoff), device.get(cmd + 'NUM')) 
-                           for cmd in ['command', 'state'] for onoff in ['ON', 'OFF']} for k in range(num)}
-        
-        if device_info:
-            DEVICE_LISTS[name] = device_info
-
-    prefix_list = {}
-    log('----------------------')
-    log('등록된 기기 목록 DEVICE_LISTS..')
-    log('----------------------')
-    for name in DEVICE_LISTS:
-        state = DEVICE_LISTS[name][1].get('stateON')
-        if state:
-            prefix = state[0][:2] if isinstance(state, list) else state[:2]
-            prefix_list[prefix] = name
-        log('{}: {}'.format(name, DEVICE_LISTS[name]))
-    log('----------------------')
+#        if name == 'light':
+#            arg = {k + 1: {cmd + onoff: make_hex(k, device.get(cmd + onoff), device.get(cmd + 'NUM')) 
+#                           for cmd in ['command', 'state'] for onoff in ['ON', 'OFF']} for k in range(num)}
+#        elif name == 'thermostat':
+#            arg = {k + 1: {cmd + onoff: make_hex(k, device.get(cmd + onoff), device.get(cmd + 'NUM')) 
+#                           for cmd in ['command', 'state'] for onoff in ['ON', 'OFF']} for k in range(num)}
+#        
+#        if device_info:
+#            DEVICE_LISTS[name] = device_info
+#
+#    prefix_list = {}
+#    log('----------------------')
+#    log('등록된 기기 목록 DEVICE_LISTS..')
+#    log('----------------------')
+#    for name in DEVICE_LISTS:
+#        state = DEVICE_LISTS[name][1].get('stateON')
+#        if state:
+#            prefix = state[0][:2] if isinstance(state, list) else state[:2]
+#            prefix_list[prefix] = name
+#        log('{}: {}'.format(name, DEVICE_LISTS[name]))
+#    log('----------------------')
 
     HOMESTATE = {}
     QUEUE = []
@@ -285,7 +284,7 @@ def do_work(config, device_list):
         if mqtt_log:
             log('[LOG] HA ->> : {} -> {}'.format('/'.join(topics), value))
 
-        if device in DEVICE_LISTS:
+        if device in RS485_DEVICE:
             key = topics[1] + topics[2]
             idx = int(topics[1][-1])
             cur_state = HOMESTATE.get(key)
@@ -298,7 +297,10 @@ def do_work(config, device_list):
                     if device == 'thermostat':
                         curTemp = HOMESTATE.get(topics[1] + 'curTemp')
                         setTemp = HOMESTATE.get(topics[1] + 'setTemp')
-                        if topics[2] == 'power':
+                        if topics[2] == 'away':
+                            F7 36 11 45 01 01 95 1A (
+                            sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + "1" + str(idx) + RS485_DEVICE[device]['away']['cmd'] + "01010000")
+                            
                             sendcmd = make_hex_temp(idx - 1, curTemp, setTemp, value)
                             recvcmd = [make_hex_temp(idx - 1, curTemp, setTemp, 'state' + value)]
                             if sendcmd:
