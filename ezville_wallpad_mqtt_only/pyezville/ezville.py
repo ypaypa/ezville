@@ -109,6 +109,7 @@ def find_device(config):
         k = 0
         while k < len(raw_data):
             if raw_data[k:k + 2] == "F7":
+                log(raw_data)
                 data_length = int(raw_data[k + 8:k + 10], 16)
                 packet_length = 10 + data_length * 2 + 4 
                 packet = raw_data[k:k + packet_length]
