@@ -12,7 +12,8 @@ HA_TOPIC = 'homenet'
 STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
 ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
-global RESIDUE = ""
+global RESIDUE
+RESIDUE = ""
 
 ##################################################################
 # Device 정보 여기에 추가
