@@ -165,7 +165,8 @@ def find_device(config):
                 else:
                     if packet[2:4] in STATE_HEADER and packet[6:8] in STATE_HEADER[packet[2:4]]:
                         name = STATE_HEADER[packet[2:4]][0]
-                        global collect_data
+                        log(name)
+                        log(packet)
                         collect_data[name].add(packet)
                             
                         if name == 'light':
@@ -486,6 +487,7 @@ def do_work(config):
                 if packet != checksum(packet):
                     k+=1
                     continue
+                log(packet)
                 cors.append(recv_from_elfin(packet))
                 RESIDUE = ""
                 k = k + packet_length
