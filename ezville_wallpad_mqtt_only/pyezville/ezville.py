@@ -249,7 +249,7 @@ def find_device(config):
         else:
             id = 0
             for i in range(device_num[name]):
-                for j in range(device_subnum[name][i]):
+                for j in range(device_subnum[name][i + 1]):
                     id += 1
                     
                     payload = DISCOVERY_PAYLOAD[name][0].copy()
