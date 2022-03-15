@@ -119,7 +119,7 @@ def find_device(config):
                 else:
                     if packet[2:4] in STATE_HEADER and packet[6:8] in STATE_HEADER[packet[2:4]]:
                         name = STATE_HEADER[packet[2:4]][0]
-                            collect_data[name].add(packet)
+                        collect_data[name].add(packet)
                             
                         if name == 'light':
                             lc = int(packet[5], 16)
