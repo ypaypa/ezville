@@ -12,7 +12,6 @@ HA_TOPIC = 'homenet'
 STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
 ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
-global RESIDUE
 RESIDUE = ""
 
 ##################################################################
@@ -107,6 +106,7 @@ def find_device(config):
 
     def on_message(client, userdata, msg):
         raw_data = msg.payload.hex().upper()
+        global RESIDUE
         raw_data = RESIDUE + raw_data
         
         k = 0
@@ -386,7 +386,10 @@ def do_work(config):
         #         COLLECTDATA['data'] = None
 
         #cors = [recv_from_elfin(raw_data[k:k + 16]) for k in range(0, len(raw_data), 16) if raw_data[k:k + 16] == checksum(raw_data[k:k + 16])]
-              
+        
+        global RESIDUE
+        raw_data = RESIDUE + raw_data
+        
         k = 0
         cors = []
         msg_length = len(raw_data)
