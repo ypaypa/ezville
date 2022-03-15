@@ -415,7 +415,7 @@ def do_work(config):
                         onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - id) & 1 else 'OFF'
                         await update_state(device_name, index, onoff)
                         await update_temperature(index, curT, setT)
-            if device_name == 'light':
+            elif device_name == 'light':
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
                     device_count = device_num[device_name]
                     light_count = device_subnum[device_name][int(packet[5], 16)]
