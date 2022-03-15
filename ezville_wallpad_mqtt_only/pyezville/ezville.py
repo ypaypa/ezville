@@ -510,12 +510,11 @@ def do_work(config):
                     break
             
             device_name = STATE_HEADER.get(data[2:4])[0]
-            log(data[6:8] + '==' + STATE_HEADER.get(data[2:4])[1])
             if device_name == 'thermostat':
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
                     device_count = device_num[device_name]
-                    log(str(device_count))
                     for id in range(device_count):
+                        log("id=" + id)
                         curT = data[18 + 4 * id:20 + 4 * id]
                         setT = data[20 + 4 * id:22 + 4 * id]
                         index = id
