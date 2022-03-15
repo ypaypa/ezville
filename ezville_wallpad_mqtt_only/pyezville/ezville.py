@@ -242,8 +242,8 @@ def find_device(config):
         if device_subnum[name] == {}:
             for id in range(device_num[name]):
                 payload = DISCOVERY_PAYLOAD[name][0].copy()
-                payload["~"] = payload["~"].format(id)
-                payload["name"] = payload["name"].format(id)
+                payload["~"] = payload["~"].format(id + 1)
+                payload["name"] = payload["name"].format(id + 1)
                             
                 mqtt_discovery(payload)
         else:
@@ -257,6 +257,7 @@ def find_device(config):
                     payload["name"] = payload["name"].format(id)
                             
                     mqtt_discovery(payload)
+                    
     mqtt_client.loop_stop()
     
                     
