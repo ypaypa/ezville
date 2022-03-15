@@ -636,7 +636,7 @@ if __name__ == '__main__':
 #    except IOError:
 #        log('기기 정보 파일이 없습니다.: /share/ezville_found_device.json')
 #        OPTION = find_device(CONFIG)
-    try:
-        find_device()
+    find_device()
+    
     while True:
         do_work(CONFIG)
