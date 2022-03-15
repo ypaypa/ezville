@@ -510,6 +510,7 @@ def do_work(config):
                     break
             
             device_name = STATE_HEADER.get(data[2:4])[0]
+            log(device_name)
             if device_name == 'thermostat':
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
                     device_count = device_num[device_name]
@@ -518,6 +519,7 @@ def do_work(config):
                         setT = data[20 + 4 * id:22 + 4 * id]
                         index = id
                         onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - id) & 1 else 'OFF'
+                        log(device_name + str(index) + onoff) 
                         await update_state(device_name, index, onoff)
                         await update_temperature(index, curT, setT)
             elif device_name == 'light':
@@ -532,6 +534,7 @@ def do_work(config):
                     for id in range(light_count):
                         index = base_index + id
                         onoff = 'ON' if int(data[12 + 2 * id: 14 + 2 * id], 16) > 0 else 'OFF'
+                        log(device_name + str(index) + onoff) 
                         await update_state(device_name, index, onoff)
 #            elif device_name == 'Fan':
 #                if data in DEVICE_LISTS['Fan'][1]['stateON']:
