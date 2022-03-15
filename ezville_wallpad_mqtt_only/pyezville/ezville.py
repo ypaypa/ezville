@@ -420,7 +420,7 @@ def do_work(config):
                     light_count = device_subnum[device_name][int(packet[5], 16)]
                  
                     base_index = 0
-                    for c in range(int(packet[5], 16):
+                    for c in range(int(packet[5], 16)):
                         base_index += device_subnum[device_name][c+1]
                 
                     for id in range(light_count):
