@@ -42,18 +42,10 @@ ACK_HEADER = {
         for cmd, code in prop.items()
             if "ack" in code
 }
-
-ACK_MAP = {}
-for device, prop in RS485_DEVICE.items():
-    for cmd, code in prop.items():
-        if "ack" in code:
-            ACK_MAP[code["id"]] = {}
-            ACK_MAP[code["id"]][code["cmd"]] = {}
-            ACK_MAP[code["id"]][code["cmd"]] = code["ack"]
             
 device_num = {STATE_HEADER[prefix][0]: 0 for prefix in STATE_HEADER}
 device_subnum = {STATE_HEADER[prefix][0]: {} for prefix in STATE_HEADER}
-#collect_data = {STATE_HEADER[prefix][0]: set() for prefix in STATE_HEADER}
+collect_data = {STATE_HEADER[prefix][0]: set() for prefix in STATE_HEADER}
 
 ##################################################################
 
@@ -91,8 +83,8 @@ def find_device(config):
     #statePrefix = {dev_info[name]['stateON'][:2]: name for name in dev_info if dev_info[name].get('stateON')}
     #device_num = {statePrefix[prefix]: 0 for prefix in statePrefix}
     #collect_data = {statePrefix[prefix]: set() for prefix in statePrefix}
-    device_num = {STATE_HEADER[prefix][0]: 0 for prefix in STATE_HEADER}
-    device_subnum = {STATE_HEADER[prefix][0]: {} for prefix in STATE_HEADER}
+#    device_num = {STATE_HEADER[prefix][0]: 0 for prefix in STATE_HEADER}
+#    device_subnum = {STATE_HEADER[prefix][0]: {} for prefix in STATE_HEADER}
 #    collect_data = {STATE_HEADER[prefix][0]: set() for prefix in STATE_HEADER}
 
     target_time = time.time() + 20
@@ -121,21 +113,21 @@ def find_device(config):
                 packet_length = 10 + data_length * 2 + 4 
                 packet = raw_data[k:k + packet_length]
                 
-                    if packet != checksum(packet):
-                        k+=1
-                        continue
-                    else:
-                        if packet[2:4] in STATE_HEADER and packet[6:8] in STATE_HEADER[packet[2:4]]:
-                            name = STATE_HEADER[packet[2:4]][0]
- #                           collect_data[name].add(packet)
+                if packet != checksum(packet):
+                    k+=1
+                    continue
+                else:
+                    if packet[2:4] in STATE_HEADER and packet[6:8] in STATE_HEADER[packet[2:4]]:
+                        name = STATE_HEADER[packet[2:4]][0]
+                            collect_data[name].add(packet)
                             
-                            if name == 'light':
-                                l_count = int(packet[5], 16)
-                                device_num[name] = max([device_num[name], l_count])
-                                device_subnum[name][l_count] =  int(packet[8:10], 16) - 1
+                        if name == 'light':
+                            lc = int(packet[5], 16)
+                            device_num[name] = max([device_num[name], lc])
+                            device_subnum[name][lc] =  int(packet[8:10], 16) - 1
                                 
-                            elif name == 'thermostat':
-                                device_num[name] = max([device_num[name], int((int(packet[8:10], 16) - 5) / 2)])
+                        elif name == 'thermostat':
+                            device_num[name] = max([device_num[name], int((int(packet[8:10], 16) - 5) / 2)])
 
                 k = k + packet_length
             else:
@@ -166,24 +158,23 @@ def find_device(config):
     mqtt_client.loop_stop()
 
 #    log('다음의 데이터를 찾았습니다...')
-#    log('======================================')
+    log('======================================')
 
-#    for name in collect_data:
-#        collect_data[name] = sorted(collect_data[name])
+    for name in collect_data:
+        collect_data[name] = sorted(collect_data[name])
 #        dev_info[name]['Number'] = device_num[name]
-#        log('DEVICE: {}'.format(name))
-#        log('Packets: {}'.format(collect_data[name]))
-#        log('-------------------')
-#    log('======================================')
+        log('DEVICE: {}'.format(name))
+        log('Packets: {}'.format(collect_data[name]))
+        log('-------------------')
+    log('======================================')
 #    log('기기의 숫자만 변경하였습니다. 상태 패킷은 직접 수정하여야 합니다.')
 #    with open(share_dir + '/ezville_found_device.json', 'w', encoding='utf-8') as make_file:
 #        json.dump(dev_info, make_file, indent="\t")
 #        log('기기리스트 저장 중 : /share/ezville_found_device.json')
 #    return dev_info
-    return
 
 
-def do_work(config, device_list):
+def do_work(config):
     debug = config['DEBUG']
     mqtt_log = config['mqtt_log']
     elfin_log = config['elfin_log']
@@ -298,11 +289,10 @@ def do_work(config, device_list):
                         curTemp = HOMESTATE.get(topics[1] + 'curTemp')
                         setTemp = HOMESTATE.get(topics[1] + 'setTemp')
                         if topics[2] == 'away':
-                            F7 36 11 45 01 01 95 1A (
-                            sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + "1" + str(idx) + RS485_DEVICE[device]['away']['cmd'] + "01010000")
-                            
-                            sendcmd = make_hex_temp(idx - 1, curTemp, setTemp, value)
-                            recvcmd = [make_hex_temp(idx - 1, curTemp, setTemp, 'state' + value)]
+                            sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '01010000')
+                            recvcmd = ['NULL']
+#                            sendcmd = make_hex_temp(idx - 1, curTemp, setTemp, value)
+#                            recvcmd = [make_hex_temp(idx - 1, curTemp, setTemp, 'state' + value)]
                             if sendcmd:
                                 QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
                                 if debug:
@@ -314,8 +304,10 @@ def do_work(config, device_list):
                                     log('[DEBUG] {} is already set: {}'.format(topics[1], value))
                             else:
                                 setTemp = value
-                                sendcmd = make_hex_temp(idx - 1, curTemp, setTemp, 'CHANGE')
-                                recvcmd = [make_hex_temp(idx - 1, curTemp, setTemp, 'stateON')]
+                                sendcmd = checksum('F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['cmd'] + '01' + str("{:02X}".format(setTemp)) + '0000')
+                                recvcmd = ['F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['ack']]
+#                                sendcmd = make_hex_temp(idx - 1, curTemp, setTemp, 'CHANGE')
+#                                recvcmd = [make_hex_temp(idx - 1, curTemp, setTemp, 'stateON')]
                                 if sendcmd:
                                     QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
                                     if debug:
@@ -339,10 +331,19 @@ def do_work(config, device_list):
 #                                if debug:
 #                                    log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
 
-                    else:
-                        sendcmd = DEVICE_LISTS[device][idx].get('command' + value)
+                    elif device == 'light':   
+                        rn = 0
+                        ln = 0
+                      
+                        while idx > 0:
+                            ln = idx
+                            rn += 1
+                            idx = idx - device_subnum[device][rn]
+                            
+                        sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(rn) + RS485_DEVICE[device]['power']['cmd'] + '030' + str(ln) + "{:02X}".format(value) + '000000')
+#                        sendcmd = DEVICE_LISTS[device][idx].get('command' + value)
                         if sendcmd:
-                            recvcmd = [DEVICE_LISTS[device][idx].get('state' + value, 'NULL')]
+                            recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(rn) + RS485_DEVICE[device]['power']['ack']]
                             QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
                             if debug:
                                 log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
@@ -370,7 +371,23 @@ def do_work(config, device_list):
         #             log('[Complete] Collect 50 signals. See : /share/collected_signal.txt')
         #         COLLECTDATA['data'] = None
 
-        cors = [recv_from_elfin(raw_data[k:k + 16]) for k in range(0, len(raw_data), 16) if raw_data[k:k + 16] == checksum(raw_data[k:k + 16])]
+        #cors = [recv_from_elfin(raw_data[k:k + 16]) for k in range(0, len(raw_data), 16) if raw_data[k:k + 16] == checksum(raw_data[k:k + 16])]
+        k = 0
+        cors = []
+        while k < len(raw_data):
+            if raw_data[k:k + 2] == "F7":
+                data_length = int(raw_data[k + 8:k + 10], 16)
+                packet_length = 10 + data_length * 2 + 4 
+                packet = raw_data[k:k + packet_length]
+        
+                if packet != checksum(packet):
+                    k+=1
+                    continue
+                cors.append(recv_from_elfin(packet))
+                k = k + packet_length
+            else:
+                k+=1
+        
         await asyncio.gather(*cors)
 
     async def recv_from_elfin(data):
@@ -380,15 +397,15 @@ def do_work(config, device_list):
 #                if COLLECTDATA['EVtime'] < time.time():
 #                    await update_state('EV', 0, 'OFF')
             for que in QUEUE:
-                if data in que['recvcmd']:
+                if data[0:8] in que['recvcmd']:
                     QUEUE.remove(que)
                     if debug:
                         log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
                     break
-                    
+            
             device_name = STATE_HEADER.get(data[2:4])[0]
             if device_name == 'thermostat':
-                if data[6:8] == STATE_HEADER.get(data[2:4])[1]:
+                if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]
                     device_count = device_num[device_name]
                     for id in range(device_count):
                         curT = data[18 + 4 * id:20 + 4 * id]
@@ -398,17 +415,18 @@ def do_work(config, device_list):
                         await update_state(device_name, index, onoff)
                         await update_temperature(index, curT, setT)
             if device_name == 'light':
-                device_count = device_num[device_name]
-                light_count = device_subnum[device_name][int(packet[5], 16)]
+                if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]
+                    device_count = device_num[device_name]
+                    light_count = device_subnum[device_name][int(packet[5], 16)]
                  
-                base_index = 0
-                for c in range(int(packet[5], 16):
-                    base_index += device_subnum[device_name][c+1]
+                    base_index = 0
+                    for c in range(int(packet[5], 16):
+                        base_index += device_subnum[device_name][c+1]
                 
-                for id in range(light_count):
-                    index = base_index + id
-                    onoff = 'ON' if int(data[12 + 2 * id: 14 + 2 * id], 16) > 0 else 'OFF'
-                    await update_state(device_name, index, onoff)
+                    for id in range(light_count):
+                        index = base_index + id
+                        onoff = 'ON' if int(data[12 + 2 * id: 14 + 2 * id], 16) > 0 else 'OFF'
+                        await update_state(device_name, index, onoff)
 #            elif device_name == 'Fan':
 #                if data in DEVICE_LISTS['Fan'][1]['stateON']:
 #                    speed = DEVICE_LISTS['Fan'][1]['stateON'].index(data)
@@ -492,7 +510,7 @@ def do_work(config, device_list):
 
     async def update_temperature(idx, curTemp, setTemp):
         deviceID = 'thermostat' + str(idx + 1)
-        temperature = {'curTemp': pad(curTemp), 'setTemp': pad(setTemp)}
+        temperature = {'curTemp': "{:02X}".format(curTemp), 'setTemp': "{:02X}".format(setTemp)}
         for state in temperature:
             key = deviceID + state
             val = temperature[state]
@@ -611,12 +629,14 @@ def do_work(config, device_list):
 if __name__ == '__main__':
     with open(config_dir + '/options.json') as file:
         CONFIG = json.load(file)
+#    try:
+#        with open(share_dir + '/ezville_found_device.json') as file:
+#            log('기기 정보 파일을 찾음: /share/ezville_found_device.json')
+#            OPTION = json.load(file)
+#    except IOError:
+#        log('기기 정보 파일이 없습니다.: /share/ezville_found_device.json')
+#        OPTION = find_device(CONFIG)
     try:
-        with open(share_dir + '/ezville_found_device.json') as file:
-            log('기기 정보 파일을 찾음: /share/ezville_found_device.json')
-            OPTION = json.load(file)
-    except IOError:
-        log('기기 정보 파일이 없습니다.: /share/ezville_found_device.json')
-        OPTION = find_device(CONFIG)
+        find_device()
     while True:
-        do_work(CONFIG, OPTION)
+        do_work(CONFIG)
