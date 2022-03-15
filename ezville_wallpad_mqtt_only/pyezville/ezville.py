@@ -510,7 +510,7 @@ def do_work(config):
                     break
             
             device_name = STATE_HEADER.get(data[2:4])[0]
-            log(device_name)
+            log(data[6:8] + '==' + STATE_HEADER.get(data[2:4])[1])
             if device_name == 'thermostat':
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
                     device_count = device_num[device_name]
@@ -519,6 +519,7 @@ def do_work(config):
                         setT = data[20 + 4 * id:22 + 4 * id]
                         index = id
                         onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - id) & 1 else 'OFF'
+                        log(str(index) + cutT + setT)
                         log(device_name + str(index) + onoff) 
                         await update_state(device_name, index, onoff)
                         await update_temperature(index, curT, setT)
