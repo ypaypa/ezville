@@ -258,7 +258,7 @@ def find_device(config):
                             
                     mqtt_discovery(payload)
                     
-    mqtt_client.loop_stop()
+#    mqtt_client.loop_stop()
     
                     
 def do_work(config):
