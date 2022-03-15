@@ -513,12 +513,11 @@ def do_work(config):
             if device_name == 'thermostat':
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
                     device_count = device_num[device_name]
-                    for id in range(device_count):
-                        log("id=" + id)
-                        curT = data[18 + 4 * id:20 + 4 * id]
-                        setT = data[20 + 4 * id:22 + 4 * id]
-                        index = id
-                        onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - id) & 1 else 'OFF'
+                    for ic in range(device_count):
+                        curT = data[18 + 4 * ic:20 + 4 * ic]
+                        setT = data[20 + 4 * ic:22 + 4 * ic]
+                        index = ic
+                        onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - ic) & 1 else 'OFF'
                         log(str(index) + cutT + setT)
                         log(device_name + str(index) + onoff) 
                         await update_state(device_name, index, onoff)
@@ -532,9 +531,9 @@ def do_work(config):
                     for c in range(int(packet[5], 16)):
                         base_index += device_subnum[device_name][c+1]
                 
-                    for id in range(light_count):
-                        index = base_index + id
-                        onoff = 'ON' if int(data[12 + 2 * id: 14 + 2 * id], 16) > 0 else 'OFF'
+                    for ic in range(light_count):
+                        index = base_index + ic
+                        onoff = 'ON' if int(data[12 + 2 * ic: 14 + 2 * ic], 16) > 0 else 'OFF'
                         log(device_name + str(index) + onoff) 
                         await update_state(device_name, index, onoff)
 #            elif device_name == 'Fan':
