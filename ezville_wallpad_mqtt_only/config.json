@@ -1,5 +1,5 @@
 {
-  "name": "MQTT2elfin COMMAX Wallpad Controller with Python",
+  "name": "MQTT2elfin EzVille Wallpad Controller with Python",
   "version": "0.0.1",
   "slug": "ezville_wallpad_mqtt_only",
   "url": "https://github.com/ktdo79/HAaddon",
