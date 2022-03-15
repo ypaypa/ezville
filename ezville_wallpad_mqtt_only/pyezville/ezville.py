@@ -31,6 +31,39 @@ RS485_DEVICE = {
     },
 }
 
+DISCOVERY_DEVICE = {
+    "ids": ["ezville_wallpad",],
+    "name": "ezville_wallpad",
+    "mf": "EzVille",
+    "mdl": "EzVille Wallpad",
+    "sw": "ktdo79/ha_addons/ezville_wallpad",
+}
+    
+DISCOVERY_PAYLOAD = {
+    "light": [ {
+        "_intg": "light",
+        "~": "homenet/light{}",
+        "name": "homenet_light{}",
+        "opt": True,
+        "stat_t": "~/power/state",
+        "cmd_t": "~/power/command",
+    } ],
+    "thermostat": [ {
+        "_intg": "climate",
+        "~": "homenet/thermostat{}",
+        "name": "homenet_thermostat{}",
+        "mode_stat_t": "~/power/state",
+        "temp_stat_t": "~/setTemp/state",
+        "temp_cmd_t": "~/setTemp/command",
+        "curr_temp_t": "~/curTemp/state",
+        "away_stat_t": "~/away/state",
+        "away_cmd_t": "~/away/command",
+        "modes": [ "off", "heat" ],
+        "min_temp": 5,
+        "max_temp": 40,
+    } ],
+}
+
 STATE_HEADER = {
     prop["state"]["id"]: (device, prop["state"]["cmd"])
     for device, prop in RS485_DEVICE.items()
@@ -137,10 +170,10 @@ def find_device(config):
                         if name == 'light':
                             lc = int(packet[5], 16)
                             device_num[name] = max([device_num[name], lc])
-                            device_subnum[name][lc] =  int(packet[8:10], 16) - 1
-                                
+                            device_subnum[name][lc] =  int(packet[8:10], 16) - 1                             
+                                                          
                         elif name == 'thermostat':
-                            device_num[name] = max([device_num[name], int((int(packet[8:10], 16) - 5) / 2)])
+                            device_num[name] = max([device_num[name], int((int(packet[8:10], 16) - 5) / 2)])                
                 
                 RESIDUE = ""
                 k = k + packet_length
@@ -165,13 +198,28 @@ def find_device(config):
     mqtt_client.connect_async(config['mqtt_server'])
     mqtt_client.user_data_set(target_time)
     mqtt_client.loop_start()
+    
+    
 
     while time.time() < target_time:
         pass
 
-    mqtt_client.loop_stop()
+#    mqtt_client.loop_stop()
+    
+    def mqtt_discovery(payload):
+        intg = payload.pop("_intg")
 
-#    log('다음의 데이터를 찾았습니다...')
+        # MQTT 통합구성요소에 등록되기 위한 추가 내용
+        payload["device"] = DISCOVERY_DEVICE
+        payload["uniq_id"] = payload["name"]
+
+        # discovery에 등록
+        topic = "homeassistant/{}/ezville_wallpad/{}/config".format(intg, payload["name"])
+        log("Add new device:  {}".format(topic))
+        mqtt_client.publish(topic, json.dumps(payload))
+    
+
+    log('다음의 데이터를 찾았습니다...')
     log('======================================')
 
     for name in collect_data:
@@ -187,7 +235,31 @@ def find_device(config):
 #        log('기기리스트 저장 중 : /share/ezville_found_device.json')
 #    return dev_info
 
-
+    log('장치를 등록합니다...')
+    log('======================================')
+    
+    for name in device_num:
+        if device_subnum[name] == {}:
+            for id in range(device_num[name]):
+                payload = DISCOVERY_PAYLOAD[name][0].copy()
+                payload["~"] = payload["~"].format(id)
+                payload["name"] = payload["name"].format(id)
+                            
+                mqtt_discovery(payload)
+        else:
+            id = 0
+            for i in range(device_num[name]):
+                for j in range(device_subnum[name][i]):
+                    id += 1
+                    
+                    payload = DISCOVERY_PAYLOAD[name][0].copy()
+                    payload["~"] = payload["~"].format(id)
+                    payload["name"] = payload["name"].format(id)
+                            
+                    mqtt_discovery(payload)
+    mqtt_client.loop_stop()
+    
+                    
 def do_work(config):
     debug = config['DEBUG']
     mqtt_log = config['mqtt_log']
