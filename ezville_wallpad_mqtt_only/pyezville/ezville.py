@@ -12,6 +12,7 @@ HA_TOPIC = 'homenet'
 STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
 ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
+RESIDUE = ""
 
 ##################################################################
 # Device 정보 여기에 추가
@@ -105,14 +106,24 @@ def find_device(config):
 
     def on_message(client, userdata, msg):
         raw_data = msg.payload.hex().upper()
+        raw_data = RESIDUE + raw_data
         
         k = 0
-        while k < len(raw_data):
+        msg_length = len(raw_data)
+        while k < msg_length:
             if raw_data[k:k + 2] == "F7":
-                log(raw_data)
-                data_length = int(raw_data[k + 8:k + 10], 16)
-                packet_length = 10 + data_length * 2 + 4 
-                packet = raw_data[k:k + packet_length]
+                if k + 10 > msg_length:
+                    RESIDUE = raw_data[k:]
+                    break
+                else:
+                    data_length = int(raw_data[k + 8:k + 10], 16)
+                    packet_length = 10 + data_length * 2 + 4 
+                    
+                    if k + packet_length > msg_length:
+                        RESIDUE = raw_data[k:]
+                        break
+                    else:
+                        packet = raw_data[k:k + packet_length]
                 
                 if packet != checksum(packet):
                     k+=1
@@ -129,7 +140,8 @@ def find_device(config):
                                 
                         elif name == 'thermostat':
                             device_num[name] = max([device_num[name], int((int(packet[8:10], 16) - 5) / 2)])
-
+                
+                RESIDUE = ""
                 k = k + packet_length
             else:
                 k+=1
@@ -373,18 +385,30 @@ def do_work(config):
         #         COLLECTDATA['data'] = None
 
         #cors = [recv_from_elfin(raw_data[k:k + 16]) for k in range(0, len(raw_data), 16) if raw_data[k:k + 16] == checksum(raw_data[k:k + 16])]
+              
         k = 0
         cors = []
+        msg_length = len(raw_data)
         while k < len(raw_data):
             if raw_data[k:k + 2] == "F7":
-                data_length = int(raw_data[k + 8:k + 10], 16)
-                packet_length = 10 + data_length * 2 + 4 
-                packet = raw_data[k:k + packet_length]
+                if k + 10 > msg_length:
+                    RESIDUE = raw_data[k:]
+                    break
+                else:
+                    data_length = int(raw_data[k + 8:k + 10], 16)
+                    packet_length = 10 + data_length * 2 + 4 
+                    
+                    if k + packet_length > msg_length:
+                        RESIDUE = raw_data[k:]
+                        break
+                    else:
+                        packet = raw_data[k:k + packet_length]
         
                 if packet != checksum(packet):
                     k+=1
                     continue
                 cors.append(recv_from_elfin(packet))
+                RESIDUE = ""
                 k = k + packet_length
             else:
                 k+=1
