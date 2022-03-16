@@ -509,12 +509,12 @@ def do_work(config):
                         log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
                     break
             
-            cors = []
             device_name = STATE_HEADER.get(data[2:4])[0]
             log(device_name + "1")
             if device_name == 'thermostat':
                 log(device_name + "2")
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
+                    cors = []                    
                     device_count = device_num[device_name]
                     log(device_name + "3:" + str(device_count))
                     for ic in range(device_count):
@@ -525,12 +525,17 @@ def do_work(config):
                         onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - ic) & 1 else 'OFF'
                         log(str(index) + cutT + setT)
                         log(device_name + str(index) + onoff) 
-                        await update_state(device_name, index, onoff)
-                        await update_temperature(index, curT, setT)
-#                        cors.append(
+#                        await update_state(device_name, index, onoff)
+#                        await update_temperature(index, curT, setT)
+                        cors.append(update_state(device_name, index, onoff))
+                        cors.append(update_temperature(index, curT, setT))
+                    
+                    await asyncio.gather(*cors)
+
             elif device_name == 'light':
-                log(device_name + "5")
+                log(device_name + "5") 
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
+                    cors = []
                     device_count = device_num[device_name]
                     light_count = device_subnum[device_name][int(packet[5], 16)]
                     log(device_name + "6:" + str(device_count) + ":" + str(light_count))
@@ -544,7 +549,10 @@ def do_work(config):
                         index = base_index + ic
                         onoff = 'ON' if int(data[12 + 2 * ic: 14 + 2 * ic], 16) > 0 else 'OFF'
                         log(device_name + str(index) + onoff) 
-                        await update_state(device_name, index, onoff)
+#                        await update_state(device_name, index, onoff)
+                        cors.append(update_state(device_name, index, onoff))
+    
+                    await  asyncio.gather(*cors)
 #            elif device_name == 'Fan':
 #                if data in DEVICE_LISTS['Fan'][1]['stateON']:
 #                    speed = DEVICE_LISTS['Fan'][1]['stateON'].index(data)
