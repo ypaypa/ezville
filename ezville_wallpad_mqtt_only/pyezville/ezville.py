@@ -493,7 +493,6 @@ def do_work(config):
                 k = k + packet_length
             else:
                 k+=1
-        await asyncio.sleep(0)
         await asyncio.gather(*cors)
 
     async def recv_from_elfin(data):
@@ -525,12 +524,12 @@ def do_work(config):
                         onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - ic) & 1 else 'OFF'
                         log(str(index) + cutT + setT)
                         log(device_name + str(index) + onoff) 
-#                        await update_state(device_name, index, onoff)
-#                        await update_temperature(index, curT, setT)
-                        cors.append(update_state(device_name, index, onoff))
-                        cors.append(update_temperature(index, curT, setT))
+                        await update_state(device_name, index, onoff)
+                        await update_temperature(index, curT, setT)
+#                        cors.append(update_state(device_name, index, onoff))
+#                        cors.append(update_temperature(index, curT, setT))
                     
-                    await asyncio.gather(*cors)
+#                    await asyncio.gather(*cors)
 
             elif device_name == 'light':
                 log(device_name + "5: " + STATE_HEADER.get(date[2:4])) 
@@ -549,10 +548,10 @@ def do_work(config):
                         index = base_index + ic
                         onoff = 'ON' if int(data[12 + 2 * ic: 14 + 2 * ic], 16) > 0 else 'OFF'
                         log(device_name + str(index) + onoff) 
-#                        await update_state(device_name, index, onoff)
-                        cors.append(update_state(device_name, index, onoff))
+                        await update_state(device_name, index, onoff)
+#                        cors.append(update_state(device_name, index, onoff))
     
-                    await  asyncio.gather(*cors)
+#                    await  asyncio.gather(*cors)
 #            elif device_name == 'Fan':
 #                if data in DEVICE_LISTS['Fan'][1]['stateON']:
 #                    speed = DEVICE_LISTS['Fan'][1]['stateON'].index(data)
@@ -697,7 +696,7 @@ def do_work(config):
             if topics[0] == HA_TOPIC and topics[-1] == 'command':
                 asyncio.run(recv_from_HA(topics, msg.payload.decode('utf-8')))
             elif topics[0] == ELFIN_TOPIC and topics[-1] == 'recv':
-                asyncio.run(slice_raw_data(msg.payload.hex().upper()))
+                asyncio.run_until_complete(slice_raw_data(msg.payload.hex().upper()))
         except:
             pass
 
