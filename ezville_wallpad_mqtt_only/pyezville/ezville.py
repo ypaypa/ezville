@@ -493,7 +493,7 @@ def do_work(config):
                 k = k + packet_length
             else:
                 k+=1
-        
+        await asyncio.sleep(0)
         await asyncio.gather(*cors)
 
     async def recv_from_elfin(data):
