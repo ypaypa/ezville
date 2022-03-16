@@ -509,6 +509,7 @@ def do_work(config):
                         log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
                     break
             
+            cors = []
             device_name = STATE_HEADER.get(data[2:4])[0]
             log(device_name + "1")
             if device_name == 'thermostat':
@@ -517,7 +518,7 @@ def do_work(config):
                     device_count = device_num[device_name]
                     log(device_name + "3:" + str(device_count))
                     for ic in range(device_count):
-                        log(device_name + "4")
+                        log(device_name + "4:" + str(ic))
                         curT = data[18 + 4 * ic:20 + 4 * ic]
                         setT = data[20 + 4 * ic:22 + 4 * ic]
                         index = ic
@@ -526,6 +527,7 @@ def do_work(config):
                         log(device_name + str(index) + onoff) 
                         await update_state(device_name, index, onoff)
                         await update_temperature(index, curT, setT)
+#                        cors.append(
             elif device_name == 'light':
                 log(device_name + "5")
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
@@ -591,6 +593,7 @@ def do_work(config):
         if onoff != HOMESTATE.get(key):
             HOMESTATE[key] = onoff
             topic = STATE_TOPIC.format(deviceID, state)
+            log(key + ":" + topic)
             mqtt_client.publish(topic, onoff.encode())
             if mqtt_log:
                 log('[LOG] ->> HA : {} >> {}'.format(topic, onoff))
