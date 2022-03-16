@@ -593,6 +593,8 @@ def do_work(config):
                 log("[WARNING] <{}> 기기의 신호를 찾음: {}".format(device_name, data))
                 log('[WARNING] 기기목록에 등록되지 않는 패킷입니다...')
         
+        await asyncio.sleep(0)
+        
     async def update_state(device, idx, onoff):
         state = 'power'
         deviceID = device + str(idx + 1)
