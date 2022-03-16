@@ -515,7 +515,7 @@ def do_work(config):
                 log(device_name + "2")
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
                     device_count = device_num[device_name]
-                    log(device_name + "3")
+                    log(device_name + "3:" + str(device_count))
                     for ic in range(device_count):
                         log(device_name + "4")
                         curT = data[18 + 4 * ic:20 + 4 * ic]
@@ -529,9 +529,9 @@ def do_work(config):
             elif device_name == 'light':
                 log(device_name + "5")
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
-                    log(device_name + "6")
                     device_count = device_num[device_name]
                     light_count = device_subnum[device_name][int(packet[5], 16)]
+                    log(device_name + "6:" + str(device_count) + ":" + str(light_count))
                  
                     base_index = 0
                     for c in range(int(packet[5], 16)):
