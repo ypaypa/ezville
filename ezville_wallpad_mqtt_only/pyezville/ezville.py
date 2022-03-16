@@ -59,7 +59,7 @@ DISCOVERY_PAYLOAD = {
         "away_mode_stat_t": "~/away/state",
         "away_mode_cmd_t": "~/away/command",
         "modes": [ "off", "heat" ],
-        "min_temp": 5,
+        "min_temp": "5",
         "max_temp": 40,
     } ],
 }
@@ -510,10 +510,14 @@ def do_work(config):
                     break
             
             device_name = STATE_HEADER.get(data[2:4])[0]
+            log(device_name + "1")
             if device_name == 'thermostat':
+                log(device_name + "2")
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
                     device_count = device_num[device_name]
+                    log(device_name + "3")
                     for ic in range(device_count):
+                        log(device_name + "4")
                         curT = data[18 + 4 * ic:20 + 4 * ic]
                         setT = data[20 + 4 * ic:22 + 4 * ic]
                         index = ic
@@ -523,12 +527,15 @@ def do_work(config):
                         await update_state(device_name, index, onoff)
                         await update_temperature(index, curT, setT)
             elif device_name == 'light':
+                log(device_name + "5")
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
+                    log(device_name + "6")
                     device_count = device_num[device_name]
                     light_count = device_subnum[device_name][int(packet[5], 16)]
                  
                     base_index = 0
                     for c in range(int(packet[5], 16)):
+                        log(device_name + "7")
                         base_index += device_subnum[device_name][c+1]
                 
                     for ic in range(light_count):
