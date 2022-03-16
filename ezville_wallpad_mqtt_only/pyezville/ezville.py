@@ -487,7 +487,7 @@ def do_work(config):
                 if packet != checksum(packet):
                     k+=1
                     continue
-                log(packet)
+                log("PACKET:" + packet)
                 cors.append(recv_from_elfin(packet))
                 RESIDUE = ""
                 k = k + packet_length
