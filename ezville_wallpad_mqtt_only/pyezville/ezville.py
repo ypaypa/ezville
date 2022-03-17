@@ -753,6 +753,7 @@ def do_work(config):
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(send_to_elfin())
+    log("OMG!!!!!")
     loop.close()
     mqtt_client.loop_stop()
 
