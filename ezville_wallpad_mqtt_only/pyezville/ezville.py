@@ -748,7 +748,8 @@ def do_work(config):
             except Exception as err:
                 log('[ERROR] send_to_elfin(): {}'.format(err))
                 return True
-            await asyncio.sleep(0.01)
+            #await asyncio.sleep(0.01)
+            await asyncio.sleep(1)
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(send_to_elfin())
