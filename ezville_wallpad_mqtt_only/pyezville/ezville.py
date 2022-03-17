@@ -696,7 +696,7 @@ def do_work(config):
             if topics[0] == HA_TOPIC and topics[-1] == 'command':
                 await recv_from_HA(topics, msg.payload.decode('utf-8'))
             elif topics[0] == ELFIN_TOPIC and topics[-1] == 'recv':
-                await slice_raw_data(msg.payload.hex().upper()))
+                await slice_raw_data(msg.payload.hex().upper())
     
     def on_message(client, userdata, msg):
         topics = msg.topic.split('/')
