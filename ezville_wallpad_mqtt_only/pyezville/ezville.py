@@ -484,9 +484,9 @@ def do_work(config):
                     else:
                         packet = raw_data[k:k + packet_length]
         
-                if packet != checksum(packet):
-                    k+=1
-                    continue
+    #            if packet != checksum(packet):
+    #                k+=1
+     #               continue
                 #log("PACKET:" + packet)
                 task = asyncio.create_task(recv_from_elfin(packet))
                 cors.append(task)
@@ -594,7 +594,7 @@ def do_work(config):
                 log("[WARNING] <{}> 기기의 신호를 찾음: {}".format(device_name, data))
                 log('[WARNING] 기기목록에 등록되지 않는 패킷입니다...')
         
-        await asyncio.sleep(0)
+#        await asyncio.sleep(0)
         
     async def update_state(device, idx, onoff):
         state = 'power'
