@@ -691,14 +691,21 @@ def do_work(config):
                        4: 'Connection refused - bad username or password',
                        5: 'Connection refused - not authorised'}
             log(errcode[rc])
-
+    
+    async def process_message(topics, msg):
+            if topics[0] == HA_TOPIC and topics[-1] == 'command':
+                await recv_from_HA(topics, msg.payload.decode('utf-8'))
+            elif topics[0] == ELFIN_TOPIC and topics[-1] == 'recv':
+                await slice_raw_data(msg.payload.hex().upper()))
+    
     def on_message(client, userdata, msg):
         topics = msg.topic.split('/')
         try:
-            if topics[0] == HA_TOPIC and topics[-1] == 'command':
-                asyncio.run_until_complete(recv_from_HA(topics, msg.payload.decode('utf-8')))
-            elif topics[0] == ELFIN_TOPIC and topics[-1] == 'recv':
-                asyncio.run_until_complete(slice_raw_data(msg.payload.hex().upper()))
+            asyncio.run(process_message(topics, msg))
+#            if topics[0] == HA_TOPIC and topics[-1] == 'command':
+#                asyncio.run(recv_from_HA(topics, msg.payload.decode('utf-8')))
+#            elif topics[0] == ELFIN_TOPIC and topics[-1] == 'recv':
+#                asyncio.run(slice_raw_data(msg.payload.hex().upper()))
         except:
             pass
 
@@ -749,12 +756,10 @@ def do_work(config):
                 log('[ERROR] send_to_elfin(): {}'.format(err))
                 return True
             #await asyncio.sleep(0.01)
-            log("OMGGGG!!!!!")
             await asyncio.sleep(10)
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(send_to_elfin())
-    log("OMG!!!!!")
     loop.close()
     mqtt_client.loop_stop()
 
