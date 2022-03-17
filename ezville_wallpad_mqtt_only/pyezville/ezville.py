@@ -749,6 +749,7 @@ def do_work(config):
                 log('[ERROR] send_to_elfin(): {}'.format(err))
                 return True
             #await asyncio.sleep(0.01)
+            log("OMGGGG!!!!!")
             await asyncio.sleep(10)
 
     loop = asyncio.get_event_loop()
