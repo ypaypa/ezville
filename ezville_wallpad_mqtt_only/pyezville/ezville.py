@@ -692,38 +692,27 @@ def do_work(config):
                        5: 'Connection refused - not authorised'}
             log(errcode[rc])
     
-#    async def process_message(topics, msg):
-#        topics = msg.topic.split('/')
-#        
-#        if topics[0] == HA_TOPIC and topics[-1] == 'command':
-#            await recv_from_HA(topics, msg.payload.decode('utf-8'))
-#        elif topics[0] == ELFIN_TOPIC and topics[-1] == 'recv':
-#            await slice_raw_data(msg.payload.hex().upper())
-
-    async def process_message():
-        
+    async def process_message(msg):
         topics = msg.topic.split('/')
-        
-        while True:
-        # Get a "work item" out of the queue.
-        sleep_for = await queue.get()
-
-        # Sleep for the "sleep_for" seconds.
-        await asyncio.sleep(sleep_for)
-
-        # Notify the queue that the "work item" has been processed.
-        queue.task_done()
-
-        print(f'{name} has slept for {sleep_for:.2f} seconds')
         
         if topics[0] == HA_TOPIC and topics[-1] == 'command':
             await recv_from_HA(topics, msg.payload.decode('utf-8'))
         elif topics[0] == ELFIN_TOPIC and topics[-1] == 'recv':
             await slice_raw_data(msg.payload.hex().upper())
+
+    async def process_message():
+        stop = False
+        while not stop:
+            if queue.empty():
+                stop = True
+            else:
+                msg = await queue.get()
+                await process_message(msg)
+            await asyncio.sleep(0)
             
     def on_message(client, userdata, msg):
-        global ha_queue
-        ha_queue.put(
+        global queue
+        asyncio.ensure_future(queue.put(msg))
     #    topics = msg.topic.split('/')
     #    try:
     #        if topics[0] == HA_TOPIC and topics[-1] == 'command':
@@ -734,8 +723,7 @@ def do_work(config):
     #    except:
     #        pass
         
-    ha_queue = asyncio.Queue()
-    elfin_queue = asyncio.Queue()
+    queue = asyncio.Queue()
                     
     async def process_message():
 
