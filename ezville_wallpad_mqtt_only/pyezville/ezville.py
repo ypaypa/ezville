@@ -725,8 +725,6 @@ def do_work(config):
         
     queue = asyncio.Queue()
                     
-    async def process_message():
-
     mqtt_client = mqtt.Client('mqtt2elfin-ezville')
     mqtt_client.username_pw_set(config['mqtt_id'], config['mqtt_password'])
     mqtt_client.on_connect = on_connect
