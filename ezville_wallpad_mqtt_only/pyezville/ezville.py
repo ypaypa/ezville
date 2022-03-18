@@ -14,6 +14,7 @@ STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
 ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
 RESIDUE = ""
+queue = Queue()
 #queue = asyncio.Queue()
 
 ##################################################################
