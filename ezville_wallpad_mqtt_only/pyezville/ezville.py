@@ -13,6 +13,7 @@ STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
 ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
 RESIDUE = ""
+queue = asyncio.Queue()
 
 ##################################################################
 # Device 정보 여기에 추가
@@ -723,8 +724,6 @@ def do_work(config):
     #            #asyncio.run(slice_raw_data(msg.payload.hex().upper()))
     #    except:
     #        pass
-        
-    queue = asyncio.Queue()
                     
     mqtt_client = mqtt.Client('mqtt2elfin-ezville')
     mqtt_client.username_pw_set(config['mqtt_id'], config['mqtt_password'])
