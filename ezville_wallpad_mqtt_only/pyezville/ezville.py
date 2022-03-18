@@ -702,6 +702,7 @@ def do_work(config):
 
     async def deque_message():
         stop = False
+        global queue
         while not stop:
             if queue.empty():
                 stop = True
