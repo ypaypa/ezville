@@ -700,7 +700,7 @@ def do_work(config):
         elif topics[0] == ELFIN_TOPIC and topics[-1] == 'recv':
             await slice_raw_data(msg.payload.hex().upper())
 
-    async def process_message():
+    async def deque_message():
         stop = False
         while not stop:
             if queue.empty():
@@ -777,7 +777,11 @@ def do_work(config):
             await asyncio.sleep(10)
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(send_to_elfin())
+    tasks = []
+    tasks.append(asyncio.ensure_future(send_to_elfin()))
+    tasks.append(asyncio.ensure_future(deque_message()))             
+    #loop.run_until_complete(send_to_elfin())
+    loop.run_until_complete(asyncio.wait(tasks))
     loop.close()
     mqtt_client.loop_stop()
 
