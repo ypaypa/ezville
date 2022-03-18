@@ -3,6 +3,7 @@ import json
 import time
 import asyncio
 import telnetlib
+from queue import Queue
 
 share_dir = '/share'
 config_dir = '/data'
@@ -13,7 +14,7 @@ STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
 ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
 RESIDUE = ""
-queue = asyncio.Queue()
+#queue = asyncio.Queue()
 
 ##################################################################
 # Device 정보 여기에 추가
@@ -708,13 +709,15 @@ def do_work(config):
             if queue.empty():
                 stop = True
             else:
-                msg = await queue.get()
+#                msg = await queue.get()
+                msg =queue.get()
                 await process_message(msg)
-            await asyncio.sleep(0)
+ #          await asyncio.sleep(0)
             
     def on_message(client, userdata, msg):
         global queue
-        asyncio.ensure_future(queue.put(msg))
+        queue.put(msg)
+  #      asyncio.ensure_future(queue.put(msg))
     #    topics = msg.topic.split('/')
     #    try:
     #        if topics[0] == HA_TOPIC and topics[-1] == 'command':
