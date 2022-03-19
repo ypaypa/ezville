@@ -744,10 +744,6 @@ def do_work(config):
             
 #        while True:
         while start_flag:
-            if QUEUE:
-                log("SOMETHING")
-            else:
-                log("EMPTY")
             try:
                 if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
                     log('[WARNING] 10초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.')
@@ -769,7 +765,6 @@ def do_work(config):
                         log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
                     COLLECTDATA['LastRecv'] = time.time_ns()
                 elif time.time_ns() - COLLECTDATA['LastRecv'] > 100000000:
-                    log("TTTTTT")
                     if QUEUE:
                         send_data = QUEUE.pop(0)
                         if elfin_log:
