@@ -398,7 +398,7 @@ def do_work(config):
                                     log('[DEBUG] {} is already set: {}'.format(topics[1], value))
                             else:
                                 setTemp = value
-                                sendcmd = checksum('F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['cmd'] + '01' + str("{:02X}".format(int(setTemp, 16))) + '0000')
+                                sendcmd = checksum('F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['cmd'] + '01' + "{:02X}".format(int(setTemp, 16)) + '0000')
                                 recvcmd = ['F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['ack']]
 #                                sendcmd = make_hex_temp(idx - 1, curTemp, setTemp, 'CHANGE')
 #                                recvcmd = [make_hex_temp(idx - 1, curTemp, setTemp, 'stateON')]
@@ -434,7 +434,7 @@ def do_work(config):
                             rn += 1
                             idx = idx - device_subnum[device][rn]
                             
-                        sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(rn) + RS485_DEVICE[device]['power']['cmd'] + '030' + str(ln) + "{:02X}".format(value) + '000000')
+                        sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(rn) + RS485_DEVICE[device]['power']['cmd'] + '030' + str(ln) + "{:02X}".format(int(value, 16)) + '000000')
 #                        sendcmd = DEVICE_LISTS[device][idx].get('command' + value)
                         if sendcmd:
                             recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(rn) + RS485_DEVICE[device]['power']['ack']]
