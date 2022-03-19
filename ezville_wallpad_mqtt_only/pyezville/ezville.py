@@ -746,27 +746,27 @@ def do_work(config):
         while start_flag:
             try:
        #         if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
-                if time.time_ns() - COLLECTDATA['LastRecv'] > 100000000000: 
-                    log(str(COLLECTDATA['LastRecv']) + "  :  " + str(time.time_ns()))
-                    log('[WARNING] 10초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.')
-                    try:
-                        elfin_id = config['elfin_id']
-                        elfin_password = config['elfin_password']
-                        elfin_server = config['elfin_server']
+#                if time.time_ns() - COLLECTDATA['LastRecv'] > 100000000000: 
+#                    log(str(COLLECTDATA['LastRecv']) + "  :  " + str(time.time_ns()))
+#                    log('[WARNING] 10초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.')
+#                    try:
+#                        elfin_id = config['elfin_id']
+#                        elfin_password = config['elfin_password']
+#                        elfin_server = config['elfin_server']
 
-                        ew11 = telnetlib.Telnet(elfin_server)
+ #                       ew11 = telnetlib.Telnet(elfin_server)
 
-                        ew11.read_until(b"login:")
-                        ew11.write(elfin_id.encode('utf-8') + b'\n')
-                        ew11.read_until(b"password:")
-                        ew11.write(elfin_password.encode('utf-8') + b'\n')
-                        ew11.write('Restart'.encode('utf-8') + b'\n')
+#                        ew11.read_until(b"login:")
+ #                       ew11.write(elfin_id.encode('utf-8') + b'\n')
+#                        ew11.read_until(b"password:")
+ #                       ew11.write(elfin_password.encode('utf-8') + b'\n')
+ #                       ew11.write('Restart'.encode('utf-8') + b'\n')
 
-                        await asyncio.sleep(10)
-                    except:
-                        log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
-                    COLLECTDATA['LastRecv'] = time.time_ns()
-                elif time.time_ns() - COLLECTDATA['LastRecv'] > 100000000:
+ #                       await asyncio.sleep(10)
+ #                   except:
+  #                      log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
+#                    COLLECTDATA['LastRecv'] = time.time_ns()
+#                elif time.time_ns() - COLLECTDATA['LastRecv'] > 100000000:
                     if QUEUE:
                         send_data = QUEUE.pop(0)
                         if elfin_log:
@@ -779,11 +779,11 @@ def do_work(config):
                         else:
                             if elfin_log:
                                 log('[SIGNAL] Send over 5 times. Send Failure. Delete a queue: {}'.format(send_data))
-            except Exception as err:
-                log('[ERROR] send_to_elfin(): {}'.format(err))
-                return True
+ #           except Exception as err:
+ #               log('[ERROR] send_to_elfin(): {}'.format(err))
+  #              return True
             #await asyncio.sleep(0.01)
-            await asyncio.sleep(0)
+  #          await asyncio.sleep(0)
             
 #    loop = asyncio.get_event_loop()
     
