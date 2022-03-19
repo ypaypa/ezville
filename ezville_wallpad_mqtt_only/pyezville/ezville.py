@@ -780,15 +780,9 @@ def do_work(config):
                 return True
             #await asyncio.sleep(0.01)
             await asyncio.sleep(10)
-
-    async def multiple_tasks(dummy):
-        input_coroutines = [test_1(dummy), test_2(dummy)]
-        await asyncio.gather(*input_coroutines, return_exceptions=True)
             
     loop = asyncio.get_event_loop()
-    
-    
-    
+     
     task1 = asyncio.create_task(deque_message())
     task2 = asyncio.create_task(send_to_elfin())
     tasks = [task1, task2]
