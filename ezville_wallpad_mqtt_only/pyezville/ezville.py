@@ -528,7 +528,7 @@ def do_work(config):
                         setT = data[20 + 4 * ic:22 + 4 * ic]
                         index = ic
                         onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - ic) & 1 else 'OFF'
-                        log(str(index) + cutT + setT)
+                        log(str(index) + curT + setT)
                         log(device_name + str(index) + onoff) 
                         await update_state(device_name, index, onoff)
                         await update_temperature(index, curT, setT)
