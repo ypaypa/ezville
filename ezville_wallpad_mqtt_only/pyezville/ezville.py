@@ -516,7 +516,7 @@ def do_work(config):
             device_name = STATE_HEADER.get(data[2:4])[0]
             log(device_name + "1: " + data)
             if device_name == 'thermostat':
-                log(device_name + "2: " + STATE_HEADER.get(date[2:4])) 
+                log(device_name + "2: " + STATE_HEADER.get(data[2:4])) 
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
                     cors = []                    
                     device_count = device_num[device_name]
