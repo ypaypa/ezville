@@ -800,10 +800,12 @@ def do_work(config):
     #asyncio.run(group)
     
     async def main_run():
-        await asyncio.gather(
-            deque_message(),
-            send_to_elfin()
-        )
+        while True:
+            await asyncio.gather(
+                deque_message(),
+                send_to_elfin()
+            )
+        
     
     asyncio.run(main_run())
     #task1 = asyncio.create_task(deque_message())
@@ -817,7 +819,7 @@ def do_work(config):
 
     #loop = asyncio.get_running_loop()
 #    loop.close()
-    mqtt_client.loop_stop()
+#    mqtt_client.loop_stop()
 
 
 if __name__ == '__main__':
