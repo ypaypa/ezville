@@ -169,8 +169,6 @@ def find_device(config):
                 else:
                     if packet[2:4] in STATE_HEADER and packet[6:8] in STATE_HEADER[packet[2:4]]:
                         name = STATE_HEADER[packet[2:4]][0]
-                        log(name)
-                        log(packet)
                         collect_data[name].add(packet)
                             
                         if name == 'light':
@@ -493,7 +491,6 @@ def do_work(config):
                 if packet != checksum(packet):
                     k+=1
                     continue
-                log("PACKET:" + packet)
  #               task = asyncio.create_task(recv_from_elfin(packet))
  #               cors.append(task)
                 cors.append(recv_from_elfin(packet))
@@ -527,7 +524,6 @@ def do_work(config):
 #                    cors = []                    
                     device_count = device_num[device_name]
                     for ic in range(device_count):
-                        log(device_name + "4:" + str(ic))
                         curT = str(int(data[18 + 4 * ic:20 + 4 * ic], 16))
                         setT = str(int(data[20 + 4 * ic:22 + 4 * ic], 16))
                         index = ic
