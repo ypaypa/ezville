@@ -706,16 +706,21 @@ def do_work(config):
     async def deque_message():
         log("1")
         stop = False
+        out = False
         global msg_queue
         while not stop:
-            log("2:" + msg.payload())
+            log("2")
             if msg_queue.empty():
+                log("ee")
                 stop = True
             else:
+                log("kk")
+                out = True
 #                msg = await queue.get()
                 msg =msg_queue.get()
                 await process_message(msg)
  #          await asyncio.sleep(0)
+        return True
             
     def on_message(client, userdata, msg):
         global msg_queue
@@ -741,7 +746,10 @@ def do_work(config):
 
     async def send_to_elfin():
         log("3")
-        await deque_message()
+        
+        pre = False
+        While not pre:
+            pre = await deque_message()
         while True:
             try:
                 if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
