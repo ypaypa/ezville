@@ -793,22 +793,30 @@ def do_work(config):
             #await asyncio.sleep(0.01)
             await asyncio.sleep(0)
             
-    loop = asyncio.get_event_loop()
+#    loop = asyncio.get_event_loop()
     
     #cors = [deque_message(), send_to_elfin()]
     #group = asyncio.gather(*cors)
     #asyncio.run(group)
     
+    async def main_run():
+        await asyncio.gather(
+            deque_message()
+            send_to_elfin()
+        )
+    
+    asyncio.run(main_run())
     #task1 = asyncio.create_task(deque_message())
     #task2 = asyncio.create_task(send_to_elfin())
     #tasks = [task1, task2]
     #group = asyncio.gather(*tasks)
+    #asyncio.run(group)
     #loop.run_until_complete(group)
-    loop.run_until_complete(deque_message())
-    loop.run_until_complete(send_to_elfin())
+#    loop.run_until_complete(deque_message())
+#    loop.run_until_complete(send_to_elfin())
 
     #loop = asyncio.get_running_loop()
-    loop.close()
+#    loop.close()
     mqtt_client.loop_stop()
 
 
