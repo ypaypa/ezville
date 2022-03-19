@@ -788,12 +788,14 @@ def do_work(config):
     loop = asyncio.get_event_loop()
     
     
-    tasks = []
-    tasks.append(asyncio.ensure_future(deque_message()))
-    tasks.append(asyncio.ensure_future(send_to_elfin()))
+    
+    task1 = asyncio.create_task(deque_message())
+    task2 = asyncio.create_task(send_to_elfin())
+    tasks = [task1, task2]
+    group = asyncio.gather(*tasks)
     #loop.run_until_complete(send_to_elfin())
     #loop.run_until_complete(asyncio.wait(tasks))
-    loop.run(asyncio.wait(tasks))
+    loop.run_until_complete(group)
     loop.close()
     mqtt_client.loop_stop()
 
