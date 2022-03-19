@@ -704,9 +704,11 @@ def do_work(config):
             await slice_raw_data(msg.payload.hex().upper())
 
     async def deque_message():
+        log("1")
         stop = False
         global queue
         while not stop:
+            log("2")
             if queue.empty():
                 stop = True
             else:
@@ -738,6 +740,7 @@ def do_work(config):
     mqtt_client.loop_start()
 
     async def send_to_elfin():
+        log("3")
         while True:
             try:
                 if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
