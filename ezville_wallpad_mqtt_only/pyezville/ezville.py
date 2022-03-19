@@ -718,7 +718,7 @@ def do_work(config):
                 out = True
                 msg =msg_queue.get()
                 await process_message(msg)
-        return out
+#        return out
             
     def on_message(client, userdata, msg):
         global msg_queue
