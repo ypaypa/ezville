@@ -783,7 +783,8 @@ def do_work(config):
     tasks.append(asyncio.ensure_future(send_to_elfin()))
     tasks.append(asyncio.ensure_future(deque_message()))             
     #loop.run_until_complete(send_to_elfin())
-    loop.run_until_complete(asyncio.wait(tasks))
+    #loop.run_until_complete(asyncio.wait(tasks))
+    loop.run(asyncio.wait(tasks))
     loop.close()
     mqtt_client.loop_stop()
 
