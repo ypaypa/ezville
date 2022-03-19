@@ -719,7 +719,7 @@ def do_work(config):
 #                msg = await queue.get()
                 msg =msg_queue.get()
                 await process_message(msg)
- #          await asyncio.sleep(0)
+            await asyncio.sleep(0)
         return out
             
     def on_message(client, userdata, msg):
@@ -750,6 +750,7 @@ def do_work(config):
         test = not await deque_message()
         while test:
             test = not await deque_message()
+            asyncio.sleep(0)
             
         while True:
             try:
