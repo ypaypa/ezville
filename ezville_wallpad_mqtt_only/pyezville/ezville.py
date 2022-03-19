@@ -745,9 +745,10 @@ def do_work(config):
 #            asyncio.sleep(0)
             
 #        while True:
+        global QUEUE
         while start_flag:
             if QUEUE:
-                log("
+                log("SOMETHING")
             else:
                 log("EMPTY")
             try:
