@@ -720,7 +720,7 @@ def do_work(config):
                 msg =msg_queue.get()
                 await process_message(msg)
  #          await asyncio.sleep(0)
-        return True
+        return out
             
     def on_message(client, userdata, msg):
         global msg_queue
