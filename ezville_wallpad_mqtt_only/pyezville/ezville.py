@@ -363,7 +363,6 @@ def do_work(config):
         log('[LOG] 50개의 신호를 수집 중..')
 
     async def recv_from_HA(topics, value):
-        global QUEUE
         device = topics[1][:-1]
         if mqtt_log:
             log('[LOG] HA ->> : {} -> {}'.format('/'.join(topics), value))
@@ -503,7 +502,6 @@ def do_work(config):
 
     async def recv_from_elfin(data):
         COLLECTDATA['LastRecv'] = time.time_ns()
-        global QUEUE
         if data:
 #            if HOMESTATE.get('EV1power') == 'ON':
 #                if COLLECTDATA['EVtime'] < time.time():
@@ -745,7 +743,6 @@ def do_work(config):
 #            asyncio.sleep(0)
             
 #        while True:
-        global QUEUE
         while start_flag:
             if QUEUE:
                 log("SOMETHING")
