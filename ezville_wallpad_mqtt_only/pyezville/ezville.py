@@ -801,7 +801,7 @@ def do_work(config):
     
     async def main_run():
         await asyncio.gather(
-            deque_message()
+            deque_message(),
             send_to_elfin()
         )
     
