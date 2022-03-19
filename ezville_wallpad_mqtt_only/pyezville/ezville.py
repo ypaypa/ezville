@@ -804,7 +804,7 @@ def do_work(config):
     #tasks = [task1, task2]
     #group = asyncio.gather(*tasks)
     #loop.run_until_complete(group)
-    loop.run(deque_message())
+    loop.run_until_complete(deque_message())
     loop.run_until_complete(send_to_elfin())
 
     #loop = asyncio.get_running_loop()
