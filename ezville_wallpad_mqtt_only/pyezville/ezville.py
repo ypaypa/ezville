@@ -537,7 +537,7 @@ def do_work(config):
 #                    await asyncio.gather(*cors)
 
             elif device_name == 'light':
-                log(device_name + "5: " + STATE_HEADER.get(date[2:4])) 
+                log(device_name + "5: " + STATE_HEADER.get(data[2:4])) 
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
                     cors = []
                     device_count = device_num[device_name]
