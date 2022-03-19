@@ -491,9 +491,9 @@ def do_work(config):
     #                k+=1
      #               continue
                 #log("PACKET:" + packet)
-                task = asyncio.create_task(recv_from_elfin(packet))
-                cors.append(task)
-                #cors.append(recv_from_elfin(packet))
+ #               task = asyncio.create_task(recv_from_elfin(packet))
+ #               cors.append(task)
+                cors.append(recv_from_elfin(packet))
                 RESIDUE = ""
                 k = k + packet_length
             else:
