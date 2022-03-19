@@ -708,7 +708,7 @@ def do_work(config):
         stop = False
         global msg_queue
         while not stop:
-            log("2")
+            log("2:" + msg.payload())
             if msg_queue.empty():
                 stop = True
             else:
