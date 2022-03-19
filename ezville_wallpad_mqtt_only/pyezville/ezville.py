@@ -778,10 +778,16 @@ def do_work(config):
             #await asyncio.sleep(0.01)
             await asyncio.sleep(10)
 
+    async def multiple_tasks(dummy):
+        input_coroutines = [test_1(dummy), test_2(dummy)]
+        await asyncio.gather(*input_coroutines, return_exceptions=True)
+            
     loop = asyncio.get_event_loop()
+    
+    
     tasks = []
+    tasks.append(asyncio.ensure_future(deque_message()))
     tasks.append(asyncio.ensure_future(send_to_elfin()))
-    tasks.append(asyncio.ensure_future(deque_message()))             
     #loop.run_until_complete(send_to_elfin())
     #loop.run_until_complete(asyncio.wait(tasks))
     loop.run(asyncio.wait(tasks))
