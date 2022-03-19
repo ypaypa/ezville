@@ -785,7 +785,7 @@ def do_work(config):
     
     cors = [deque_message(), send_to_elfin()]
     group = asyncio.gather(*cors)
-    asyncio.run_until_complete(group)
+    asyncio.run(group)
     
     #task1 = asyncio.create_task(deque_message())
     #task2 = asyncio.create_task(send_to_elfin())
