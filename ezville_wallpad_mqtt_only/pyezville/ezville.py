@@ -398,7 +398,7 @@ def do_work(config):
                                     log('[DEBUG] {} is already set: {}'.format(topics[1], value))
                             else:
                                 setTemp = value
-                                sendcmd = checksum('F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['cmd'] + '01' + str("{:02X}".format(setTemp)) + '0000')
+                                sendcmd = checksum('F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['cmd'] + '01' + str("{:02X}".format(int(setTemp, 16))) + '0000')
                                 recvcmd = ['F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['ack']]
 #                                sendcmd = make_hex_temp(idx - 1, curTemp, setTemp, 'CHANGE')
 #                                recvcmd = [make_hex_temp(idx - 1, curTemp, setTemp, 'stateON')]
@@ -518,13 +518,12 @@ def do_work(config):
             
             if not STATE_HEADER.get(data[2:4]):
                 return
+            
             device_name = STATE_HEADER.get(data[2:4])[0]
-            log(device_name + "1: " + data)
             if device_name == 'thermostat':
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
-                    cors = []                    
+#                    cors = []                    
                     device_count = device_num[device_name]
-                    log(device_name + "3:" + str(device_count))
                     for ic in range(device_count):
                         log(device_name + "4:" + str(ic))
                         curT = data[18 + 4 * ic:20 + 4 * ic]
@@ -545,7 +544,6 @@ def do_work(config):
                     cors = []
                     device_count = device_num[device_name]
                     light_count = device_subnum[device_name][int(data[5], 16)]
-                    log(device_name + "6:" + str(device_count) + ":" + str(light_count))
                  
                     base_index = 0
                     for c in range(int(data[5], 16)):
