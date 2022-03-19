@@ -741,6 +741,7 @@ def do_work(config):
 
     async def send_to_elfin():
         log("3")
+        await deque_message()
         while True:
             try:
                 if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
@@ -781,11 +782,11 @@ def do_work(config):
             #await asyncio.sleep(0.01)
             await asyncio.sleep(10)
             
-    #loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop()
     
-    cors = [deque_message(), send_to_elfin()]
-    group = asyncio.gather(*cors)
-    asyncio.run(group)
+    #cors = [deque_message(), send_to_elfin()]
+    #group = asyncio.gather(*cors)
+    #asyncio.run(group)
     
     #task1 = asyncio.create_task(deque_message())
     #task2 = asyncio.create_task(send_to_elfin())
@@ -793,9 +794,9 @@ def do_work(config):
     #group = asyncio.gather(*tasks)
     #loop.run_until_complete(group)
     
-    #loop.run_until_complete(send_to_elfin())
+    loop.run_until_complete(send_to_elfin())
 
-    loop = asyncio.get_running_loop()
+    #loop = asyncio.get_running_loop()
     loop.close()
     mqtt_client.loop_stop()
 
