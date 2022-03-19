@@ -524,8 +524,8 @@ def do_work(config):
 #                    cors = []                    
                     device_count = device_num[device_name]
                     for ic in range(device_count):
-                        curT = str(int(data[18 + 4 * ic:20 + 4 * ic], 16))
-                        setT = str(int(data[20 + 4 * ic:22 + 4 * ic], 16))
+                        curT = str(int(data[20 + 4 * ic:22 + 4 * ic], 16))
+                        setT = str(int(data[22 + 4 * ic:24 + 4 * ic], 16))
                         index = ic
                         onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - ic) & 1 else 'OFF'
                         log(str(index) + curT + setT)
