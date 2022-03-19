@@ -513,7 +513,6 @@ def do_work(config):
                     if debug:
                         log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
                     break
-            log(data)
             
             if not STATE_HEADER.get(data[2:4]):
                 return
@@ -528,8 +527,6 @@ def do_work(config):
                         setT = str(int(data[22 + 4 * ic:24 + 4 * ic], 16))
                         index = ic
                         onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - ic) & 1 else 'OFF'
-                        log(str(index) + curT + setT)
-                        log(device_name + str(index) + onoff) 
                         await update_state(device_name, index, onoff)
                         await update_temperature(index, curT, setT)
 #                        cors.append(update_state(device_name, index, onoff))
@@ -550,7 +547,6 @@ def do_work(config):
                     for ic in range(light_count):
                         index = base_index + ic
                         onoff = 'ON' if int(data[12 + 2 * ic: 14 + 2 * ic], 16) > 0 else 'OFF'
-                        log(device_name + str(index) + onoff) 
                         await update_state(device_name, index, onoff)
 #                        cors.append(update_state(device_name, index, onoff))
     
@@ -605,7 +601,7 @@ def do_work(config):
         if onoff != HOMESTATE.get(key):
             HOMESTATE[key] = onoff
             topic = STATE_TOPIC.format(deviceID, state)
-            log(key + ":" + topic)
+
             mqtt_client.publish(topic, onoff.encode())
             if mqtt_log:
                 log('[LOG] ->> HA : {} >> {}'.format(topic, onoff))
