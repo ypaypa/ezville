@@ -526,8 +526,8 @@ def do_work(config):
                     device_count = device_num[device_name]
                     for ic in range(device_count):
                         log(device_name + "4:" + str(ic))
-                        curT = data[18 + 4 * ic:20 + 4 * ic]
-                        setT = data[20 + 4 * ic:22 + 4 * ic]
+                        curT = str(int(data[18 + 4 * ic:20 + 4 * ic], 16))
+                        setT = str(int(data[20 + 4 * ic:22 + 4 * ic], 16))
                         index = ic
                         onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - ic) & 1 else 'OFF'
                         log(str(index) + curT + setT)
@@ -547,7 +547,6 @@ def do_work(config):
                  
                     base_index = 0
                     for c in range(int(data[5], 16)):
-                        log(device_name + "7")
                         base_index += device_subnum[device_name][c+1]
                 
                     for ic in range(light_count):
