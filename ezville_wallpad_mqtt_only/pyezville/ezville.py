@@ -541,11 +541,11 @@ def do_work(config):
                 if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
                     cors = []
                     device_count = device_num[device_name]
-                    light_count = device_subnum[device_name][int(packet[5], 16)]
+                    light_count = device_subnum[device_name][int(data[5], 16)]
                     log(device_name + "6:" + str(device_count) + ":" + str(light_count))
                  
                     base_index = 0
-                    for c in range(int(packet[5], 16)):
+                    for c in range(int(data[5], 16)):
                         log(device_name + "7")
                         base_index += device_subnum[device_name][c+1]
                 
