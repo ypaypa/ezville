@@ -544,7 +544,7 @@ def do_work(config):
                     light_count = device_subnum[device_name][int(data[5], 16)]
                  
                     base_index = 0
-                    for c in range(int(data[5], 16)):
+                    for c in range(int(data[5], 16) - 1):
                         base_index += device_subnum[device_name][c+1]
                 
                     for ic in range(light_count):
