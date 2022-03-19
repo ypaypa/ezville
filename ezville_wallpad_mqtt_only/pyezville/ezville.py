@@ -15,6 +15,7 @@ ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
 RESIDUE = ""
 msg_queue = Queue()
+start_flag = False
 #msg_queue = asyncio.Queue()
 
 ##################################################################
@@ -506,6 +507,7 @@ def do_work(config):
 #            if HOMESTATE.get('EV1power') == 'ON':
 #                if COLLECTDATA['EVtime'] < time.time():
 #                    await update_state('EV', 0, 'OFF')
+            
             for que in QUEUE:
                 if data[0:8] in que['recvcmd']:
                     QUEUE.remove(que)
@@ -513,6 +515,7 @@ def do_work(config):
                         log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
                     break
             log(data)
+            
             if not STATE_HEADER.get(data[2:4]):
                 return
             device_name = STATE_HEADER.get(data[2:4])[0]
@@ -719,6 +722,10 @@ def do_work(config):
             
     def on_message(client, userdata, msg):
         global msg_queue
+        global start_flag
+        if start_flag == False:
+            start_flag == True
+            
         msg_queue.put(msg)
   #      asyncio.ensure_future(queue.put(msg))
     #    topics = msg.topic.split('/')
@@ -740,12 +747,13 @@ def do_work(config):
     mqtt_client.loop_start()
 
     async def send_to_elfin():
-        test = not await deque_message()
-        while test:
-            test = not await deque_message()
-            asyncio.sleep(0)
+#        test = not await deque_message()
+#        while test:
+#            test = not await deque_message()
+#            asyncio.sleep(0)
             
-        while True:
+#        while True:
+        while start_flag:
             try:
                 if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
                     log('[WARNING] 10초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.')
@@ -783,7 +791,7 @@ def do_work(config):
                 log('[ERROR] send_to_elfin(): {}'.format(err))
                 return True
             #await asyncio.sleep(0.01)
-            await asyncio.sleep(10)
+            await asyncio.sleep(0)
             
     loop = asyncio.get_event_loop()
     
@@ -796,7 +804,7 @@ def do_work(config):
     #tasks = [task1, task2]
     #group = asyncio.gather(*tasks)
     #loop.run_until_complete(group)
-    
+    loop.run(deque_message())
     loop.run_until_complete(send_to_elfin())
 
     #loop = asyncio.get_running_loop()
