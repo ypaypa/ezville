@@ -512,7 +512,7 @@ def do_work(config):
                     if debug:
                         log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
                     break
-            
+            log(data)
             device_name = STATE_HEADER.get(data[2:4])[0]
             log(device_name + "1: " + data)
             if device_name == 'thermostat':
