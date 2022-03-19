@@ -14,8 +14,8 @@ STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
 ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
 RESIDUE = ""
-queue = Queue()
-#queue = asyncio.Queue()
+msg_queue = Queue()
+#msg_queue = asyncio.Queue()
 
 ##################################################################
 # Device 정보 여기에 추가
@@ -706,20 +706,20 @@ def do_work(config):
     async def deque_message():
         log("1")
         stop = False
-        global queue
+        global msg_queue
         while not stop:
             log("2")
-            if queue.empty():
+            if msg_queue.empty():
                 stop = True
             else:
 #                msg = await queue.get()
-                msg =queue.get()
+                msg =msg_queue.get()
                 await process_message(msg)
  #          await asyncio.sleep(0)
             
     def on_message(client, userdata, msg):
-        global queue
-        queue.put(msg)
+        global msg_queue
+        msg_queue.put(msg)
   #      asyncio.ensure_future(queue.put(msg))
     #    topics = msg.topic.split('/')
     #    try:
