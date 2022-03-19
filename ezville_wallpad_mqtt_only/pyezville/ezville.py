@@ -714,7 +714,7 @@ def do_work(config):
         global msg_queue
         global start_flag
         if start_flag == False:
-            start_flag == True
+            start_flag = True
             
         msg_queue.put(msg)
   #      asyncio.ensure_future(queue.put(msg))
