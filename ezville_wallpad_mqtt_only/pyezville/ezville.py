@@ -709,7 +709,6 @@ def do_work(config):
             if msg_queue.empty():
                 stop = True
             else:
-                log("kk")
                 out = True
                 msg =msg_queue.get()
                 await process_message(msg)
@@ -748,6 +747,7 @@ def do_work(config):
 #            asyncio.sleep(0)
             
 #        while True:
+        log("TT")
         while start_flag:
             try:
                 if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
@@ -771,6 +771,7 @@ def do_work(config):
                     COLLECTDATA['LastRecv'] = time.time_ns()
                 elif time.time_ns() - COLLECTDATA['LastRecv'] > 100000000:
                     if QUEUE:
+                        log("TTTTT")
                         send_data = QUEUE.pop(0)
                         if elfin_log:
                             log('[SIGNAL] 신호 전송: {}'.format(send_data))
