@@ -745,7 +745,8 @@ def do_work(config):
 #        while True:
         while start_flag:
             try:
-                if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
+       #         if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
+                if time.time_ns() - COLLECTDATA['LastRecv'] > 100000000000: 
                     log(str(COLLECTDATA['LastRecv']) + "  :  " + str(time.time_ns()))
                     log('[WARNING] 10초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.')
                     try:
