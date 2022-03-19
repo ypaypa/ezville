@@ -747,9 +747,10 @@ def do_work(config):
     async def send_to_elfin():
         log("3")
         
-        pre = False
-        While not pre:
-            pre = await deque_message()
+        test = not await deque_message()
+        while test:
+            test = not await deque_message()
+            
         while True:
             try:
                 if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
