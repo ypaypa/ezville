@@ -472,7 +472,7 @@ def do_work(config):
         k = 0
         cors = []
         msg_length = len(raw_data)
-        while k < len(raw_data):
+        while k < msg_length:
             if raw_data[k:k + 2] == "F7":
                 if k + 10 > msg_length:
                     RESIDUE = raw_data[k:]
@@ -487,10 +487,10 @@ def do_work(config):
                     else:
                         packet = raw_data[k:k + packet_length]
         
-    #            if packet != checksum(packet):
-    #                k+=1
-     #               continue
-                #log("PACKET:" + packet)
+                if packet != checksum(packet):
+                    k+=1
+                    continue
+                log("PACKET:" + packet)
  #               task = asyncio.create_task(recv_from_elfin(packet))
  #               cors.append(task)
                 cors.append(recv_from_elfin(packet))
@@ -704,22 +704,17 @@ def do_work(config):
             await slice_raw_data(msg.payload.hex().upper())
 
     async def deque_message():
-        log("1")
         stop = False
         out = False
         global msg_queue
         while not stop:
-            log("2")
             if msg_queue.empty():
-                log("ee")
                 stop = True
             else:
                 log("kk")
                 out = True
-#                msg = await queue.get()
                 msg =msg_queue.get()
                 await process_message(msg)
-            await asyncio.sleep(0)
         return out
             
     def on_message(client, userdata, msg):
@@ -745,8 +740,6 @@ def do_work(config):
     mqtt_client.loop_start()
 
     async def send_to_elfin():
-        log("3")
-        
         test = not await deque_message()
         while test:
             test = not await deque_message()
