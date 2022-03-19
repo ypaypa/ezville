@@ -363,6 +363,7 @@ def do_work(config):
         log('[LOG] 50개의 신호를 수집 중..')
 
     async def recv_from_HA(topics, value):
+        global QUEUE
         device = topics[1][:-1]
         if mqtt_log:
             log('[LOG] HA ->> : {} -> {}'.format('/'.join(topics), value))
@@ -502,6 +503,7 @@ def do_work(config):
 
     async def recv_from_elfin(data):
         COLLECTDATA['LastRecv'] = time.time_ns()
+        global QUEUE
         if data:
 #            if HOMESTATE.get('EV1power') == 'ON':
 #                if COLLECTDATA['EVtime'] < time.time():
@@ -744,6 +746,10 @@ def do_work(config):
             
 #        while True:
         while start_flag:
+            if QUEUE:
+                log("
+            else:
+                log("EMPTY")
             try:
                 if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
                     log('[WARNING] 10초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.')
