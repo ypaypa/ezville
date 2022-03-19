@@ -434,7 +434,9 @@ def do_work(config):
                             rn += 1
                             idx = idx - device_subnum[device][rn]
                             
-                        sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(rn) + RS485_DEVICE[device]['power']['cmd'] + '030' + str(ln) + "{:02X}".format(int(value, 16)) + '000000')
+                        pwr = '01' if value == 'ON' else '00'
+                        
+                        sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(rn) + RS485_DEVICE[device]['power']['cmd'] + '030' + str(ln) + pwr + '000000')
 #                        sendcmd = DEVICE_LISTS[device][idx].get('command' + value)
                         if sendcmd:
                             recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(rn) + RS485_DEVICE[device]['power']['ack']]
