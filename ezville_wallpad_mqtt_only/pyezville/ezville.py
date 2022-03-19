@@ -643,7 +643,7 @@ def do_work(config):
 
     async def update_temperature(idx, curTemp, setTemp):
         deviceID = 'thermostat' + str(idx + 1)
-        temperature = {'curTemp': "{:02X}".format(curTemp), 'setTemp': "{:02X}".format(setTemp)}
+        temperature = {'curTemp': "{:02X}".format(int(curTemp, 16)), 'setTemp': "{:02X}".format(int(setTemp, 16))}
         for state in temperature:
             key = deviceID + state
             val = temperature[state]
