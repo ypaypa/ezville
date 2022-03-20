@@ -744,6 +744,7 @@ def do_work(config):
             
 #        while True:
         while start_flag:
+            log("RRRRRRRR")
             try:
 #                if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
 #                if time.time_ns() - COLLECTDATA['LastRecv'] > 100000000000: 
