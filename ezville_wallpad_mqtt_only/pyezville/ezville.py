@@ -744,6 +744,7 @@ def do_work(config):
             
 #        while True:
         log(str(len(QUEUE))
+            
         while start_flag:
             try:
 #                if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
