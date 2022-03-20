@@ -743,7 +743,7 @@ def do_work(config):
 #            asyncio.sleep(0)
             
 #        while True:
-        log(str(len(QUEUE))
+        log(str(len(QUEUE)))
             
         while start_flag:
             try:
