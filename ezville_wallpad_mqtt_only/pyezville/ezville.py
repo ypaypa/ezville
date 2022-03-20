@@ -508,6 +508,7 @@ def do_work(config):
 #                if COLLECTDATA['EVtime'] < time.time():
 #                    await update_state('EV', 0, 'OFF')
             
+            
             for que in QUEUE:
                 if data[0:8] in que['recvcmd']:
                     QUEUE.remove(que)
@@ -744,6 +745,10 @@ def do_work(config):
             
 #        while True:
         log(str(len(QUEUE)))
+        if start_flag:
+            log("GO")
+        if QUEUE:
+            log("GO2")
             
         while start_flag:
             try:
