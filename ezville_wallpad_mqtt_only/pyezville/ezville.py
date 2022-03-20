@@ -14,8 +14,6 @@ STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
 ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
 RESIDUE = ""
-msg_queue = Queue()
-start_flag = False
 #msg_queue = asyncio.Queue()
 
 ##################################################################
@@ -358,6 +356,9 @@ def do_work(config):
 
     HOMESTATE = {}
     QUEUE = []
+    msg_queue = Queue()
+    start_flag = False
+    
     COLLECTDATA = {'cond': find_signal, 'data': set(), 'EVtime': time.time(), 'LastRecv': time.time_ns()}
     if find_signal:
         log('[LOG] 50개의 신호를 수집 중..')
@@ -767,7 +768,6 @@ def do_work(config):
 #                        log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
 #                    COLLECTDATA['LastRecv'] = time.time_ns()
 #                elif time.time_ns() - COLLECTDATA['LastRecv'] > 100000000:
-                if True:
                     if QUEUE:
                         send_data = QUEUE.pop(0)
                         if elfin_log:
@@ -798,7 +798,7 @@ def do_work(config):
                 deque_message(),
                 send_to_elfin()
             )
-            await asyncio.sleep(0)
+            await asyncio.sleep(0.001)
         
     
     asyncio.run(main_run())
