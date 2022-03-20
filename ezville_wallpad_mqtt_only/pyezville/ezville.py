@@ -744,7 +744,6 @@ def do_work(config):
             
 #        while True:
         while start_flag:
-            log("RRRRRRRR")
             try:
 #                if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
 #                if time.time_ns() - COLLECTDATA['LastRecv'] > 100000000000: 
@@ -784,8 +783,8 @@ def do_work(config):
             except Exception as err:
                 log('[ERROR] send_to_elfin(): {}'.format(err))
                 return True
-            #await asyncio.sleep(0.01)
-            await asyncio.sleep(0)
+            await asyncio.sleep(0.01)
+            #await asyncio.sleep(0)
             
 #    loop = asyncio.get_event_loop()
     
