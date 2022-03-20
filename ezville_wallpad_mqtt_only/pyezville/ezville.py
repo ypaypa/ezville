@@ -15,6 +15,7 @@ ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
 RESIDUE = ""
 #msg_queue = asyncio.Queue()
+start_flag = False
 
 ##################################################################
 # Device 정보 여기에 추가
@@ -357,7 +358,7 @@ def do_work(config):
     HOMESTATE = {}
     QUEUE = []
     msg_queue = Queue()
-    start_flag = False
+#    start_flag = False
     
     COLLECTDATA = {'cond': find_signal, 'data': set(), 'EVtime': time.time(), 'LastRecv': time.time_ns()}
     if find_signal:
@@ -714,7 +715,7 @@ def do_work(config):
             
     def on_message(client, userdata, msg):
 #        global msg_queue
-#        global start_flag
+        global start_flag
 
         msg_queue.put(msg)
         start_flag = True
