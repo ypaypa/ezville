@@ -714,10 +714,9 @@ def do_work(config):
     def on_message(client, userdata, msg):
 #        global msg_queue
 #        global start_flag
-        if start_flag == False:
-            start_flag = True
-            
+
         msg_queue.put(msg)
+        start_flag = True
   #      asyncio.ensure_future(queue.put(msg))
     #    topics = msg.topic.split('/')
     #    try:
