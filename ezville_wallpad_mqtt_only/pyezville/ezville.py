@@ -744,7 +744,7 @@ def do_work(config):
             
 #        while True:
         while start_flag:
-#            try:
+            try:
 #                if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
 #                if time.time_ns() - COLLECTDATA['LastRecv'] > 100000000000: 
 #                    log(str(COLLECTDATA['LastRecv']) + "  :  " + str(time.time_ns()))
@@ -767,6 +767,7 @@ def do_work(config):
 #                        log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
 #                    COLLECTDATA['LastRecv'] = time.time_ns()
 #                elif time.time_ns() - COLLECTDATA['LastRecv'] > 100000000:
+                if True:
                     if QUEUE:
                         send_data = QUEUE.pop(0)
                         if elfin_log:
@@ -779,11 +780,11 @@ def do_work(config):
                         else:
                             if elfin_log:
                                 log('[SIGNAL] Send over 5 times. Send Failure. Delete a queue: {}'.format(send_data))
- #           except Exception as err:
- #               log('[ERROR] send_to_elfin(): {}'.format(err))
-  #              return True
+            except Exception as err:
+                log('[ERROR] send_to_elfin(): {}'.format(err))
+                return True
             #await asyncio.sleep(0.01)
-  #          await asyncio.sleep(0)
+            await asyncio.sleep(0)
             
 #    loop = asyncio.get_event_loop()
     
@@ -797,6 +798,7 @@ def do_work(config):
                 deque_message(),
                 send_to_elfin()
             )
+            await asyncio.sleep(0)
         
     
     asyncio.run(main_run())
