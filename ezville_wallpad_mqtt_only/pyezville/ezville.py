@@ -701,7 +701,7 @@ def do_work(config):
     async def deque_message():
         stop = False
         out = False
-        global msg_queue
+#        global msg_queue
         while not stop:
             if msg_queue.empty():
                 stop = True
@@ -712,8 +712,8 @@ def do_work(config):
 #        return out
             
     def on_message(client, userdata, msg):
-        global msg_queue
-        global start_flag
+#        global msg_queue
+#        global start_flag
         if start_flag == False:
             start_flag = True
             
