@@ -115,6 +115,8 @@ def ezville_loop(config):
     MSG_QUEUE = Queue()
     # EW11에 보낼 Command 및 예상 Acknowledge 패킷 
     CMD_QUEUE = []
+
+    HOMESTATE = {}
     
     # MQTT Discovery Que 및 모드 조절
     DISCOVERY_LIST = []
@@ -384,6 +386,7 @@ def ezville_loop(config):
 
                                                                                     
     async def update_state(device, id1, id2, onoff):
+        nonlocal HOMESTATE
         state = 'power'
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
         key = deviceID + state
@@ -401,6 +404,7 @@ def ezville_loop(config):
         return
                                                                                     
     async def update_temperature(device, id1, id2, curTemp, setTemp):
+        nonlocal HOMESTATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
         temperature = {'curTemp': "{:02X}".format(int(curTemp, 16)), 'setTemp': "{:02X}".format(int(setTemp, 16))}
         for state in temperature:
