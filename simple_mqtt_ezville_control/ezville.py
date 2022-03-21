@@ -300,7 +300,7 @@ def ezville_loop(config):
                                         payload["~"] = payload["~"].format(rid, id)
                                         payload["name"] = payload["name"].format(rid, id)
                                    
-                                        await mttq_discovery(payload)                            
+                                        await mqtt_discovery(payload)                            
                                     else:
                                         onoff = 'ON' if int(packet[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
                                         await update_state(name, rid, id, onoff)
@@ -321,7 +321,7 @@ def ezville_loop(config):
                                         payload["~"] = payload["~"].format(rid, src)
                                         payload["name"] = payload["name"].format(rid, src)
                                    
-                                        await mttq_discovery(payload)   
+                                        await mqtt_discovery(payload)   
                                     else:
                                         curT = int(packet[16 + 4 * rid:18 + 4 * rid], 16)
                                         setT = int(packet[18 + 4 * rid:20 + 4 * rid], 16)
