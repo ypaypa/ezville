@@ -350,7 +350,7 @@ def ezville_loop(config):
                                 slc = int(packet[8:10], 16) 
                                 
                                 for id in range(1, slc):
-                                    onoff = 'ON' if int(data[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
+                                    onoff = 'ON' if int(packet[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
                                     await update_state(name, rid, id, onoff)
                                     
                             elif name == 'thermostat':
@@ -423,7 +423,9 @@ def ezville_loop(config):
                                                                                     
                                                                                     
     async def send_to_elfin():
-        nonlocal CMD_QUEUE                                                                                             
+        nonlocal CMD_QUEUE
+        nonlocal DISCOVERY_MODE
+                                                                                             
         while not DISCOVERY_MODE:
             try:
 #                if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
