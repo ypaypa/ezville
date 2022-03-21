@@ -75,8 +75,6 @@ device_num = {STATE_HEADER[prefix][0]: 0 for prefix in STATE_HEADER}
 # DEVICE 별 SUB ID (방에 여러개의 DEVICE가 있는 경우)
 device_subnum = {STATE_HEADER[prefix][0]: {} for prefix in STATE_HEADER}
 
-##################################################################
-
 # LOG 메시지
 def log(string):
     date = time.strftime('%Y-%m-%d %p %I:%M:%S', time.localtime(time.time()))
@@ -104,7 +102,6 @@ def checksum(input_hex):
     except:
         return None
 
-    
 share_dir = '/share'
 config_dir = '/data'
 
@@ -117,6 +114,8 @@ def ezville_loop(config):
     
     # EW11 혹은 HA 전달 메시지 저장소
     MSG_QUEUE = Queue()
+    # EW11에 보낼 Command 및 예상 Acknowledge 패킷 
+    CMD_QUEUE = []
     
     # MQTT Discovery Que 및 모드 조절
     DISCOVERY_LIST = []
@@ -159,7 +158,7 @@ def ezville_loop(config):
                     await EW11_process(msg.payload.hex().upper())
 
     # HA에서 전달된 메시지 처리        
-    async def HA_process()
+    async def HA_process(topics, payload):
 
 
 
@@ -191,59 +190,10 @@ def ezville_loop(config):
         await asyncio.gather(*cors)
         
         
-    async def recv_from_elfin(data):
-        COLLECTDATA['LastRecv'] = time.time_ns()
-        if data:
-#            if HOMESTATE.get('EV1power') == 'ON':
-#                if COLLECTDATA['EVtime'] < time.time():
-#                    await update_state('EV', 0, 'OFF')
-            
-            
-            for que in QUEUE:
-                if data[0:8] in que['recvcmd']:
-                    QUEUE.remove(que)
-                    if debug:
-                        log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
-                    break
-            
-            if not STATE_HEADER.get(data[2:4]):
-                return
-            
-            device_name = STATE_HEADER.get(data[2:4])[0]
-            if device_name == 'thermostat':
-                if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
-#                    cors = []                    
-                    device_count = device_num[device_name]
-                    for ic in range(device_count):
-                        curT = str(int(data[20 + 4 * ic:22 + 4 * ic], 16))
-                        setT = str(int(data[22 + 4 * ic:24 + 4 * ic], 16))
-                        index = ic
-                        onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - ic) & 1 else 'OFF'
-                        await update_state(device_name, index, onoff)
-                        await update_temperature(index, curT, setT)
-#                        cors.append(update_state(device_name, index, onoff))
-#                        cors.append(update_temperature(index, curT, setT))
-                    
-#                    await asyncio.gather(*cors)
-
-            elif device_name == 'light':
-                if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
-                    cors = []
-                    device_count = device_num[device_name]
-                    light_count = device_subnum[device_name][int(data[5], 16)]
-                 
-                    base_index = 0
-                    for c in range(int(data[5], 16) - 1):
-                        base_index += device_subnum[device_name][c+1]
-                
-                    for ic in range(light_count):
-                        index = base_index + ic
-                        onoff = 'ON' if int(data[12 + 2 * ic: 14 + 2 * ic], 16) > 0 else 'OFF'
-                        await update_state(device_name, index, onoff)
         
     
     # EW11 전달된 메시지 처리
-    async def EW11_process(raw_data)
+    async def EW11_process(raw_data):
         raw_data = RESIDUE + raw_data
         DISCOVERY = DISCOVERY_MODE
         
@@ -273,10 +223,10 @@ def ezville_loop(config):
                     k+=1
                     continue
                 else:
-                    # DISCOVERY MODE인 경우 패킷 정보 기반 장치 등록 실시
-                    if DISCOVERY:
-                        # STATE 업데이트 패킷이면 분석하여 장치 등록을 먼저하고 이후 STATE 업데이트 실시
-                        if packet[2:4] in STATE_HEADER and packet[6:8] in STATE_HEADER[packet[2:4]]:
+                    # STATE 패킷인지 우선 확인
+                    if packet[2:4] in STATE_HEADER and (packet[6:8] in STATE_HEADER[packet[2:4][1] or packet[6:8] == ACK_HEADER.get(packet[2:4])[1]):
+                        # 현재 DISCOVERY MODE인 경우 패킷 정보 기반 장치 등록 실시
+                        if DISCOVERY:
                             name = STATE_HEADER[packet[2:4]][0]                            
                             if name == 'light':
                                 # ROOM ID
@@ -295,7 +245,10 @@ def ezville_loop(config):
                                         payload["name"] = payload["name"].format(rid, id)
                                    
                                         await mttq_discovery(payload)                            
-                                                          
+                                    else:
+                                        onoff = 'ON' if int(packet[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
+                                        await update_state(name, rid, id, onoff)
+                                                                                    
                             elif name == 'thermostat':
                                 # room 갯수
                                 rc = int((int(packet[8:10], 16) - 5) / 2)
@@ -312,92 +265,54 @@ def ezville_loop(config):
                                         payload["~"] = payload["~"].format(rid, src)
                                         payload["name"] = payload["name"].format(rid, src)
                                    
-                                        await mttq_discovery(payload)           
-                    else:
-
+                                        await mttq_discovery(payload)   
+                                    else:
+                                        curT = int(packet[16 + 4 * rid:18 + 4 * rid], 16)
+                                        setT = int(packet[18 + 4 * rid:20 + 4 * rid], 16)
+                                        onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
+                                        await update_state(name, rid, src, onoff)
+                                        await update_temperature(name, rid, src, curT, setT)           
+                                                                                    
+                        # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
+                        else:
+                            for que in CMD_QUEUE:
+                                if packet[0:8] in que['recvcmd']:
+                                    QUEUE.remove(que)
+                                    if debug:
+                                        log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
+                                    break
                         
-                            async def recv_from_elfin(data):
+                            name = STATE_HEADER[packet[2:4]][0]
+                  
+                            if name == 'light':
+                                # ROOM ID
+                                rid = int(packet[5], 16)
+                                # ROOM의 light 갯수 + 1
+                                slc = int(packet[8:10], 16) 
                                 
-        COLLECTDATA['LastRecv'] = time.time_ns()
-        if data:
-#            if HOMESTATE.get('EV1power') == 'ON':
-#                if COLLECTDATA['EVtime'] < time.time():
-#                    await update_state('EV', 0, 'OFF')
-            
-            
-            for que in QUEUE:
-                if data[0:8] in que['recvcmd']:
-                    QUEUE.remove(que)
-                    if debug:
-                        log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
-                    break
-            
-            if not STATE_HEADER.get(data[2:4]):
-                return
-            
-            device_name = STATE_HEADER.get(data[2:4])[0]
-            if device_name == 'thermostat':
-                if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
-#                    cors = []                    
-                    device_count = device_num[device_name]
-                    for ic in range(device_count):
-                        curT = str(int(data[20 + 4 * ic:22 + 4 * ic], 16))
-                        setT = str(int(data[22 + 4 * ic:24 + 4 * ic], 16))
-                        index = ic
-                        onoff = 'ON' if int(data[12:14], 16) & 0x1F >> (device_count - 1 - ic) & 1 else 'OFF'
-                        await update_state(device_name, index, onoff)
-                        await update_temperature(index, curT, setT)
-#                        cors.append(update_state(device_name, index, onoff))
-#                        cors.append(update_temperature(index, curT, setT))
-                    
-#                    await asyncio.gather(*cors)
-
-            elif device_name == 'light':
-                if data[6:8] == STATE_HEADER.get(data[2:4])[1] or data[6:8] == ACK_HEADER.get(data[2:4])[1]:
-                    cors = []
-                    device_count = device_num[device_name]
-                    light_count = device_subnum[device_name][int(data[5], 16)]
-                 
-                    base_index = 0
-                    for c in range(int(data[5], 16) - 1):
-                        base_index += device_subnum[device_name][c+1]
-                
-                    for ic in range(light_count):
-                        index = base_index + ic
-                        onoff = 'ON' if int(data[12 + 2 * ic: 14 + 2 * ic], 16) > 0 else 'OFF'
-                        await update_state(device_name, index, onoff)
-                        
-                        
-                        
+                                for id in range(1, slc):
+                                    onoff = 'ON' if int(data[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
+                                    await update_state(name, rid, id, onoff)
+                                    
+                            elif name == 'thermostat':
+                                # room 갯수
+                                rc = int((int(packet[8:10], 16) - 5) / 2)
+                                # room의 조절기 수 (현재 하나 뿐임)
+                                src = 1
+                                
+                                for rid in range(1, rc + 1):
+                                    curT = int(packet[16 + 4 * rid:18 + 4 * rid], 16)
+                                    setT = int(packet[18 + 4 * rid:20 + 4 * rid], 16)
+                                    onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
+                                    await update_state(name, rid, src, onoff)
+                                    await update_temperature(name, rid, src, curT, setT)
+                       
                 RESIDUE = ""
                 k = k + packet_length
             else:
                 k+=1
-                    
-        await asyncio.gather(*cors)
 
-                                        
-     for name in device_num:
-        if device_subnum[name] == {}:
-            for id in range(device_num[name]):
-                payload = DISCOVERY_PAYLOAD[name][0].copy()
-                payload["~"] = payload["~"].format(id + 1)
-                payload["name"] = payload["name"].format(id + 1)
-                            
-                mqtt_discovery(payload)
-        else:
-            id = 0
-            for i in range(device_num[name]):
-                for j in range(device_subnum[name][i + 1]):
-                    id += 1
-                    
-                    payload = DISCOVERY_PAYLOAD[name][0].copy()
-                    payload["~"] = payload["~"].format(id)
-                    payload["name"] = payload["name"].format(id)
-                            
-                    mqtt_discovery(payload)
-            
-            
+
     async def mqtt_discovery(payload):
         intg = payload.pop("_intg")
 
