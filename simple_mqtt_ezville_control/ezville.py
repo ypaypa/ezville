@@ -274,7 +274,7 @@ def ezville_loop(config):
                     continue
                 else:
                     # STATE 패킷인지 우선 확인
-                    if packet[2:4] in STATE_HEADER and (packet[6:8] in STATE_HEADER[packet[2:4][1] or packet[6:8] == ACK_HEADER.get(packet[2:4])[1]):
+                    if packet[2:4] in STATE_HEADER and (packet[6:8] in STATE_HEADER[packet[2:4]][1] or packet[6:8] == ACK_HEADER[packet[2:4]][1]):
                         # 현재 DISCOVERY MODE인 경우 패킷 정보 기반 장치 등록 실시
                         if DISCOVERY:
                             name = STATE_HEADER[packet[2:4]][0]                            
