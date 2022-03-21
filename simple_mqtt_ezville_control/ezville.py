@@ -138,11 +138,13 @@ def ezville_loop(config):
          
         
     def on_message(client, userdata, msg):
+        nonlocal MSG_QUEUE
         MSG_QUEUE.put(msg)
     
     # MQTT message를 분류하여 처리
     async def process_message():
         # MSG_QUEUE의 message를 하나씩 pop
+        nonlocal MSG_QUEUE
         stop = False
         while not stop:
             if MSG_QUEUE.empty():
@@ -158,6 +160,7 @@ def ezville_loop(config):
 
     # HA에서 전달된 메시지 처리        
     async def HA_process(topics, value):
+        nonlocal CMD_QUEUE
         device_info = topics[1].split('_')
         device = device_info[0]
         
@@ -184,7 +187,7 @@ def ezville_loop(config):
                             recvcmd = ['NULL']
                             
                             if sendcmd:
-                                QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
                                 if debug:
                                     log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
                                     
@@ -199,7 +202,7 @@ def ezville_loop(config):
                                 recvcmd = ['F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['ack']]
 
                                 if sendcmd:
-                                    QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                                    CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
                                     if debug:
                                         log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
 
@@ -244,6 +247,9 @@ def ezville_loop(config):
     
     # EW11 전달된 메시지 처리
     async def EW11_process(raw_data):
+        nonlocal DISCOVERY_MODE, DISCOVERY_LIST
+        nonlocal RESIDUE
+        nonlocal CMD_QUEUE
         raw_data = RESIDUE + raw_data
         DISCOVERY = DISCOVERY_MODE
         
@@ -328,7 +334,7 @@ def ezville_loop(config):
                             # 앞서 보낸 명령에 대한 Acknowledge 인 경우 CMD_QUEUE에서 해당 명령 삭제
                             for que in CMD_QUEUE:
                                 if packet[0:8] in que['recvcmd']:
-                                    QUEUE.remove(que)
+                                    CMD_QUEUE.remove(que)
                                     if debug:
                                         log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
                                     break
