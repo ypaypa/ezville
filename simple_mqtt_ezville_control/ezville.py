@@ -122,7 +122,7 @@ def ezville_loop(config):
     DISCOVERY_DURATION = 20
     
     # EW11 전달 패킷 중 처리 후 남은 짜투리 패킷 저장
-    RESIDUE = 
+    RESIDUE = ""
     
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
