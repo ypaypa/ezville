@@ -233,7 +233,7 @@ def ezville_loop(config):
 
                         if sendcmd:
                             recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
-                            QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
                             if debug:
                                 log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
                         else:
@@ -422,7 +422,8 @@ def ezville_loop(config):
         return  
                                                                                     
                                                                                     
-    async def send_to_elfin():                                                                                              
+    async def send_to_elfin():
+        nonlocal CMD_QUEUE                                                                                             
         while not DISCOVERY_MODE:
             try:
 #                if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
