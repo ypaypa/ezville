@@ -148,7 +148,7 @@ def ezville_loop(config):
             if MSG_QUEUE.empty():
                 stop = True
             else:
-                msg = msg_queue.get()
+                msg = MSG_QUEUE.get()
                 topics = msg.topic.split('/')
 
                 if topics[0] == HA_TOPIC and topics[-1] == 'command':
