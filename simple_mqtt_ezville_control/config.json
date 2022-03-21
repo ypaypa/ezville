@@ -1,9 +1,9 @@
 {
-  "name": "MQTT2elfin EzVille Wallpad Controller with Python",
+  "name": "MQTT 기반 Simple EzVille Wallpad Control",
   "version": "0.0.1",
-  "slug": "ezville_wallpad_mqtt_only",
-  "url": "https://github.com/ktdo79/HAaddon",
-  "description": "mqtt 통신을 활용한 EzVille 월패드 컨트롤러",
+  "slug": "simple_mqtt_ezville_control",
+  "url": "https://github.com/ktdo79/addon",
+  "description": "mqtt 통신을 활용한 간단화된 EzVille 월패드 컨트롤러",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
   "map": [
     "share:rw"
