@@ -479,17 +479,19 @@ def ezville_loop(config):
     log('======================================')
     
     async def main_run():
+        nonlocal DISCOVERY_MODE
         while True:
             await asyncio.gather(
                 process_message(),
                 send_to_elfin()
             )
             await asyncio.sleep(0.001)
-            if time.time() > target_time:
+            if time.time() > target_time and DISCOVERY_MODE:
                 DISCOVERY_MODE = False
                 log('======================================')
                 log('동작을 시작합니다...')
-                                                                                    
+                log('======================================')
+                                                                                 
     asyncio.run(main_run())
 
 if __name__ == '__main__':
