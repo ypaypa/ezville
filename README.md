@@ -15,5 +15,7 @@ MQTT discovery를 이용, 장치별로 yaml 파일을 직접 작성하지 않아
  현재 삼성, 대림, 코맥스, 현대 월패드를 지원하면 ew11 같은 무선 소켓 연결도 지원합니다. 
  최근 HAOS에서 설치가 안되는 문제를 수정
 
+### Simple MQTT EzVille Control
 
+ 순수 MQTT 기반으로 MQTT Discovery 기능 
 
