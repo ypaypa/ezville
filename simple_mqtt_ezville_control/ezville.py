@@ -119,8 +119,8 @@ def ezville_loop(config):
     # 기존 STATE 저장용 공간
     HOMESTATE = {}
     
-    # MSG_CACHE
-    MSG_CACHE = []
+    # 이전에 전달된 패킷인지 판단을 위한 캐쉬
+    MSG_CACHE = {}
     
     # MQTT Discovery Que 및 모드 조절
     DISCOVERY_LIST = []
