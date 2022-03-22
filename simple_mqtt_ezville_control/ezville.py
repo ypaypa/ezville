@@ -378,7 +378,7 @@ def ezville_loop(config):
                                     for rid in range(1, rc + 1):
                                         setT = packet[16 + 4 * rid:18 + 4 * rid]
                                         curT = packet[18 + 4 * rid:20 + 4 * rid]
-                                       onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
+                                        onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
                                         awayonoff = 'ON' if int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
                                     
                                         await update_state(name, 'power', rid, src, onoff)
