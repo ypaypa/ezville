@@ -345,13 +345,15 @@ def ezville_loop(config):
                         # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
                         else:
                             # 앞서 보낸 명령에 대한 Acknowledge 인 경우 CMD_QUEUE에서 해당 명령 삭제
-                            for que in CMD_QUEUE:
-                                if packet[0:8] or 'NULL' in que['recvcmd']:
-                                    CMD_QUEUE.remove(que)
-                                    if debug:
-                                        log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
-                                    break
+                            if packet[6:8] == ACK_HEADER[packet[2:4]][1]:
+                                for que in CMD_QUEUE:
+                                    if packet[0:8] or 'NULL' in que['recvcmd']:
+                                        CMD_QUEUE.remove(que)
+                                        if debug:
+                                            log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
+                                        break
                             
+                            # MSG_CACHE에 없는 새로운 패킷인 경우만 실행
                             if MSG_CACHE.get(PACKET[0:10]) != PACKET[10:]:
                                 name = STATE_HEADER[packet[2:4]][0]                             
                   
@@ -370,6 +372,7 @@ def ezville_loop(config):
                                         MSG_CACHE[PACKET[0:10]] = PACKET[10:]
                                     
                                 elif name == 'thermostat':
+                                    log("TEST: " + str(time.time()))
                                     # room 갯수
                                     rc = int((int(packet[8:10], 16) - 5) / 2)
                                     # room의 조절기 수 (현재 하나 뿐임)
