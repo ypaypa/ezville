@@ -130,6 +130,10 @@ def ezville_loop(config):
     # EW11 전달 패킷 중 처리 후 남은 짜투리 패킷 저장
     RESIDUE = ""
     
+    # 강제 주기적 업데이트 설정 - 300초 마다 HA 업데이트 실시
+    FORCE_UPDATE = False
+    FORCE_DURATION = 300
+    
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             log("Connected to MQTT broker..")
@@ -261,6 +265,7 @@ def ezville_loop(config):
         nonlocal RESIDUE
         nonlocal CMD_QUEUE
         nonlocal MSG_CACHE
+        nonlocal FORCE_UPDATE
         raw_data = RESIDUE + raw_data
         DISCOVERY = DISCOVERY_MODE
         
@@ -355,8 +360,8 @@ def ezville_loop(config):
                                             log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
                                         break
                             
-                            # MSG_CACHE에 없는 새로운 패킷인 경우만 실행
-                            if MSG_CACHE.get(packet[0:10]) != packet[10:]:
+                            # MSG_CACHE에 없는 새로운 패킷이거나 FORCE_UPDATE 실행된 경우만 실행
+                            if MSG_CACHE.get(packet[0:10]) != packet[10:] or FORCE_UPDATE:
                                 name = STATE_HEADER[packet[2:4]][0]                             
                   
                                 if name == 'light':
@@ -413,14 +418,19 @@ def ezville_loop(config):
                                                                                     
     async def update_state(device, state, id1, id2, onoff):
         nonlocal HOMESTATE
+        nonlocal FORCE_UPDATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
         key = deviceID + state
 
-        if onoff != HOMESTATE.get(key):
+        if onoff != HOMESTATE.get(key) or FORCE_UPDATE:
             HOMESTATE[key] = onoff
             topic = STATE_TOPIC.format(deviceID, state)
-
             mqtt_client.publish(topic, onoff.encode())
+            
+            # 강제 업데이트 모드였으면 해제 시켜줌
+            if FORCE_UPDATE:
+                    FORCE_UPDATE = False
+                    
             if mqtt_log:
                 log('[LOG] ->> HA : {} >> {}'.format(topic, onoff))
         else:
@@ -431,15 +441,21 @@ def ezville_loop(config):
     
     async def update_temperature(device, id1, id2, curTemp, setTemp):
         nonlocal HOMESTATE
+        nonlocal FORCE_UPDATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
         temperature = {'curTemp': "{}".format(str(int(curTemp, 16))), 'setTemp': "{}".format(str(int(setTemp, 16)))}
         for state in temperature:
             key = deviceID + state
             val = temperature[state]
-            if val != HOMESTATE.get(key):
+            if val != HOMESTATE.get(key) or FORCE_UPDATE:
                 HOMESTATE[key] = val
                 topic = STATE_TOPIC.format(deviceID, state)
                 mqtt_client.publish(topic, val.encode())
+                
+                 # 강제 업데이트 모드였으면 해제 시켜줌
+                if FORCE_UPDATE:
+                    FORCE_UPDATE = False
+                
                 if mqtt_log:
                     log('[LOG] ->> HA : {} -> {}'.format(topic, val))
             else:
@@ -504,23 +520,39 @@ def ezville_loop(config):
     mqtt_client.connect_async(config['mqtt_server'])
     mqtt_client.loop_start()        
   
+    # Discovery 및 강제 업데이트 시간 설정
     target_time = time.time() + DISCOVERY_DURATION
+    force_target_time = target_time + FORCE_DURATION
+    
     log('장치를 등록합니다...')
     log('======================================')
     
     async def main_run():
+        nonlocal target_time, force_target_time
         nonlocal DISCOVERY_MODE
+        nonlocal FORCE_DURATION
+        nonlocal FORCE_UPDATE
+        
         while True:
             await asyncio.gather(
                 process_message(),
                 send_to_elfin()
-            )
-            await asyncio.sleep(0.01)
-            if time.time() > target_time and DISCOVERY_MODE:
+            )           
+            
+            timestamp = time.time()
+            if timestamp > target_time and DISCOVERY_MODE:
                 DISCOVERY_MODE = False
                 log('======================================')
                 log('동작을 시작합니다...')
                 log('======================================')
+            
+            # 정해진 시간이 지났으면 타이머 리셋 후 HA 상태 강제 업데이트
+            if timestamp > force_target_time and not FORCE_UPDATE:
+                force_target_time = time.time() + FORCE_DURATION
+                FORCE_UPDATE = True
+                
+            # 0.02초 대기 후 루프 진행
+            await asyncio.sleep(0.02)
                                                                                  
     asyncio.run(main_run())
 
