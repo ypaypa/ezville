@@ -496,7 +496,7 @@ def ezville_loop(config):
                 process_message(),
                 send_to_elfin()
             )
-            await asyncio.sleep(0.001)
+            await asyncio.sleep(0.0001)
             if time.time() > target_time and DISCOVERY_MODE:
                 DISCOVERY_MODE = False
                 log('======================================')
