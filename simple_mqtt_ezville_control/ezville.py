@@ -72,7 +72,6 @@ ACK_HEADER = {
 # LOG 메시지
 def log(string):
     date = time.strftime('%Y-%m-%d %p %I:%M:%S', time.localtime(time.time()))
-    print('[{}] {}'.format(date, string))
     return
 
 # CHECKSUM 및 ADD를 마지막 4 BYTE에 추가
@@ -513,7 +512,7 @@ def ezville_loop(config):
                 process_message(),
                 send_to_elfin()
             )
-            await asyncio.sleep(0.001)
+            await asyncio.sleep(0.01)
             if time.time() > target_time and DISCOVERY_MODE:
                 DISCOVERY_MODE = False
                 log('======================================')
