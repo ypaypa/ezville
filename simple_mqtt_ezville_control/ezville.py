@@ -186,7 +186,7 @@ def ezville_loop(config):
                         
                         if topics[2] == 'away':
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '01010000')
-                            recvcmd = ['NULL']
+                            recvcmd = 'NULL'
                             
                             if sendcmd:
                                 CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
@@ -305,7 +305,8 @@ def ezville_loop(config):
                                         await mqtt_discovery(payload)                            
                                     else:
                                         onoff = 'ON' if int(packet[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
-                                        await update_state(name, rid, id, onoff)
+                                        
+                                        await update_state(name, 'power', rid, id, onoff)
                                                                                     
                             elif name == 'thermostat':
                                 # room 갯수
@@ -325,19 +326,20 @@ def ezville_loop(config):
                                    
                                         await mqtt_discovery(payload)   
                                     else:
-                                        #setT = int(packet[16 + 4 * rid:18 + 4 * rid], 16)
-                                        #curT = int(packet[18 + 4 * rid:20 + 4 * rid], 16)
                                         setT = packet[16 + 4 * rid:18 + 4 * rid]
                                         curT = packet[18 + 4 * rid:20 + 4 * rid]
                                         onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
-                                        await update_state(name, rid, src, onoff)
-                                        await update_temperature(name, rid, src, curT, setT)           
+                                        awayonoff = 'ON' if int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
+
+                                        await update_state(name, 'power', rid, src, onoff)
+                                        await update_state(name, 'away', rid, src, awayonoff)
+                                        await update_temperature(name, rid, src, curT, setT)
                                                                                     
                         # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
                         else:
                             # 앞서 보낸 명령에 대한 Acknowledge 인 경우 CMD_QUEUE에서 해당 명령 삭제
                             for que in CMD_QUEUE:
-                                if packet[0:8] in que['recvcmd']:
+                                if packet[0:8] or 'NULL' in que['recvcmd']:
                                     CMD_QUEUE.remove(que)
                                     if debug:
                                         log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
@@ -353,7 +355,8 @@ def ezville_loop(config):
                                 
                                 for id in range(1, slc):
                                     onoff = 'ON' if int(packet[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
-                                    await update_state(name, rid, id, onoff)
+                                    
+                                    await update_state(name, 'power', rid, id, onoff)
                                     
                             elif name == 'thermostat':
                                 # room 갯수
@@ -362,12 +365,13 @@ def ezville_loop(config):
                                 src = 1
                                 
                                 for rid in range(1, rc + 1):
-                                    #setT = int(packet[16 + 4 * rid:18 + 4 * rid], 16)
-                                    #curT = int(packet[18 + 4 * rid:20 + 4 * rid], 16)
                                     setT = packet[16 + 4 * rid:18 + 4 * rid]
                                     curT = packet[18 + 4 * rid:20 + 4 * rid]
                                     onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
-                                    await update_state(name, rid, src, onoff)
+                                    awayonoff = 'ON' if int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
+                                    
+                                    await update_state(name, 'power', rid, src, onoff)
+                                    await update_state(name, 'away', rid, src, awayonoff)
                                     await update_temperature(name, rid, src, curT, setT)
                        
                 RESIDUE = ""
@@ -389,9 +393,8 @@ def ezville_loop(config):
         mqtt_client.publish(topic, json.dumps(payload))
 
                                                                                     
-    async def update_state(device, id1, id2, onoff):
+    async def update_state(device, state, id1, id2, onoff):
         nonlocal HOMESTATE
-        state = 'power'
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
         key = deviceID + state
 
@@ -410,7 +413,6 @@ def ezville_loop(config):
     async def update_temperature(device, id1, id2, curTemp, setTemp):
         nonlocal HOMESTATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
-        #temperature = {'curTemp': "{:02d}".format(curTemp), 'setTemp': "{:02d}".format(setTemp)}
         temperature = {'curTemp': "{}".format(str(int(curTemp, 16))), 'setTemp': "{}".format(str(int(setTemp, 16)))}
         for state in temperature:
             key = deviceID + state
