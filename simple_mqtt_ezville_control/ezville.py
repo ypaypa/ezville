@@ -57,16 +57,16 @@ DISCOVERY_PAYLOAD = {
 
 # STATE 확인용 Dictionary
 STATE_HEADER = {
-    prop["state"]["id"]: (device, prop["state"]["cmd"])
+    prop['state']['id']: (device, prop['state']['cmd'])
     for device, prop in RS485_DEVICE.items()
-    if "state" in prop
+    if 'state' in prop
 }
 
 ACK_HEADER = {
-    prop[cmd]["id"]: (device, prop[cmd]["ack"])
+    prop[cmd]['id']: (device, prop[cmd]['ack'])
     for device, prop in RS485_DEVICE.items()
         for cmd, code in prop.items()
-            if "ack" in code
+            if 'ack' in code
 }
 
 # LOG 메시지
@@ -115,8 +115,12 @@ def ezville_loop(config):
     MSG_QUEUE = Queue()
     # EW11에 보낼 Command 및 예상 Acknowledge 패킷 
     CMD_QUEUE = []
-
+    
+    # 기존 STATE 저장용 공간
     HOMESTATE = {}
+    
+    # MSG_CACHE
+    MSG_CACHE = []
     
     # MQTT Discovery Que 및 모드 조절
     DISCOVERY_LIST = []
@@ -254,6 +258,7 @@ def ezville_loop(config):
         nonlocal DISCOVERY_MODE, DISCOVERY_LIST
         nonlocal RESIDUE
         nonlocal CMD_QUEUE
+        nonlocal MSG_CACHE
         raw_data = RESIDUE + raw_data
         DISCOVERY = DISCOVERY_MODE
         
@@ -346,35 +351,42 @@ def ezville_loop(config):
                                     if debug:
                                         log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
                                     break
-                        
-                            name = STATE_HEADER[packet[2:4]][0]
+                            
+                            if MSG_CACHE.get(PACKET[0:10]) != PACKET[10:]:
+                                name = STATE_HEADER[packet[2:4]][0]                             
                   
-                            if name == 'light':
-                                # ROOM ID
-                                rid = int(packet[5], 16)
-                                # ROOM의 light 갯수 + 1
-                                slc = int(packet[8:10], 16) 
+                                if name == 'light':
+                                    # ROOM ID
+                                    rid = int(packet[5], 16)
+                                    # ROOM의 light 갯수 + 1
+                                    slc = int(packet[8:10], 16) 
+                                    
+                                    for id in range(1, slc):
+                                        onoff = 'ON' if int(packet[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
+                                        
+                                        await update_state(name, 'power', rid, id, onoff)
+                                        
+                                        # 한번 처리한 패턴은 CACHE 저장
+                                        MSG_CACHE[PACKET[0:10]] = PACKET[10:]
+                                    
+                                elif name == 'thermostat':
+                                    # room 갯수
+                                    rc = int((int(packet[8:10], 16) - 5) / 2)
+                                    # room의 조절기 수 (현재 하나 뿐임)
+                                    src = 1
                                 
-                                for id in range(1, slc):
-                                    onoff = 'ON' if int(packet[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
+                                    for rid in range(1, rc + 1):
+                                        setT = packet[16 + 4 * rid:18 + 4 * rid]
+                                        curT = packet[18 + 4 * rid:20 + 4 * rid]
+                                       onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
+                                        awayonoff = 'ON' if int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
                                     
-                                    await update_state(name, 'power', rid, id, onoff)
-                                    
-                            elif name == 'thermostat':
-                                # room 갯수
-                                rc = int((int(packet[8:10], 16) - 5) / 2)
-                                # room의 조절기 수 (현재 하나 뿐임)
-                                src = 1
-                                
-                                for rid in range(1, rc + 1):
-                                    setT = packet[16 + 4 * rid:18 + 4 * rid]
-                                    curT = packet[18 + 4 * rid:20 + 4 * rid]
-                                    onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
-                                    awayonoff = 'ON' if int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
-                                    
-                                    await update_state(name, 'power', rid, src, onoff)
-                                    await update_state(name, 'away', rid, src, awayonoff)
-                                    await update_temperature(name, rid, src, curT, setT)
+                                        await update_state(name, 'power', rid, src, onoff)
+                                        await update_state(name, 'away', rid, src, awayonoff)
+                                        await update_temperature(name, rid, src, curT, setT)
+                                        
+                                        # 한번 처리한 패턴은 CACHE 저장
+                                        MSG_CACHE[PACKET[0:10]] = PACKET[10:]
                        
                 RESIDUE = ""
                 k = k + packet_length
