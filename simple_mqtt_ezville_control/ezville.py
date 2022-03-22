@@ -146,6 +146,7 @@ def ezville_loop(config):
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
         MSG_QUEUE.put(msg)
+        log("TEST: " + str(time.time()))
     
     # MQTT message를 분류하여 처리
     async def process_message():
@@ -372,7 +373,6 @@ def ezville_loop(config):
                                         MSG_CACHE[packet[0:10]] = packet[10:]
                                     
                                 elif name == 'thermostat':
-                                    log("TEST: " + str(time.time()))
                                     # room 갯수
                                     rc = int((int(packet[8:10], 16) - 5) / 2)
                                     # room의 조절기 수 (현재 하나 뿐임)
@@ -513,7 +513,7 @@ def ezville_loop(config):
                 process_message(),
                 send_to_elfin()
             )
-            await asyncio.sleep(0.0001)
+            await asyncio.sleep(0.001)
             if time.time() > target_time and DISCOVERY_MODE:
                 DISCOVERY_MODE = False
                 log('======================================')
