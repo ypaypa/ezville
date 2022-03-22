@@ -325,8 +325,10 @@ def ezville_loop(config):
                                    
                                         await mqtt_discovery(payload)   
                                     else:
-                                        curT = int(packet[16 + 4 * rid:18 + 4 * rid], 16)
-                                        setT = int(packet[18 + 4 * rid:20 + 4 * rid], 16)
+                                        #setT = int(packet[16 + 4 * rid:18 + 4 * rid], 16)
+                                        #curT = int(packet[18 + 4 * rid:20 + 4 * rid], 16)
+                                        setT = packet[16 + 4 * rid:18 + 4 * rid]
+                                        curT = packet[18 + 4 * rid:20 + 4 * rid]
                                         onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
                                         await update_state(name, rid, src, onoff)
                                         await update_temperature(name, rid, src, curT, setT)           
@@ -360,8 +362,10 @@ def ezville_loop(config):
                                 src = 1
                                 
                                 for rid in range(1, rc + 1):
-                                    curT = int(packet[16 + 4 * rid:18 + 4 * rid], 16)
-                                    setT = int(packet[18 + 4 * rid:20 + 4 * rid], 16)
+                                    #setT = int(packet[16 + 4 * rid:18 + 4 * rid], 16)
+                                    #curT = int(packet[18 + 4 * rid:20 + 4 * rid], 16)
+                                    setT = packet[16 + 4 * rid:18 + 4 * rid]
+                                    curT = packet[18 + 4 * rid:20 + 4 * rid]
                                     onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
                                     await update_state(name, rid, src, onoff)
                                     await update_temperature(name, rid, src, curT, setT)
@@ -406,6 +410,7 @@ def ezville_loop(config):
     async def update_temperature(device, id1, id2, curTemp, setTemp):
         nonlocal HOMESTATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
+        #temperature = {'curTemp': "{:02d}".format(curTemp), 'setTemp': "{:02d}".format(setTemp)}
         temperature = {'curTemp': "{:02d}".format(curTemp), 'setTemp': "{:02d}".format(setTemp)}
         for state in temperature:
             key = deviceID + state
