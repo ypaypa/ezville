@@ -481,7 +481,7 @@ def ezville_loop(config):
                         if elfin_log:
                             log('[SIGNAL] 신호 전송: {}'.format(send_data))
                         mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
-                        asyncio.sleep(0.001)
+                        await asyncio.sleep(0.001)
                         mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
 
                         if send_data['count'] < 5:
