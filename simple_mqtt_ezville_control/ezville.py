@@ -406,7 +406,7 @@ def ezville_loop(config):
     async def update_temperature(device, id1, id2, curTemp, setTemp):
         nonlocal HOMESTATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
-        temperature = {'curTemp': "{:02X}".format(curTemp), 'setTemp': "{:02X}".format(setTemp)}
+        temperature = {'curTemp': "{:02d}".format(curTemp), 'setTemp': "{:02d}".format(setTemp)}
         for state in temperature:
             key = deviceID + state
             val = temperature[state]
