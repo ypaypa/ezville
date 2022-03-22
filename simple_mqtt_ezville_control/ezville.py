@@ -522,7 +522,7 @@ def ezville_loop(config):
     log('======================================')
     
     async def main_run():
-        nonlocal target_time, force_target_time
+        nonlocal target_time, force_target_time, force_stop_time
         nonlocal DISCOVERY_MODE
         nonlocal FORCE_PERIOD
         nonlocal FORCE_DURATION
