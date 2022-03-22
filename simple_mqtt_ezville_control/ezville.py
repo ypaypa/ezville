@@ -72,6 +72,7 @@ ACK_HEADER = {
 # LOG 메시지
 def log(string):
     date = time.strftime('%Y-%m-%d %p %I:%M:%S', time.localtime(time.time()))
+    print('[{}] {}'.format(date, string))
     return
 
 # CHECKSUM 및 ADD를 마지막 4 BYTE에 추가
@@ -145,7 +146,7 @@ def ezville_loop(config):
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
         MSG_QUEUE.put(msg)
-        log("TEST: " + str(time.time()))
+        
     
     # MQTT message를 분류하여 처리
     async def process_message():
@@ -164,6 +165,7 @@ def ezville_loop(config):
                 elif topics[0] == ELFIN_TOPIC and topics[-1] == 'recv':
                     await EW11_process(msg.payload.hex().upper())
 
+                    
     # HA에서 전달된 메시지 처리        
     async def HA_process(topics, value):
         nonlocal CMD_QUEUE
@@ -425,7 +427,8 @@ def ezville_loop(config):
             if debug:
                 log('[DEBUG] {} is already set: {}'.format(deviceID, onoff))
         return
-                                                                                    
+
+    
     async def update_temperature(device, id1, id2, curTemp, setTemp):
         nonlocal HOMESTATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
