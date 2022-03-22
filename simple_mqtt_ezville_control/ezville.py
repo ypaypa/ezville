@@ -130,9 +130,10 @@ def ezville_loop(config):
     # EW11 전달 패킷 중 처리 후 남은 짜투리 패킷 저장
     RESIDUE = ""
     
-    # 강제 주기적 업데이트 설정 - 300초 마다 HA 업데이트 실시
+    # 강제 주기적 업데이트 설정 - 매 300초 마다 3초간 HA 업데이트 실시
     FORCE_UPDATE = False
-    FORCE_DURATION = 300
+    FORCE_PERIOD = 300
+    FORCE_DURATION = 3
     
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -426,10 +427,6 @@ def ezville_loop(config):
             HOMESTATE[key] = onoff
             topic = STATE_TOPIC.format(deviceID, state)
             mqtt_client.publish(topic, onoff.encode())
-            
-            # 강제 업데이트 모드였으면 해제 시켜줌
-            if FORCE_UPDATE:
-                    FORCE_UPDATE = False
                     
             if mqtt_log:
                 log('[LOG] ->> HA : {} >> {}'.format(topic, onoff))
@@ -451,10 +448,6 @@ def ezville_loop(config):
                 HOMESTATE[key] = val
                 topic = STATE_TOPIC.format(deviceID, state)
                 mqtt_client.publish(topic, val.encode())
-                
-                 # 강제 업데이트 모드였으면 해제 시켜줌
-                if FORCE_UPDATE:
-                    FORCE_UPDATE = False
                 
                 if mqtt_log:
                     log('[LOG] ->> HA : {} -> {}'.format(topic, val))
@@ -522,7 +515,8 @@ def ezville_loop(config):
   
     # Discovery 및 강제 업데이트 시간 설정
     target_time = time.time() + DISCOVERY_DURATION
-    force_target_time = target_time + FORCE_DURATION
+    force_target_time = target_time + FORCE_PERIOD
+    force_stop_time = force_target_time + FORCE_DURATION
     
     log('장치를 등록합니다...')
     log('======================================')
@@ -530,6 +524,7 @@ def ezville_loop(config):
     async def main_run():
         nonlocal target_time, force_target_time
         nonlocal DISCOVERY_MODE
+        nonlocal FORCE_PERIOD
         nonlocal FORCE_DURATION
         nonlocal FORCE_UPDATE
         
@@ -546,10 +541,15 @@ def ezville_loop(config):
                 log('동작을 시작합니다...')
                 log('======================================')
             
-            # 정해진 시간이 지났으면 타이머 리셋 후 HA 상태 강제 업데이트
+            # 정해진 시간이 지나면 FORCE 모드 발동
             if timestamp > force_target_time and not FORCE_UPDATE:
-                force_target_time = time.time() + FORCE_DURATION
+                force_stop_time = timestamp + FORCE_DURATION
                 FORCE_UPDATE = True
+                
+            # 정해진 시간이 지나면 FORCE 모드 종료    
+            if timestamp > force_stop_time and FORCE_UPDATE:
+                force_target_time = timestamp + FORCE_PERIOD
+                FORCE_UPDATE = False
                 
             # 0.02초 대기 후 루프 진행
             await asyncio.sleep(0.02)
