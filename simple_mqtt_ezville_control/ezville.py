@@ -354,7 +354,7 @@ def ezville_loop(config):
                                         break
                             
                             # MSG_CACHE에 없는 새로운 패킷인 경우만 실행
-                            if MSG_CACHE.get(PACKET[0:10]) != PACKET[10:]:
+                            if MSG_CACHE.get(packet[0:10]) != packet[10:]:
                                 name = STATE_HEADER[packet[2:4]][0]                             
                   
                                 if name == 'light':
@@ -369,7 +369,7 @@ def ezville_loop(config):
                                         await update_state(name, 'power', rid, id, onoff)
                                         
                                         # 한번 처리한 패턴은 CACHE 저장
-                                        MSG_CACHE[PACKET[0:10]] = PACKET[10:]
+                                        MSG_CACHE[packet[0:10]] = packet[10:]
                                     
                                 elif name == 'thermostat':
                                     log("TEST: " + str(time.time()))
@@ -389,7 +389,7 @@ def ezville_loop(config):
                                         await update_temperature(name, rid, src, curT, setT)
                                         
                                         # 한번 처리한 패턴은 CACHE 저장
-                                        MSG_CACHE[PACKET[0:10]] = PACKET[10:]
+                                        MSG_CACHE[packet[0:10]] = packet[10:]
                        
                 RESIDUE = ""
                 k = k + packet_length
