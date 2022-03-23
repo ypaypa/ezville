@@ -14,24 +14,28 @@
     "DEBUG": false,
     "mqtt_log": true,
     "elfin_log": false,
-    "save_unregistered_signal": false,
     "mqtt_server": "192.168.x.x",
     "mqtt_id": "id",
     "mqtt_password": "password",
     "elfin_server": "192.168.x.x",
     "elfin_id": "admin",
-    "elfin_password": "elfin_password"
+    "elfin_password": "elfin_password",
+    "command_send_count": "3",
+    "command_interval": "0.001",
+    "command_retry_count": "5"
   },
   "schema": {
     "DEBUG": "bool",
     "mqtt_log": "bool",
     "elfin_log": "bool",
-    "save_unregistered_signal": "bool",
     "mqtt_server": "str",
     "mqtt_id": "str",
     "mqtt_password": "str",
     "elfin_server": "str",
     "elfin_id": "str",
-    "elfin_password": "str"
+    "elfin_password": "str",
+    "command_send_count": "int",
+    "command_interval": "num",
+    "command_retry_count": "int"
   }
 }
