@@ -584,7 +584,7 @@ def ezville_loop(config):
         nonlocal FORCE_UPDATE
         
         while True:
-            if soc_mode
+            if soc_mode:
                 await asyncio.gather(
                     recv_from_elfin(),                    
                     process_message(),
