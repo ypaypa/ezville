@@ -460,6 +460,7 @@ def ezville_loop(config):
     async def send_to_elfin():
         nonlocal CMD_QUEUE
         nonlocal DISCOVERY_MODE
+        nonlocal command_retry_count, command_interval, command_send_count
                                                                                              
         while not DISCOVERY_MODE:
             try:
