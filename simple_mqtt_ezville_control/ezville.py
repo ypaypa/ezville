@@ -3,6 +3,9 @@ import json
 import time
 import asyncio
 import telnetlib
+
+import socket
+
 from queue import Queue
 
 # DEVICE 별 패킷 정보
@@ -95,8 +98,7 @@ def checksum(input_hex):
         return input_hex + format(checksum, '02X') + format(add, '02X')
     except:
         return None
-
-share_dir = '/share'
+    
 config_dir = '/data'
 
 HA_TOPIC = 'ezville'
@@ -104,15 +106,23 @@ STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
 ELFIN_TOPIC = 'ew11'
 ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
 
+
 def ezville_loop(config):
     
     # config 
     debug = config['DEBUG']
+    soc_mode = config['socket_mode']
     mqtt_log = config['mqtt_log']
     elfin_log = config['elfin_log']
     
+    # SOCKET 정보
+    SOC_ADDRESS = config['elfin_server']
+    SOC_PORT = config['elfin_port']
+    
     # EW11 혹은 HA 전달 메시지 저장소
     MSG_QUEUE = Queue()
+    # SOCKET 모드에서의 저장공간
+    MSG
     # EW11에 보낼 Command 및 예상 Acknowledge 패킷 
     CMD_QUEUE = []
     
@@ -142,9 +152,13 @@ def ezville_loop(config):
 
     
     def on_connect(client, userdata, flags, rc):
+        nonlocal soc_mode
         if rc == 0:
             log("Connected to MQTT broker..")
-            client.subscribe([(HA_TOPIC + '/#', 0), (ELFIN_TOPIC + '/recv', 0), (ELFIN_TOPIC + '/send', 1)])
+            if soc_mode:
+                client.subscribe(HA_TOPIC + '/#', 0)
+            else:
+                client.subscribe([(HA_TOPIC + '/#', 0), (ELFIN_TOPIC + '/recv', 0), (ELFIN_TOPIC + '/send', 1)])
         else:
             errcode = {1: 'Connection refused - incorrect protocol version',
                        2: 'Connection refused - invalid client identifier',
@@ -158,7 +172,12 @@ def ezville_loop(config):
         nonlocal MSG_QUEUE
         MSG_QUEUE.put(msg)
         
-    
+    def connect_socket(address, port):
+        soc = socket.socket()
+        soc.connect(address, port)
+        
+        return soc
+            
     # MQTT message를 분류하여 처리
     async def process_message():
         # MSG_QUEUE의 message를 하나씩 pop
@@ -464,6 +483,7 @@ def ezville_loop(config):
                                                                                     
                                                                                     
     async def send_to_elfin():
+        nonlocal soc_mode, soc
         nonlocal CMD_QUEUE
         nonlocal DISCOVERY_MODE
         nonlocal CMD_SEND_COUNT
@@ -500,7 +520,10 @@ def ezville_loop(config):
                             log('[SIGNAL] 신호 전송: {}'.format(send_data))
 
                         for i in range(CMD_SEND_COUNT):
-                            mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
+                            if soc_mode:
+                                soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                            else:
+                                mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
                             await asyncio.sleep(CMD_INTERVAL)
 
                         if send_data['count'] < CMD_RETRY_COUNT:
@@ -522,7 +545,11 @@ def ezville_loop(config):
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
     mqtt_client.connect_async(config['mqtt_server'])
-    mqtt_client.loop_start()        
+    mqtt_client.loop_start()
+    
+    # SOCKET 통신 시작
+    if soc_mode:
+        soc = connect_socket(SOC_ADDRESS, SOC_PORT)
   
     # Discovery 및 강제 업데이트 시간 설정
     target_time = time.time() + DISCOVERY_DURATION
@@ -533,18 +560,41 @@ def ezville_loop(config):
     log('장치를 등록합니다...')
     log('======================================')
     
+    async def recv_from_elfin()
+        nonlocal soc
+        nonlocal MSG_QUEUE
+        
+        class MSG:
+            topic = ''
+            payload = bytearray()
+        
+        # EW11 버퍼 크기만큼 데이터 받기
+        DATA = soc.recv(512)
+        msg.topic = ELFIN_TOPIC + '/recv'
+        msg.payload = DATA
+        
+        MSG_QUEUE.put(msg)
+    
     async def main_run():
         nonlocal target_time, force_target_time, force_stop_time
+        nonlocal soc_mode
         nonlocal DISCOVERY_MODE
         nonlocal FORCE_PERIOD
         nonlocal FORCE_DURATION
         nonlocal FORCE_UPDATE
         
         while True:
-            await asyncio.gather(
-                process_message(),
-                send_to_elfin()
-            )           
+            if soc_mode
+                await asyncio.gather(
+                    recv_from_elfin(),                    
+                    process_message(),
+                    send_to_elfin()
+                )
+            else
+                await asyncio.gather(
+                    process_message(),
+                    send_to_elfin()               
+                )           
             
             timestamp = time.time()
             if timestamp > target_time and DISCOVERY_MODE:
