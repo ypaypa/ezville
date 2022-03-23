@@ -121,8 +121,6 @@ def ezville_loop(config):
     
     # EW11 혹은 HA 전달 메시지 저장소
     MSG_QUEUE = Queue()
-    # SOCKET 모드에서의 저장공간
-    MSG
     # EW11에 보낼 Command 및 예상 Acknowledge 패킷 
     CMD_QUEUE = []
     
