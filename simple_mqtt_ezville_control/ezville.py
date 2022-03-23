@@ -191,22 +191,24 @@ def ezville_loop(config):
                     if debug:
                         log('[DEBUG] {} is already set: {}'.format(key, value))
                 else:
-                    if device == 'thermostat':
-                        curTemp = HOMESTATE.get(topics[1] + 'curTemp')
-                        setTemp = HOMESTATE.get(topics[1] + 'setTemp')
-                        
+                    if device == 'thermostat':                        
                         if topics[2] == 'away':
-                            sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '01010000')
+                            away = '01' if value == 'ON' else '00'
+                            
+                            sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '01' + away + '0000')
                             recvcmd = 'NULL'
                             
+                            F7 36 11 45 01 01 95 1A
+                            
                             if sendcmd:
-                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
                                 CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
                                 if debug:
                                     log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
                                     
                         elif topics[2] == 'setTemp':
+                            curTemp = HOMESTATE.get(topics[1] + 'curTemp')
+                            setTemp = HOMESTATE.get(topics[1] + 'setTemp')
+                            
                             value = int(float(value))
                             if value == int(setTemp):
                                 if debug:
