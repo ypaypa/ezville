@@ -168,6 +168,7 @@ def ezville_loop(config):
         
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
+        print(time.time())
         MSG_QUEUE.put(msg)
             
     # MQTT message를 분류하여 처리
