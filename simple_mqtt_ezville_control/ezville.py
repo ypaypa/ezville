@@ -561,6 +561,8 @@ def ezville_loop(config):
             topic = ''
             payload = bytearray()
         
+        msg = MSG()
+
         # EW11 버퍼 크기만큼 데이터 받기
         DATA = soc.recv(512)
         msg.topic = ELFIN_TOPIC + '/recv'
