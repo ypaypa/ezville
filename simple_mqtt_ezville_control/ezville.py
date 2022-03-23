@@ -560,7 +560,7 @@ def ezville_loop(config):
     log('장치를 등록합니다...')
     log('======================================')
     
-    async def recv_from_elfin()
+    async def recv_from_elfin():
         nonlocal soc
         nonlocal MSG_QUEUE
         
