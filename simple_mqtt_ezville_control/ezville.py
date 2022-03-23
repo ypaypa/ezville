@@ -541,6 +541,9 @@ def ezville_loop(config):
     
     # SOCKET 통신 시작
     if soc_mode:
+        log('======================================')
+        log('Socket 연결을 시작합니다')
+        log('======================================')
         soc = socket.socket()
         soc.connect((SOC_ADDRESS, SOC_PORT))
   
