@@ -14,7 +14,7 @@
     "DEBUG": false,
     "mqtt_log": true,
     "elfin_log": false,
-    "mode": mixed,
+    "mode": "mixed",
     "mqtt_server": "192.168.x.x",
     "mqtt_id": "id",
     "mqtt_password": "password",
