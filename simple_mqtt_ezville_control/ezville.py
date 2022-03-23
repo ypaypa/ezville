@@ -198,8 +198,6 @@ def ezville_loop(config):
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '01' + away + '0000')
                             recvcmd = 'NULL'
                             
-                            F7 36 11 45 01 01 95 1A
-                            
                             if sendcmd:
                                 CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
                                 if debug:
