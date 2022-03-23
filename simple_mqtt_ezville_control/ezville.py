@@ -134,6 +134,12 @@ def ezville_loop(config):
     FORCE_UPDATE = False
     FORCE_PERIOD = 300
     FORCE_DURATION = 3
+
+    # Command를 EW11로 보내는 방식 설정 (한번에 보내는 횟수와 간격, 재시도 횟수)
+    CMD_SEND_COUNT = config['command_send_count']
+    CMD_INTERVAL = config['command_interval']
+    CMD_RETRY_COUNT = config['command_retry_count']
+
     
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -460,7 +466,9 @@ def ezville_loop(config):
     async def send_to_elfin():
         nonlocal CMD_QUEUE
         nonlocal DISCOVERY_MODE
-        nonlocal command_retry_count, command_interval, command_send_count
+        nonlocal CMD_SEND_COUNT
+        nonlocal CMD_INTERVAL
+        nonlocal CMD_RETRY_COUNT
                                                                                              
         while not DISCOVERY_MODE:
             try:
@@ -491,11 +499,11 @@ def ezville_loop(config):
                         if elfin_log:
                             log('[SIGNAL] 신호 전송: {}'.format(send_data))
 
-                        for i in range(command_send_count):
+                        for i in range(CMD_SEND_COUNT):
                             mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
-                            await asyncio.sleep(command_interval)
+                            await asyncio.sleep(CMD_INTERVAL)
 
-                        if send_data['count'] < command_retry_count:
+                        if send_data['count'] < CMD_RETRY_COUNT:
                             send_data['count'] = send_data['count'] + 1
                             CMD_QUEUE.append(send_data)
                         else:
