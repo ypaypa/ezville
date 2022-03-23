@@ -489,13 +489,12 @@ def ezville_loop(config):
                         send_data = CMD_QUEUE.pop(0)
                         if elfin_log:
                             log('[SIGNAL] 신호 전송: {}'.format(send_data))
-                        mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
-                        await asyncio.sleep(0.02)
-                        mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
-                        await asyncio.sleep(0.02)
-                        mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
 
-                        if send_data['count'] < 5:
+                        for i in range(command_send_count):
+                            mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
+                            await asyncio.sleep(command_interval)
+
+                        if send_data['count'] < command_retry_count:
                             send_data['count'] = send_data['count'] + 1
                             CMD_QUEUE.append(send_data)
                         else:
