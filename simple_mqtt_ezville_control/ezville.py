@@ -505,7 +505,8 @@ def ezville_loop(config):
 
                         if send_data['count'] < CMD_RETRY_COUNT:
                             send_data['count'] = send_data['count'] + 1
-                            CMD_QUEUE.append(send_data)
+                            #CMD_QUEUE.append(send_data)
+                            CMD_QUEUE.insert(0, send_data)
                         else:
                             if elfin_log:
                                 log('[SIGNAL] Send over 5 times. Send Failure. Delete a queue: {}'.format(send_data))
