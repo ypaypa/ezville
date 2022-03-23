@@ -519,6 +519,7 @@ def ezville_loop(config):
     force_target_time = target_time + FORCE_PERIOD
     force_stop_time = force_target_time + FORCE_DURATION
     
+    log('======================================')    
     log('장치를 등록합니다...')
     log('======================================')
     
