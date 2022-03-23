@@ -169,12 +169,6 @@ def ezville_loop(config):
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
         MSG_QUEUE.put(msg)
-        
-    def connect_socket(address, port):
-        soc = socket.socket()
-        soc.connect(address, port)
-        
-        return soc
             
     # MQTT message를 분류하여 처리
     async def process_message():
@@ -547,7 +541,8 @@ def ezville_loop(config):
     
     # SOCKET 통신 시작
     if soc_mode:
-        soc = connect_socket(SOC_ADDRESS, SOC_PORT)
+        soc = socket.socket()
+        soc.connect((SOC_ADDRESS, SOC_PORT))
   
     # Discovery 및 강제 업데이트 시간 설정
     target_time = time.time() + DISCOVERY_DURATION
