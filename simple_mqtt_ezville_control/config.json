@@ -34,8 +34,8 @@
     "elfin_server": "str",
     "elfin_id": "str",
     "elfin_password": "str",
-    "command_send_count": "integer",
-    "command_interval": "number",
-    "command_retry_count": "integer"
+    "command_send_count": "int",
+    "command_interval": "float",
+    "command_retry_count": "int"
   }
 }
