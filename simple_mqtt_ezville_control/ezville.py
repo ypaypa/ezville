@@ -590,7 +590,7 @@ def ezville_loop(config):
                     process_message(),
                     send_to_elfin()
                 )
-            else
+            else:
                 await asyncio.gather(
                     process_message(),
                     send_to_elfin()               
