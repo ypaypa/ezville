@@ -111,7 +111,7 @@ def ezville_loop(config):
     
     # config 
     debug = config['DEBUG']
-    soc_mode = config['socket_mode']
+    comm_mode = config['mode']
     mqtt_log = config['mqtt_log']
     elfin_log = config['elfin_log']
     
@@ -150,11 +150,13 @@ def ezville_loop(config):
 
     
     def on_connect(client, userdata, flags, rc):
-        nonlocal soc_mode
+        nonlocal comm_mode
         if rc == 0:
             log("Connected to MQTT broker..")
-            if soc_mode:
+            if comm_mode == 'socket':
                 client.subscribe(HA_TOPIC + '/#', 0)
+            elif comm_mode == 'mixed':
+                client.subscribe([(HA_TOPIC + '/#', 0), (ELFIN_TOPIC + '/recv', 0)])
             else:
                 client.subscribe([(HA_TOPIC + '/#', 0), (ELFIN_TOPIC + '/recv', 0), (ELFIN_TOPIC + '/send', 1)])
         else:
@@ -475,7 +477,7 @@ def ezville_loop(config):
                                                                                     
                                                                                     
     async def send_to_elfin():
-        nonlocal soc_mode, soc
+        nonlocal comm_mode, soc
         nonlocal CMD_QUEUE
         nonlocal DISCOVERY_MODE
         nonlocal CMD_SEND_COUNT
@@ -512,10 +514,10 @@ def ezville_loop(config):
                             log('[SIGNAL] 신호 전송: {}'.format(send_data))
 
                         for i in range(CMD_SEND_COUNT):
-                            if soc_mode:
-                                soc.sendall(bytes.fromhex(send_data['sendcmd']))
-                            else:
+                            if comm_mode == 'mqtt':
                                 mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
+                            else:
+                                soc.sendall(bytes.fromhex(send_data['sendcmd']))
                             await asyncio.sleep(CMD_INTERVAL)
 
                         if send_data['count'] < CMD_RETRY_COUNT:
@@ -540,7 +542,7 @@ def ezville_loop(config):
     mqtt_client.loop_start()
     
     # SOCKET 통신 시작
-    if soc_mode:
+    if comm_mode == 'mixed' or comm_mode == 'socket':
         log('======================================')
         log('Socket 연결을 시작합니다')
         log('======================================')
@@ -575,14 +577,14 @@ def ezville_loop(config):
     
     async def main_run():
         nonlocal target_time, force_target_time, force_stop_time
-        nonlocal soc_mode
+        nonlocal comm_mode
         nonlocal DISCOVERY_MODE
         nonlocal FORCE_PERIOD
         nonlocal FORCE_DURATION
         nonlocal FORCE_UPDATE
         
         while True:
-            if soc_mode:
+            if comm_mode == 'socket':
                 await asyncio.gather(
                     recv_from_elfin(),                    
                     process_message(),
