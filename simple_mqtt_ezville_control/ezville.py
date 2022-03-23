@@ -168,7 +168,6 @@ def ezville_loop(config):
         
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
-        log(str(time.time()))
         MSG_QUEUE.put(msg)
             
     # MQTT message를 분류하여 처리
@@ -565,7 +564,7 @@ def ezville_loop(config):
         msg = MSG()
 
         # EW11 버퍼 크기만큼 데이터 받기
-        DATA = soc.recv(512)
+        DATA = soc.recv(128)
         msg.topic = ELFIN_TOPIC + '/recv'
         msg.payload = DATA
         
