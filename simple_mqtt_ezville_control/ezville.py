@@ -56,6 +56,29 @@ DISCOVERY_PAYLOAD = {
         "min_temp": "5",
         "max_temp": 40,
     } ],
+    "plug": [ {
+        "_intg": "switch",
+        "~": "ezville/plug/{idn}/power",
+        "name": "ezville_plug_{idn}",
+        "stat_t": "~/state",
+        "cmd_t": "~/command",
+        "icon": "mdi:power-plug",
+    },
+    {
+        "_intg": "switch",
+        "~": "ezville/plug/{idn}/idlecut",
+        "name": "ezville_plug_{idn}_standby_cutoff",
+        "stat_t": "~/state",
+        "cmd_t": "~/command",
+        "icon": "mdi:leaf",
+    },
+    {
+        "_intg": "sensor",
+        "~": "ezville/plug/{idn}",
+        "name": "ezville_plug_{idn}_power_usage",
+        "stat_t": "~/current/state",
+        "unit_of_meas": "W",
+    } ],
 }
 
 # STATE 확인용 Dictionary
