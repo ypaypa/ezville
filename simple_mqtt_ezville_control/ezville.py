@@ -517,7 +517,12 @@ def ezville_loop(config):
                             if comm_mode == 'mqtt':
                                 mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
                             else:
-                                soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                                try:
+                                    soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                                except OSError:
+                                    connect_socket(soc)
+                                    soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                                    
                             await asyncio.sleep(CMD_INTERVAL)
 
                         if send_data['count'] < CMD_RETRY_COUNT:
@@ -526,7 +531,7 @@ def ezville_loop(config):
                             CMD_QUEUE.insert(0, send_data)
                         else:
                             if elfin_log:
-                                log('[SIGNAL] Send over 5 times. Send Failure. Delete a queue: {}'.format(send_data))
+                                log('[SIGNAL] 5회 명령을 재전송하였으나 수행에 실패했습니다.. 다음의 Queue 삭제: {}'.format(send_data))
                     return
             except Exception as err:
                 log('[ERROR] send_to_elfin(): {}'.format(err))
@@ -541,22 +546,37 @@ def ezville_loop(config):
     mqtt_client.connect_async(config['mqtt_server'])
     mqtt_client.loop_start()
     
-    # SOCKET 통신 시작
-    if comm_mode == 'mixed' or comm_mode == 'socket':
-        log('======================================')
-        log('Socket 연결을 시작합니다')
-        log('======================================')
-        soc = socket.socket()
+    def initiate_socket():
+        # SOCKET 통신 시작
+            log('Socket 연결을 시작합니다')
+            
+            retry_count = 0
+            while True:
+                try:
+                    soc = socket.socket()
+                    connect_socket(soc)
+                    return soc
+                except ConnectionRefused as e:
+                    log('Server에서 연결을 거부합니다. 재시도 예정 (' + str(retry_count) + '회 재시도)')
+                    time.sleep(1)
+                    retry_count += 1
+                    continue
+                    
+    def connect_socket(socket):
+        nonlocal SOC_ADDRESS
+        nonlocal SOC_PORT
+        socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
         soc.connect((SOC_ADDRESS, SOC_PORT))
-  
+        
+    if comm_mode == 'mixed' or comm_mode == 'socket':
+        soc = initiate_socket()  
+
     # Discovery 및 강제 업데이트 시간 설정
     target_time = time.time() + DISCOVERY_DURATION
     force_target_time = target_time + FORCE_PERIOD
     force_stop_time = force_target_time + FORCE_DURATION
     
-    log('======================================')    
-    log('장치를 등록합니다...')
-    log('======================================')
+    log('장치 등록을 시작합니다...')
     
     async def recv_from_elfin():
         nonlocal soc
@@ -599,9 +619,7 @@ def ezville_loop(config):
             timestamp = time.time()
             if timestamp > target_time and DISCOVERY_MODE:
                 DISCOVERY_MODE = False
-                log('======================================')
-                log('동작을 시작합니다...')
-                log('======================================')
+                log('IOT 제어 입력 수행을 시작합니다...')
             
             # 정해진 시간이 지나면 FORCE 모드 발동
             if timestamp > force_target_time and not FORCE_UPDATE:
