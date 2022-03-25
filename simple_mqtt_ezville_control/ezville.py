@@ -58,24 +58,16 @@ DISCOVERY_PAYLOAD = {
     } ],
     "plug": [ {
         "_intg": "switch",
-        "~": "ezville/plug/{idn}/power",
-        "name": "ezville_plug_{idn}",
-        "stat_t": "~/state",
-        "cmd_t": "~/command",
-        "icon": "mdi:power-plug",
-    },
-    {
-        "_intg": "switch",
-        "~": "ezville/plug/{idn}/idlecut",
-        "name": "ezville_plug_{idn}_standby_cutoff",
-        "stat_t": "~/state",
-        "cmd_t": "~/command",
+        "~": "ezville/plug_{:0>2d}_{:0>2d}",
+        "name": "ezville_plug_{:0>2d}_{:0>2d}",
+        "stat_t": "~/power/state",
+        "cmd_t": "~/power/command",
         "icon": "mdi:leaf",
     },
     {
         "_intg": "sensor",
-        "~": "ezville/plug/{idn}",
-        "name": "ezville_plug_{idn}_power_usage",
+        "~": "ezville/plug_{:0>2d}_{:0>2d}",
+        "name": "ezville_plug_{:0>2d}_{:0>2d}_powermeter",
         "stat_t": "~/current/state",
         "unit_of_meas": "W",
     } ],
@@ -121,6 +113,7 @@ def checksum(input_hex):
         return input_hex + format(checksum, '02X') + format(add, '02X')
     except:
         return None
+
     
 config_dir = '/data'
 
@@ -391,6 +384,32 @@ def ezville_loop(config):
                                         await update_state(name, 'power', rid, src, onoff)
                                         await update_state(name, 'away', rid, src, awayonoff)
                                         await update_temperature(name, rid, src, curT, setT)
+                            elif name == 'plug':
+                                # ROOM ID
+                                rid = int(packet[5], 16)
+                                # ROOM의 plug 갯수
+                                slc = int(packet[10:12], 16) 
+                                
+                                for id in range(1, slc + 1):
+                                    discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, id)
+
+                                    if discovery_name not in DISCOVERY_LIST:
+                                        DISCOVERY_LIST.append(discovery_name)
+                                    
+                                        for payload_template in DISCOVERY_PAYLOAD[name]
+                                            payload = payloads.copy()
+                                            payload["~"] = payload["~"].format(rid, id)
+                                            payload["name"] = payload["name"].format(rid, id)
+                                   
+                                            await mqtt_discovery(payload)                            
+                                    else:
+                                        # 1: 대기전력 커짐, 3: 자동모드 켜짐
+                                        # 위와 같지만 일단 on-off 여부만 판단
+                                        onoff = 'ON' if int(packet[6 + 6 * id: 8 + 6 * id], 16) > 0 else 'OFF'
+                                        power_num = int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100
+                                        
+                                        await update_state(name, 'power', rid, id, onoff)
+                                        await update_power(name, 'current', rid, id, power_num)
                                                                                     
                         # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
                         else:
@@ -424,8 +443,8 @@ def ezville_loop(config):
                                 elif name == 'thermostat':
                                     # room 갯수
                                     rc = int((int(packet[8:10], 16) - 5) / 2)
-                                    # room의 조절기 수 (현재 하나 뿐임)
-                                    src = 1
+                                    # ROOM의 light 갯수 + 1
+                                    slc = int(packet[8:10], 16) 
                                 
                                     for rid in range(1, rc + 1):
                                         setT = packet[16 + 4 * rid:18 + 4 * rid]
@@ -439,6 +458,20 @@ def ezville_loop(config):
                                         
                                         # 한번 처리한 패턴은 CACHE 저장
                                         MSG_CACHE[packet[0:10]] = packet[10:]
+                                elif name == 'plug':
+                                    # ROOM ID
+                                    rid = int(packet[5], 16)
+                                    # ROOM의 plug 갯수
+                                    slc = int(packet[10:12], 16) 
+                                
+                                    for id in range(1, slc + 1):
+                                        # 1: 대기전력 커짐, 3: 자동모드 켜짐
+                                        # 위와 같지만 일단 on-off 여부만 판단
+                                        onoff = 'ON' if int(packet[6 + 6 * id: 8 + 6 * id], 16) > 0 else 'OFF'
+                                        power_num = int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100
+                                        
+                                        await update_state(name, 'power', rid, id, onoff)
+                                        await update_state(name, 'current', rid, id, power_num)
                        
                 RESIDUE = ""
                 k = k + packet_length
@@ -476,7 +509,6 @@ def ezville_loop(config):
             if debug:
                 log('[DEBUG] {} is already set: {}'.format(deviceID, onoff))
         return
-
     
     async def update_temperature(device, id1, id2, curTemp, setTemp):
         nonlocal HOMESTATE
@@ -579,7 +611,7 @@ def ezville_loop(config):
                     soc = socket.socket()
                     connect_socket(soc)
                     return soc
-                except ConnectionRefused as e:
+                except ConnectionRefusedError as e:
                     log('Server에서 연결을 거부합니다. 재시도 예정 (' + str(retry_count) + '회 재시도)')
                     time.sleep(1)
                     retry_count += 1
