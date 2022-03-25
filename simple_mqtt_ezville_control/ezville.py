@@ -414,7 +414,7 @@ def ezville_loop(config):
                                         power_num = int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100
                                         
                                         await update_state(name, 'power', rid, id, onoff)
-                                        await update_power(name, 'current', rid, id, power_num)
+                                        await update_state(name, 'current', rid, id, power_num)
                                                                                     
                         # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
                         else:
