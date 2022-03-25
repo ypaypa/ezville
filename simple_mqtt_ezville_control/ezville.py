@@ -597,7 +597,7 @@ def ezville_loop(config):
                                     spc = 1 
                                     
                                     onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
-                                     log(onoff + ' ' + packet)
+                                    log(onoff + ' ' + packet)
                                         
                                     await update_state(name, 'power', rid, spc, onoff)
                        
