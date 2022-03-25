@@ -609,6 +609,7 @@ def ezville_loop(config):
             while True:
                 try:
                     soc = socket.socket()
+                    soc.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
                     connect_socket(soc)
                     return soc
                 except ConnectionRefusedError as e:
@@ -620,7 +621,6 @@ def ezville_loop(config):
     def connect_socket(socket):
         nonlocal SOC_ADDRESS
         nonlocal SOC_PORT
-        socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         soc.connect((SOC_ADDRESS, SOC_PORT))
         
     if comm_mode == 'mixed' or comm_mode == 'socket':
