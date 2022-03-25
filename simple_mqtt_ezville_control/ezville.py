@@ -402,7 +402,7 @@ def ezville_loop(config):
                                         DISCOVERY_LIST.append(discovery_name)
                                     
                                         for payload_template in DISCOVERY_PAYLOAD[name]:
-                                            payload = payloads.copy()
+                                            payload = payloads_template.copy()
                                             payload["~"] = payload["~"].format(rid, id)
                                             payload["name"] = payload["name"].format(rid, id)
                                    
