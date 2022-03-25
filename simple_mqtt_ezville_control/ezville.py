@@ -27,9 +27,9 @@ RS485_DEVICE = {
         "power":    { "id": "50", "cmd": "43", "ack": "C3", },
     },
     "gas_valve": {
-        "state":    { "id": "50", "cmd": "81", },
+        "state":    { "id": "12", "cmd": "81", },
 
-        "power":    { "id": "50", "cmd": "43", "ack": "C3", }, # 잠그기만 가능
+        "power":    { "id": "12", "cmd": "41", "ack": "C1", }, # 잠그기만 가능
     },
 }
 
@@ -335,6 +335,9 @@ def ezville_loop(config):
         nonlocal FORCE_UPDATE
         raw_data = RESIDUE + raw_data
         DISCOVERY = DISCOVERY_MODE
+        
+        if elfin_log:
+            log('[SIGNAL] receved: {}'.format(raw_data))
         
         k = 0
         cors = []
