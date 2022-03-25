@@ -411,7 +411,7 @@ def ezville_loop(config):
                                         # 1: 대기전력 커짐, 3: 자동모드 켜짐
                                         # 위와 같지만 일단 on-off 여부만 판단
                                         onoff = 'ON' if int(packet[6 + 6 * id: 8 + 6 * id], 16) > 0 else 'OFF'
-                                        power_num = int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100
+                                        power_num = "{:.2f}".format(int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100)
                                         
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
@@ -473,7 +473,7 @@ def ezville_loop(config):
                                         # 1: 대기전력 커짐, 3: 자동모드 켜짐
                                         # 위와 같지만 일단 on-off 여부만 판단
                                         onoff = 'ON' if int(packet[6 + 6 * id: 8 + 6 * id], 16) > 0 else 'OFF'
-                                        power_num = int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100
+                                        power_num = "{:.2f}".format(int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100)
                                         
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
