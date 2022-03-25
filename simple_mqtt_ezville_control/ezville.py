@@ -590,7 +590,7 @@ def ezville_loop(config):
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
                                         
-                                elif name == 'gas_value':
+                                elif name == 'gas_valve':
                                     # Gas Value는 하나라서 강제 설정
                                     rid = 1
                                     # Gas Value는 하나라서 강제 설정
