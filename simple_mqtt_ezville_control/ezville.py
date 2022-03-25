@@ -83,8 +83,8 @@ DISCOVERY_PAYLOAD = {
     } ],
     "gas_valve": [ {
         "_intg": "switch",
-        "~": "{prefix}/gas_valve_{:0>2d}_{:0>2d}",
-        "name": "{prefix}_gas_valve_{:0>2d}_{:0>2d}",
+        "~": "ezville/gas_valve_{:0>2d}_{:0>2d}",
+        "name": "ezville_gas_valve_{:0>2d}_{:0>2d}",
         "stat_t": "~/power/state",
         "cmd_t": "~/power/command",
         "icon": "mdi:valve",
