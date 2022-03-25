@@ -341,9 +341,9 @@ def ezville_loop(config):
                                 
                     elif device == 'gas_valve':
                         # 가스 밸브는 ON 제어를 받지 않음
-                        if value == 'OFF':
+                   #     if value == 'OFF':
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '0101' + '0000')
-
+                            log(sendcmd)
                             if sendcmd:
                                 recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
                                 CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
@@ -523,7 +523,6 @@ def ezville_loop(config):
                                     await mqtt_discovery(payload)                            
                                 else:
                                     onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
-                                    log(onoff + ' ' + packet)
                                         
                                     await update_state(name, 'power', rid, spc, onoff)
                                                                                     
@@ -597,7 +596,6 @@ def ezville_loop(config):
                                     spc = 1 
                                     
                                     onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
-                                    log(onoff + ' ' + packet)
                                         
                                     await update_state(name, 'power', rid, spc, onoff)
                        
