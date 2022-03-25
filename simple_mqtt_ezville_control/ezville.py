@@ -620,7 +620,7 @@ def ezville_loop(config):
     def connect_socket(socket):
         nonlocal SOC_ADDRESS
         nonlocal SOC_PORT
-        socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
+        socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         soc.connect((SOC_ADDRESS, SOC_PORT))
         
     if comm_mode == 'mixed' or comm_mode == 'socket':
