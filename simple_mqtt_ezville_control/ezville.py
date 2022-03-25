@@ -26,7 +26,7 @@ RS485_DEVICE = {
 
         "power":    { "id": "50", "cmd": "43", "ack": "C3" }
     },
-    "gas_valve": {
+    "gasvalve": {
         "state":    { "id": "12", "cmd": "81" },
 
         "power":    { "id": "12", "cmd": "41", "ack": "C1" } # 잠그기만 가능
@@ -86,10 +86,10 @@ DISCOVERY_PAYLOAD = {
         "stat_t": "~/current/state",
         "unit_of_meas": "W",
     } ],
-    "gas_valve": [ {
+    "gasvalve": [ {
         "_intg": "switch",
-        "~": "ezville/gas_valve_{:0>2d}_{:0>2d}",
-        "name": "ezville_gas_valve_{:0>2d}_{:0>2d}",
+        "~": "ezville/gasvalve_{:0>2d}_{:0>2d}",
+        "name": "ezville_gasvalve_{:0>2d}_{:0>2d}",
         "stat_t": "~/power/state",
         "cmd_t": "~/power/command",
         "icon": "mdi:valve",
@@ -339,7 +339,7 @@ def ezville_loop(config):
                             if debug:
                                 log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
                                 
-                    elif device == 'gas_valve':
+                    elif device == 'gasvalve':
                         # 가스 밸브는 ON 제어를 받지 않음
                    #     if value == 'OFF':
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '0101' + '0000')
@@ -505,7 +505,7 @@ def ezville_loop(config):
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
                                         
-                            elif name == 'gas_valve':
+                            elif name == 'gasvalve':
                                 # Gas Value는 하나라서 강제 설정
                                 rid = 1
                                 # Gas Value는 하나라서 강제 설정
@@ -589,7 +589,7 @@ def ezville_loop(config):
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
                                         
-                                elif name == 'gas_valve':
+                                elif name == 'gasvalve':
                                     # Gas Value는 하나라서 강제 설정
                                     rid = 1
                                     # Gas Value는 하나라서 강제 설정
