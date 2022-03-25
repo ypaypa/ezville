@@ -342,7 +342,7 @@ def ezville_loop(config):
                     elif device == 'gasvalve':
                         # 가스 밸브는 ON 제어를 받지 않음
                         if value == 'OFF':
-                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '0101' + '0000')
+                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '0100' + '0000')
                             log(sendcmd)
                             if sendcmd:
                                 recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
