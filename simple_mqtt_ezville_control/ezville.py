@@ -396,7 +396,7 @@ def ezville_loop(config):
                                     if discovery_name not in DISCOVERY_LIST:
                                         DISCOVERY_LIST.append(discovery_name)
                                     
-                                        for payload_template in DISCOVERY_PAYLOAD[name]
+                                        for payload_template in DISCOVERY_PAYLOAD[name]:
                                             payload = payloads.copy()
                                             payload["~"] = payload["~"].format(rid, id)
                                             payload["name"] = payload["name"].format(rid, id)
