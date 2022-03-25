@@ -330,7 +330,7 @@ def ezville_loop(config):
                                     log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
                             else:
                                 if debug:
-                                log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+                                    log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
             else:
                 if debug:
                     log('[DEBUG] There is no command about {}'.format('/'.join(topics)))
