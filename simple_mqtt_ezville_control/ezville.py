@@ -21,6 +21,11 @@ RS485_DEVICE = {
         "away":    { "id": "36", "cmd": "45", "ack": "00", },
         "target":   { "id": "36", "cmd": "44", "ack": "C4", },
     },
+    "plug": {
+        "state":    { "id": "50", "cmd": "81", },
+
+        "power":    { "id": "50", "cmd": "43", "ack": "C3", },
+    },
 }
 
 # MQTT Discovery를 위한 Preset 정보
