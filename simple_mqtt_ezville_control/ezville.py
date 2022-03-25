@@ -318,6 +318,19 @@ def ezville_loop(config):
                         else:
                             if debug:
                                 log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+                    elif device == 'gas_value':
+                        # 가스 밸브는 ON 제어를 받지 않음
+                        if value == 'OFF':
+                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '0101' + '0000')
+
+                            if sendcmd:
+                                recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
+                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                                if debug:
+                                    log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                            else:
+                                if debug:
+                                log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
             else:
                 if debug:
                     log('[DEBUG] There is no command about {}'.format('/'.join(topics)))
@@ -444,6 +457,26 @@ def ezville_loop(config):
                                         
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
+                            elif name == 'gas_value':
+                                # Gas Value는 하나라서 강제 설정
+                                rid = 1
+                                # Gas Value는 하나라서 강제 설정
+                                spc = 1 
+                                
+                                discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, id)
+                                    
+                                if discovery_name not in DISCOVERY_LIST:
+                                    DISCOVERY_LIST.append(discovery_name)
+                                    
+                                    payload = DISCOVERY_PAYLOAD[name][0].copy()
+                                    payload["~"] = payload["~"].format(rid, spc)
+                                    payload["name"] = payload["name"].format(rid, spc)
+                                   
+                                    await mqtt_discovery(payload)                            
+                                else:
+                                    onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
+                                        
+                                    await update_state(name, 'power', rid, spc, onoff)
                                                                                     
                         # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
                         else:
@@ -506,6 +539,16 @@ def ezville_loop(config):
                                         
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
+                                        
+                                elif name == 'gas_value':
+                                    # Gas Value는 하나라서 강제 설정
+                                    rid = 1
+                                    # Gas Value는 하나라서 강제 설정
+                                    spc = 1 
+                                    
+                                    onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
+                                        
+                                    await update_state(name, 'power', rid, spc, onoff)
                        
                 RESIDUE = ""
                 k = k + packet_length
