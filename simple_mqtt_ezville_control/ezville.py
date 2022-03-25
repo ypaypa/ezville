@@ -305,6 +305,7 @@ def ezville_loop(config):
                         else:
                             if debug:
                                 log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+                                
                     elif device == 'plug':                         
                         pwr = '01' if value == 'ON' else '00'
 
@@ -318,7 +319,8 @@ def ezville_loop(config):
                         else:
                             if debug:
                                 log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
-                    elif device == 'gas_value':
+                                
+                    elif device == 'gas_valve':
                         # 가스 밸브는 ON 제어를 받지 않음
                         if value == 'OFF':
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '0101' + '0000')
@@ -431,6 +433,7 @@ def ezville_loop(config):
                                         await update_state(name, 'power', rid, src, onoff)
                                         await update_state(name, 'away', rid, src, awayonoff)
                                         await update_temperature(name, rid, src, curT, setT)
+                                        
                             elif name == 'plug':
                                 # ROOM ID
                                 rid = int(packet[5], 16)
@@ -457,7 +460,8 @@ def ezville_loop(config):
                                         
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
-                            elif name == 'gas_value':
+                                        
+                            elif name == 'gas_valve':
                                 # Gas Value는 하나라서 강제 설정
                                 rid = 1
                                 # Gas Value는 하나라서 강제 설정
