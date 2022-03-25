@@ -26,6 +26,11 @@ RS485_DEVICE = {
 
         "power":    { "id": "50", "cmd": "43", "ack": "C3", },
     },
+    "gas_valve": {
+        "state":    { "id": "50", "cmd": "81", },
+
+        "power":    { "id": "50", "cmd": "43", "ack": "C3", }, # 잠그기만 가능
+    },
 }
 
 # MQTT Discovery를 위한 Preset 정보
@@ -75,6 +80,14 @@ DISCOVERY_PAYLOAD = {
         "name": "ezville_plug_{:0>2d}_{:0>2d}_powermeter",
         "stat_t": "~/current/state",
         "unit_of_meas": "W",
+    } ],
+    "gas_valve": [ {
+        "_intg": "switch",
+        "~": "{prefix}/gas_valve_{:0>2d}_{:0>2d}",
+        "name": "{prefix}_gas_valve_{:0>2d}_{:0>2d}",
+        "stat_t": "~/power/state",
+        "cmd_t": "~/power/command",
+        "icon": "mdi:valve",
     } ],
 }
 
@@ -283,6 +296,19 @@ def ezville_loop(config):
                         pwr = '01' if value == 'ON' else '00'
                         
                         sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '030' + str(sid) + pwr + '000000')
+
+                        if sendcmd:
+                            recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
+                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                            if debug:
+                                log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                        else:
+                            if debug:
+                                log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+                    elif device == 'plug':                         
+                        pwr = '01' if value == 'ON' else '00'
+
+                        sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '020' + str(sid) + pwr + '0000')
 
                         if sendcmd:
                             recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
