@@ -393,9 +393,9 @@ def ezville_loop(config):
                                 # ROOM ID
                                 rid = int(packet[5], 16)
                                 # ROOM의 plug 갯수
-                                slc = int(packet[10:12], 16) 
+                                spc = int(packet[10:12], 16) 
                                 
-                                for id in range(1, slc + 1):
+                                for id in range(1, spc + 1):
                                     discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, id)
 
                                     if discovery_name not in DISCOVERY_LIST:
@@ -448,8 +448,8 @@ def ezville_loop(config):
                                 elif name == 'thermostat':
                                     # room 갯수
                                     rc = int((int(packet[8:10], 16) - 5) / 2)
-                                    # ROOM의 light 갯수 + 1
-                                    slc = int(packet[8:10], 16) 
+                                    # room의 조절기 수 (현재 하나 뿐임)
+                                    src = 1
                                 
                                     for rid in range(1, rc + 1):
                                         setT = packet[16 + 4 * rid:18 + 4 * rid]
@@ -467,9 +467,9 @@ def ezville_loop(config):
                                     # ROOM ID
                                     rid = int(packet[5], 16)
                                     # ROOM의 plug 갯수
-                                    slc = int(packet[10:12], 16) 
+                                    spc = int(packet[10:12], 16) 
                                 
-                                    for id in range(1, slc + 1):
+                                    for id in range(1, spc + 1):
                                         # 1: 대기전력 커짐, 3: 자동모드 켜짐
                                         # 위와 같지만 일단 on-off 여부만 판단
                                         onoff = 'ON' if int(packet[6 + 6 * id: 8 + 6 * id], 16) > 0 else 'OFF'
