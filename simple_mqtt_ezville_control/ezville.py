@@ -524,7 +524,7 @@ def ezville_loop(config):
                                 else:
                                     onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
                                         
-                                    await update_state(name, 'power', rid, spc, onoff)
+                                    await update_state(name, 'state', rid, spc, onoff)
                                                                                     
                         # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
                         else:
@@ -597,7 +597,7 @@ def ezville_loop(config):
                                     
                                     onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
                                         
-                                    await update_state(name, 'power', rid, spc, onoff)
+                                    await update_state(name, 'state', rid, spc, onoff)
                        
                 RESIDUE = ""
                 k = k + packet_length
