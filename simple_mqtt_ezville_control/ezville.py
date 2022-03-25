@@ -11,26 +11,31 @@ from queue import Queue
 # DEVICE 별 패킷 정보
 RS485_DEVICE = {
     "light": {
-        "state":    { "id": "0E", "cmd": "81", },
+        "state":    { "id": "0E", "cmd": "81" },
 
-        "power":    { "id": "0E", "cmd": "41", "ack": "C1", },
+        "power":    { "id": "0E", "cmd": "41", "ack": "C1" }
     },
     "thermostat": {
-        "state":    { "id": "36", "cmd": "81", },
+        "state":    { "id": "36", "cmd": "81" },
 
-        "away":    { "id": "36", "cmd": "45", "ack": "00", },
-        "target":   { "id": "36", "cmd": "44", "ack": "C4", },
+        "away":    { "id": "36", "cmd": "45", "ack": "00" },
+        "target":   { "id": "36", "cmd": "44", "ack": "C4" }
     },
     "plug": {
-        "state":    { "id": "50", "cmd": "81", },
+        "state":    { "id": "50", "cmd": "81" },
 
-        "power":    { "id": "50", "cmd": "43", "ack": "C3", },
+        "power":    { "id": "50", "cmd": "43", "ack": "C3" }
     },
     "gas_valve": {
-        "state":    { "id": "12", "cmd": "81", },
+        "state":    { "id": "12", "cmd": "81" },
 
-        "power":    { "id": "12", "cmd": "41", "ack": "C1", }, # 잠그기만 가능
+        "power":    { "id": "12", "cmd": "41", "ack": "C1" } # 잠그기만 가능
     },
+    "elevator": {
+        "state":    { "id": "33", "cmd": "81" },
+
+        "press":    { "id": "33", "cmd": "41", "ack": "C1" }
+    }
 }
 
 # MQTT Discovery를 위한 Preset 정보
@@ -88,6 +93,20 @@ DISCOVERY_PAYLOAD = {
         "stat_t": "~/power/state",
         "cmd_t": "~/power/command",
         "icon": "mdi:valve",
+    } ],
+    "elevator": [ {
+        "_intg": "button",
+        "~": "ezville/elevator_{:0>2d}_{:0>2d}",
+        "name": "ezville_elevator_up_{:0>2d}_{:0>2d}",
+        "cmd_t": "~/up/command",
+        "icon": "mdi:elevator-up",
+    },
+    {
+        "_intg": "button",
+        "~": "ezville/elevator_{:0>2d}_{:0>2d}",
+        "name": "ezville_elevator_down_{:0>2d}_{:0>2d}",
+        "cmd_t": "~/down/command",
+        "icon": "mdi:elevator-down",
     } ],
 }
 
@@ -333,6 +352,31 @@ def ezville_loop(config):
                             else:
                                 if debug:
                                     log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+                                    
+#                    elif device == 'elevator': 
+#                        if topics[2] == 'up':
+#                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['press']['cmd'] + '0101' + '0000')
+#
+#                            if sendcmd:
+#                                recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['press']['ack']]
+#                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+#                                if debug:
+#                                    log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+#                            else:
+#                                if debug:
+#                                    log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+                         
+#                        elif topics[2] == 'down':
+#                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['press']['cmd'] + '0101' + '0000')
+#
+#                            if sendcmd:
+#                                recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['press']['ack']]
+#                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+#                                if debug:
+#                                    log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+#                            else:
+#                                if debug:
+#                                    log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
             else:
                 if debug:
                     log('[DEBUG] There is no command about {}'.format('/'.join(topics)))
