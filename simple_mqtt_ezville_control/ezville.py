@@ -386,7 +386,7 @@ def ezville_loop(config):
                         elif topics[2] == 'outing':
                             OUTING = '1'
                             
-                        CMD = "{:0>4X}"(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
+                        CMD = "{:0>2X}".format(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
                         
                         sendcmd = checksum('F7' + RS485_DEVICE[device]['press']['id'] + '0' + str(idx) + RS485_DEVICE[device]['press']['cmd'] + '0300' + CMD + '000000')
                         recvcmd = 'NULL'
