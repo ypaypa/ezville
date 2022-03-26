@@ -556,7 +556,7 @@ def ezville_loop(config):
                                 # 일괄차단기는 하나라서 강제 설정
                                 sbc = 1
                                 
-                                discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, spc)
+                                discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, sbc)
                                 
                                 if discovery_name not in DISCOVERY_LIST:
                                     DISCOVERY_LIST.append(discovery_name)
@@ -568,6 +568,7 @@ def ezville_loop(config):
                                    
                                         await mqtt_discovery(payload)        
                                 else:
+                                    # 일괄 차단기는 버튼이라 상태 변수만 업데이트 해줌
                                     states = bin(int(packet[12:14], 16))[2:].zfill(8)
                                         
                                     ELEVDOWN = states[5]                                        
@@ -647,6 +648,7 @@ def ezville_loop(config):
                                     onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
                                         
                                     await update_state(name, 'power', rid, spc, onoff)
+                                    
                                 elif name == 'batch':
                                     # 일괄차단기는 하나라서 강제 설정
                                     rid = 1
@@ -654,7 +656,6 @@ def ezville_loop(config):
                                     sbc = 1
                                     
                                     # 일괄 차단기는 버튼이라 상태 변수만 업데이트 해줌
-
                                     states = bin(int(packet[12:14], 16))[2:].zfill(8)
                                     
                                     ELEVDOWN = states[5]                                        
