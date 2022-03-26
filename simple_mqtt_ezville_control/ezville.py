@@ -637,6 +637,8 @@ def ezville_loop(config):
                                         onoff = 'ON' if int(packet[6 + 6 * id: 8 + 6 * id], 16) > 0 else 'OFF'
                                         power_num = "{:.2f}".format(int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100)
                                         
+                                        log(str(id) + ':' + onoff + ':' + power_num)
+                                        
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
                                         
