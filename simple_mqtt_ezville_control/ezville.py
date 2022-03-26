@@ -581,13 +581,20 @@ def ezville_loop(config):
                                    
                                         await mqtt_discovery(payload)        
                                 else:
-                                    # 일괄 차단기는 버튼이라 상태 변수만 업데이트 해줌
+                                    # 일괄 차단기는 버튼 상태 변수 업데이트
                                     states = bin(int(packet[12:14], 16))[2:].zfill(8)
                                         
                                     ELEVDOWN = states[5]                                        
                                     ELEVUP = states[4]
                                     GROUPON = states[2]
                                     OUTING = states[1]
+                                    
+                                    grouponoff = 'ON' if GROUPON == '1' else 'OFF'
+                                    outingonoff = 'ON' if OUTING == '1' else 'OFF'
+                                    
+                                    # 스위치 구성은 업데이트
+                                    await update_state(name, 'group', rid, sbc, grouponoff)
+                                    await update_state(name, 'outing', rid, sbc, outingonoff)
                                                                                     
                         # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
                         else:
@@ -670,13 +677,20 @@ def ezville_loop(config):
                                     # 일괄차단기는 하나라서 강제 설정
                                     sbc = 1
                                     
-                                    # 일괄 차단기는 버튼이라 상태 변수만 업데이트 해줌
+                                    # 일괄 차단기는 버튼 상태 변수 업데이트
                                     states = bin(int(packet[12:14], 16))[2:].zfill(8)
                                     
                                     ELEVDOWN = states[5]                                        
                                     ELEVUP = states[4]
                                     GROUPON = states[2]
                                     OUTING = states[1]
+                                    
+                                    grouponoff = 'ON' if GROUPON == '1' else 'OFF'
+                                    outingonoff = 'ON' if OUTING == '1' else 'OFF'
+                                    
+                                    # 스위치 구성은 업데이트
+                                    await update_state(name, 'group', rid, sbc, grouponoff)
+                                    await update_state(name, 'outing', rid, sbc, outingonoff)
                        
                 RESIDUE = ""
                 k = k + packet_length
