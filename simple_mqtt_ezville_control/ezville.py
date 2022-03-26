@@ -116,20 +116,18 @@ DISCOVERY_PAYLOAD = {
         "icon": "mdi:elevator-down"
     },
     {
-        "_intg": "switch",
+        "_intg": "binary_sensor",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
         "name": "ezville_batch-groupcontrol_{:0>2d}_{:0>2d}",
         "stat_t": "~/group/state",
-        "cmd_t": "~/group/command",
         "icon": "mdi:lightbulb-group"
     },
     {
-        "_intg": "switch",
+        "_intg": "binary_sensor",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
         "name": "ezville_batch-outing_{:0>2d}_{:0>2d}",
         "stat_t": "~/outing/state",
-        "cmd_t": "~/outing/command",
-        "icon": "mdi:home-off"
+        "icon": "mdi:home-circle"
     } ]
 }
 
