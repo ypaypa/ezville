@@ -80,6 +80,14 @@ DISCOVERY_PAYLOAD = {
         "icon": "mdi:leaf"
     },
     {
+        "_intg": "switch",
+        "~": "ezville/plug_{:0>2d}_{:0>2d}",
+        "name": "ezville_plug-automode_{:0>2d}_{:0>2d}",
+        "stat_t": "~/auto/state",
+        "cmd_t": "~/auto/command",
+        "icon": "mdi:leaf"
+    },
+    {
         "_intg": "sensor",
         "~": "ezville/plug_{:0>2d}_{:0>2d}",
         "name": "ezville_plug_{:0>2d}_{:0>2d}_powermeter",
@@ -350,7 +358,7 @@ def ezville_loop(config):
                         pwr = '01' if value == 'ON' else '00'
 
                         sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '020' + str(sid) + pwr + '0000')
-                        log(sendcmd)
+
                         if sendcmd:
                             recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
                             CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
@@ -364,7 +372,7 @@ def ezville_loop(config):
                         # 가스 밸브는 ON 제어를 받지 않음
                         if value == 'OFF':
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '0100' + '0000')
-                            log(sendcmd)
+
                             if sendcmd:
                                 recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
                                 CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
@@ -522,12 +530,14 @@ def ezville_loop(config):
                                    
                                             await mqtt_discovery(payload)                            
                                     else:
-                                        # 1: 대기전력 커짐, 3: 자동모드 켜짐
+                                        # BIT0: 대기전력 On/Off, BIT1: 자동모드 On/Off
                                         # 위와 같지만 일단 on-off 여부만 판단
-                                        onoff = 'ON' if int(packet[6 + 6 * id: 8 + 6 * id], 16) > 0 else 'OFF'
+                                        onoff = 'ON' if int(packet[7 + 6 * id], 16) > 0 else 'OFF'
+                                        autoonoff = 'ON' if int(packet[6 + 6 * id], 16) > 0 else 'OFF'
                                         power_num = "{:.2f}".format(int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100)
                                         
                                         await update_state(name, 'power', rid, id, onoff)
+                                        await update_state(name, 'auto', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
                                         
                             elif name == 'gasvalve':
@@ -632,14 +642,14 @@ def ezville_loop(config):
                                     spc = int(packet[10:12], 16) 
                                 
                                     for id in range(1, spc + 1):
-                                        # 1: 대기전력 커짐, 3: 자동모드 켜짐
+                                        # BIT0: 대기전력 On/Off, BIT1: 자동모드 On/Off
                                         # 위와 같지만 일단 on-off 여부만 판단
-                                        onoff = 'ON' if int(packet[6 + 6 * id: 8 + 6 * id], 16) > 0 else 'OFF'
+                                        onoff = 'ON' if int(packet[7 + 6 * id], 16) > 0 else 'OFF'
+                                        autoonoff = 'ON' if int(packet[6 + 6 * id], 16) > 0 else 'OFF'
                                         power_num = "{:.2f}".format(int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100)
                                         
-                                        log(packet + "  " + str(id) + ':' + onoff + ':' + power_num)
-                                        
                                         await update_state(name, 'power', rid, id, onoff)
+                                        await update_state(name, 'auto', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
                                         
                                 elif name == 'gasvalve':
