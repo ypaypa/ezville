@@ -80,11 +80,10 @@ DISCOVERY_PAYLOAD = {
         "icon": "mdi:leaf"
     },
     {
-        "_intg": "switch",
+        "_intg": "binary_sensor",
         "~": "ezville/plug_{:0>2d}_{:0>2d}",
         "name": "ezville_plug-automode_{:0>2d}_{:0>2d}",
         "stat_t": "~/auto/state",
-        "cmd_t": "~/auto/command",
         "icon": "mdi:leaf"
     },
     {
@@ -105,30 +104,32 @@ DISCOVERY_PAYLOAD = {
     "batch": [ {
         "_intg": "button",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch_elevator-up_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch-elevator-up_{:0>2d}_{:0>2d}",
         "cmd_t": "~/elevator-up/command",
         "icon": "mdi:elevator-up"
     },
     {
         "_intg": "button",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch_elevator-down_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch-elevator-down_{:0>2d}_{:0>2d}",
         "cmd_t": "~/elevator-down/command",
         "icon": "mdi:elevator-down"
     },
     {
-        "_intg": "button",
+        "_intg": "switch",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch_groupcontrol_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch-groupcontrol_{:0>2d}_{:0>2d}",
+        "stat_t": "~/group/state",
         "cmd_t": "~/group/command",
         "icon": "mdi:lightbulb-group"
     },
     {
-        "_intg": "button",
+        "_intg": "switch",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
         "name": "ezville_batch-outing_{:0>2d}_{:0>2d}",
+        "stat_t": "~/outing/state",
         "cmd_t": "~/outing/command",
-        "icon": "mdi:home-off-line"
+        "icon": "mdi:home-off"
     } ]
 }
 
@@ -381,35 +382,35 @@ def ezville_loop(config):
                             else:
                                 if debug:
                                     log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
-
-                    elif device == 'batch':
-                        # 일괄 차단기는 4가지 모드로 조절
-                        log(topics[2])
-                        if topics[2] == 'elevator-up':
-                            ELEVUP = '1'    
-                        elif topics[2] == 'elevator-down':
-                            ELEVDOWN = '1'
-                        elif topics[2] == 'group':
-                            GROUPON = '0'
-                        elif topics[2] == 'outing':
-                            OUTING = '1'
-                            
-                        CMD = "{:0>2X}".format(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
-                        
-                        sendcmd = checksum('F7' + RS485_DEVICE[device]['press']['id'] + '0' + str(idx) + RS485_DEVICE[device]['press']['cmd'] + '0300' + CMD + '000000')
-                        recvcmd = 'NULL'
-                        log(sendcmd)
-                        if sendcmd:
-                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-                            if debug:
-                                log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
-                        else:
-                            if debug:
-                                log('[DEBUG] There is no command for {}'.format('/'.join(topics)))  
                                     
             else:
-                if debug:
-                    log('[DEBUG] There is no command about {}'.format('/'.join(topics)))
+                if device == 'batch':
+                    # 일괄 차단기는 4가지 모드로 조절
+               
+                    if topics[2] == 'elevator-up':
+                        ELEVUP = '1'    
+                    elif topics[2] == 'elevator-down':
+                        ELEVDOWN = '1'
+                    elif topics[2] == 'group':
+                        GROUPON = '0'
+                    elif topics[2] == 'outing':
+                        OUTING = '1'
+                            
+                    CMD = "{:0>2X}".format(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
+                        
+                    sendcmd = checksum('F7' + RS485_DEVICE[device]['press']['id'] + '0' + str(idx) + RS485_DEVICE[device]['press']['cmd'] + '0300' + CMD + '000000')
+                    recvcmd = 'NULL'
+                    
+                    if sendcmd:
+                        CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                        if debug:
+                            log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                    else:
+                        if debug:
+                            log('[DEBUG] There is no command for {}'.format('/'.join(topics))) 
+                else:
+                    if debug:
+                        log('[DEBUG] There is no command about {}'.format('/'.join(topics)))
         else:
             if debug:
                 log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
