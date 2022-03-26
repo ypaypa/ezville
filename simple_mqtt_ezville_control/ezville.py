@@ -556,6 +556,8 @@ def ezville_loop(config):
                                 # 일괄차단기는 하나라서 강제 설정
                                 sbc = 1
                                 
+                                discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, spc)
+                                
                                 if discovery_name not in DISCOVERY_LIST:
                                     DISCOVERY_LIST.append(discovery_name)
                                     
