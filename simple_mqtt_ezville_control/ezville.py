@@ -111,14 +111,14 @@ DISCOVERY_PAYLOAD = {
     {
         "_intg": "button",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch-groupcontrol_{:0>2d}_{:0>2d}",
         "cmd_t": "~/group/command",
         "icon": "mdi:lightbulb-group"
     },
     {
         "_intg": "button",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch-outing_{:0>2d}_{:0>2d}",
         "cmd_t": "~/outing/command",
         "icon": "mdi:home-off-line"
     } ]
