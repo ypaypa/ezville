@@ -397,8 +397,9 @@ def ezville_loop(config):
                         OUTING = '1'
                             
                     CMD = "{:0>2X}".format(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
-                        
-                    sendcmd = checksum('F7' + RS485_DEVICE[device]['press']['id'] + '0' + str(idx) + RS485_DEVICE[device]['press']['cmd'] + '0300' + CMD + '000000')
+                    
+                    # 일괄 차단기는 state를 변경하여 제공해서 월패드에서 조작하도록 해야함
+                    sendcmd = checksum('F7' + RS485_DEVICE[device]['press']['id'] + '0' + str(idx) + RS485_DEVICE[device]['press']['state'] + '0300' + CMD + '000000')
                     recvcmd = 'NULL'
                     
                     if sendcmd:
