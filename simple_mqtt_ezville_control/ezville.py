@@ -31,7 +31,7 @@ RS485_DEVICE = {
 
         "power":    { "id": "12", "cmd": "41", "ack": "C1" } # 잠그기만 가능
     },
-    "elevator": {
+    "batch": {
         "state":    { "id": "33", "cmd": "81" },
 
         "press":    { "id": "33", "cmd": "41", "ack": "C1" }
@@ -55,7 +55,7 @@ DISCOVERY_PAYLOAD = {
         "name": "ezville_light_{:0>2d}_{:0>2d}",
         "opt": True,
         "stat_t": "~/power/state",
-        "cmd_t": "~/power/command",
+        "cmd_t": "~/power/command"
     } ],
     "thermostat": [ {
         "_intg": "climate",
@@ -69,7 +69,7 @@ DISCOVERY_PAYLOAD = {
         "away_mode_cmd_t": "~/away/command",
         "modes": [ "off", "heat" ],
         "min_temp": "5",
-        "max_temp": 40,
+        "max_temp": 40
     } ],
     "plug": [ {
         "_intg": "switch",
@@ -77,14 +77,14 @@ DISCOVERY_PAYLOAD = {
         "name": "ezville_plug_{:0>2d}_{:0>2d}",
         "stat_t": "~/power/state",
         "cmd_t": "~/power/command",
-        "icon": "mdi:leaf",
+        "icon": "mdi:leaf"
     },
     {
         "_intg": "sensor",
         "~": "ezville/plug_{:0>2d}_{:0>2d}",
         "name": "ezville_plug_{:0>2d}_{:0>2d}_powermeter",
         "stat_t": "~/current/state",
-        "unit_of_meas": "W",
+        "unit_of_meas": "W"
     } ],
     "gasvalve": [ {
         "_intg": "switch",
@@ -92,22 +92,36 @@ DISCOVERY_PAYLOAD = {
         "name": "ezville_gasvalve_{:0>2d}_{:0>2d}",
         "stat_t": "~/power/state",
         "cmd_t": "~/power/command",
-        "icon": "mdi:valve",
+        "icon": "mdi:valve"
     } ],
-    "elevator": [ {
+    "batch": [ {
         "_intg": "button",
-        "~": "ezville/elevator_{:0>2d}_{:0>2d}",
-        "name": "ezville_elevator_up_{:0>2d}_{:0>2d}",
-        "cmd_t": "~/up/command",
-        "icon": "mdi:elevator-up",
+        "~": "ezville/batch_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch-elevator-up_{:0>2d}_{:0>2d}",
+        "cmd_t": "~/elevator-up/command",
+        "icon": "mdi:elevator-up"
     },
     {
         "_intg": "button",
-        "~": "ezville/elevator_{:0>2d}_{:0>2d}",
-        "name": "ezville_elevator_down_{:0>2d}_{:0>2d}",
-        "cmd_t": "~/down/command",
-        "icon": "mdi:elevator-down",
-    } ],
+        "~": "ezville/batch_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch-elevator-down_{:0>2d}_{:0>2d}",
+        "cmd_t": "~/elevator-down/command",
+        "icon": "mdi:elevator-down"
+    },
+    {
+        "_intg": "button",
+        "~": "ezville/batch_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch_{:0>2d}_{:0>2d}",
+        "cmd_t": "~/group/command",
+        "icon": "mdi:lightbulb-group"
+    },
+    {
+        "_intg": "button",
+        "~": "ezville/batch_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch_{:0>2d}_{:0>2d}",
+        "cmd_t": "~/outing/command",
+        "icon": "mdi:home-off-line"
+    } ]
 }
 
 # STATE 확인용 Dictionary
@@ -195,7 +209,13 @@ def ezville_loop(config):
     FORCE_UPDATE = False
     FORCE_PERIOD = 300
     FORCE_DURATION = 3
-
+    
+    # 현관스위치 요구 상태
+    ELEVUP = ''
+    ELEVDOWN = ''
+    GROUPON = ''
+    OUTING = ''
+    
     # Command를 EW11로 보내는 방식 설정 (한번에 보내는 횟수와 간격, 재시도 횟수)
     CMD_SEND_COUNT = config['command_send_count']
     CMD_INTERVAL = config['command_interval']
@@ -246,6 +266,7 @@ def ezville_loop(config):
     # HA에서 전달된 메시지 처리        
     async def HA_process(topics, value):
         nonlocal CMD_QUEUE
+        nonlocal ELEVUP, ELEVDOWN, GROUPON, OUTING
         device_info = topics[1].split('_')
         device = device_info[0]
         
@@ -343,7 +364,7 @@ def ezville_loop(config):
                         # 가스 밸브는 ON 제어를 받지 않음
                         if value == 'OFF':
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '0100' + '0000')
-                            log(sendcmd)
+
                             if sendcmd:
                                 recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
                                 CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
@@ -352,31 +373,32 @@ def ezville_loop(config):
                             else:
                                 if debug:
                                     log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+
+                    elif device == 'batch':
+                        # 일괄 차단기는 4가지 모드로 조절
+                                               
+                        if topics[2] == 'elevator-up':
+                            ELEVUP = '1'    
+                        elif topics[2] == 'elevator-down':
+                            ELEVDOWN = '1'
+                        elif topics[2] == 'group':
+                            GROUPON = '0'
+                        elif topics[2] == 'outing':
+                            OUTING = '1'
+                            
+                        CMD = "{:0>4X}"(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
+                        
+                        sendcmd = checksum('F7' + RS485_DEVICE[device]['press']['id'] + '0' + str(idx) + RS485_DEVICE[device]['press']['cmd'] + '0300' + CMD + '000000')
+                        recvcmd = 'NULL'
+                        
+                        if sendcmd:
+                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                            if debug:
+                                log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                        else:
+                            if debug:
+                                log('[DEBUG] There is no command for {}'.format('/'.join(topics)))  
                                     
-#                    elif device == 'elevator': 
-#                        if topics[2] == 'up':
-#                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['press']['cmd'] + '0101' + '0000')
-#
-#                            if sendcmd:
-#                                recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['press']['ack']]
-#                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-#                                if debug:
-#                                    log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
-#                            else:
-#                                if debug:
-#                                    log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
-                         
-#                        elif topics[2] == 'down':
-#                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['press']['cmd'] + '0101' + '0000')
-#
-#                            if sendcmd:
-#                                recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['press']['ack']]
-#                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-#                                if debug:
-#                                    log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
-#                            else:
-#                                if debug:
-#                                    log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
             else:
                 if debug:
                     log('[DEBUG] There is no command about {}'.format('/'.join(topics)))
@@ -392,6 +414,8 @@ def ezville_loop(config):
         nonlocal CMD_QUEUE
         nonlocal MSG_CACHE
         nonlocal FORCE_UPDATE
+        nonlocal ELEVUP, ELEVDOWN, GROUPON, OUTING
+        
         raw_data = RESIDUE + raw_data
         DISCOVERY = DISCOVERY_MODE
         
@@ -525,6 +549,29 @@ def ezville_loop(config):
                                     onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
                                         
                                     await update_state(name, 'power', rid, spc, onoff)
+                                    
+                            elif name == 'batch':
+                                # 일괄차단기는 하나라서 강제 설정
+                                rid = 1
+                                # 일괄차단기는 하나라서 강제 설정
+                                sbc = 1
+                                
+                                if discovery_name not in DISCOVERY_LIST:
+                                    DISCOVERY_LIST.append(discovery_name)
+                                    
+                                    for payload_template in DISCOVERY_PAYLOAD[name]:
+                                        payload = payload_template.copy()
+                                        payload["~"] = payload["~"].format(rid, sbc)
+                                        payload["name"] = payload["name"].format(rid, sbc)
+                                   
+                                        await mqtt_discovery(payload)        
+                                else:
+                                    states = bin(int(packet[12:14], 16))[2:].zfill(8)
+                                        
+                                    ELEVDOWN = states[5]                                        
+                                    ELEVUP = states[4]
+                                    GROUPON = states[2]
+                                    OUTING = states[1]
                                                                                     
                         # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
                         else:
@@ -598,6 +645,20 @@ def ezville_loop(config):
                                     onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
                                         
                                     await update_state(name, 'power', rid, spc, onoff)
+                                elif name == 'batch':
+                                    # 일괄차단기는 하나라서 강제 설정
+                                    rid = 1
+                                    # 일괄차단기는 하나라서 강제 설정
+                                    sbc = 1
+                                    
+                                    # 일괄 차단기는 버튼이라 상태 변수만 업데이트 해줌
+
+                                    states = bin(int(packet[12:14], 16))[2:].zfill(8)
+                                    
+                                    ELEVDOWN = states[5]                                        
+                                    ELEVUP = states[4]
+                                    GROUPON = states[2]
+                                    OUTING = states[1]
                        
                 RESIDUE = ""
                 k = k + packet_length
