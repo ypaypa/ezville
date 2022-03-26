@@ -376,7 +376,7 @@ def ezville_loop(config):
 
                     elif device == 'batch':
                         # 일괄 차단기는 4가지 모드로 조절
-                                               
+                        log(topics[2])
                         if topics[2] == 'elevator-up':
                             ELEVUP = '1'    
                         elif topics[2] == 'elevator-down':
@@ -637,7 +637,7 @@ def ezville_loop(config):
                                         onoff = 'ON' if int(packet[6 + 6 * id: 8 + 6 * id], 16) > 0 else 'OFF'
                                         power_num = "{:.2f}".format(int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100)
                                         
-                                        log(str(id) + ':' + onoff + ':' + power_num)
+                                        log(packet + "  " + str(id) + ':' + onoff + ':' + power_num)
                                         
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
