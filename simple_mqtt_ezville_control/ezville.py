@@ -105,21 +105,21 @@ DISCOVERY_PAYLOAD = {
     "batch": [ {
         "_intg": "button",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch-elevator-up_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch_elevator-up_{:0>2d}_{:0>2d}",
         "cmd_t": "~/elevator-up/command",
         "icon": "mdi:elevator-up"
     },
     {
         "_intg": "button",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch-elevator-down_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch_elevator-down_{:0>2d}_{:0>2d}",
         "cmd_t": "~/elevator-down/command",
         "icon": "mdi:elevator-down"
     },
     {
         "_intg": "button",
         "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch-groupcontrol_{:0>2d}_{:0>2d}",
+        "name": "ezville_batch_groupcontrol_{:0>2d}_{:0>2d}",
         "cmd_t": "~/group/command",
         "icon": "mdi:lightbulb-group"
     },
