@@ -685,7 +685,7 @@ def ezville_loop(config):
                                     GROUPON = states[2]
                                     OUTING = states[1]
                                     
-                                    grouponoff = 'ON' if GROUPON == '1' else 'OFF'
+                                    grouponoff = 'ON' if GROUPON == '0' else 'OFF'
                                     outingonoff = 'ON' if OUTING == '1' else 'OFF'
                                     
                                     # 스위치 구성은 업데이트
