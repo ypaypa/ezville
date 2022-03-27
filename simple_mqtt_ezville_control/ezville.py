@@ -223,8 +223,7 @@ def ezville_loop(config):
     GROUPON = ''
     OUTING = ''
     
-    # Command를 EW11로 보내는 방식 설정 (한번에 보내는 횟수와 간격, 재시도 횟수)
-    CMD_SEND_COUNT = config['command_send_count']
+    # Command를 EW11로 보내는 방식 설정 (명령 간격 및 재시도 횟수)
     CMD_INTERVAL = config['command_interval']
     CMD_RETRY_COUNT = config['command_retry_count']
 
@@ -752,7 +751,6 @@ def ezville_loop(config):
         nonlocal comm_mode, soc
         nonlocal CMD_QUEUE
         nonlocal DISCOVERY_MODE
-        nonlocal CMD_SEND_COUNT
         nonlocal CMD_INTERVAL
         nonlocal CMD_RETRY_COUNT
                                                                                              
