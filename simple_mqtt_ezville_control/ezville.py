@@ -785,17 +785,16 @@ def ezville_loop(config):
                         if elfin_log:
                             log('[SIGNAL] 신호 전송: {}'.format(send_data))
 
-                        for i in range(CMD_SEND_COUNT):
-                            if comm_mode == 'mqtt':
-                                mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
-                            else:
-                                try:
-                                    soc.sendall(bytes.fromhex(send_data['sendcmd']))
-                                except OSError:
-                                    connect_socket(soc)
-                                    soc.sendall(bytes.fromhex(send_data['sendcmd']))
-                                    
-                            await asyncio.sleep(CMD_INTERVAL)
+                        if comm_mode == 'mqtt':
+                            mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
+                        else:
+                            try:
+                                soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                            except OSError:
+                                connect_socket(soc)
+                                soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                        log(str(time.time()))
+                        await asyncio.sleep(CMD_INTERVAL)
 
                         if send_data['count'] < CMD_RETRY_COUNT:
                             send_data['count'] = send_data['count'] + 1
@@ -803,7 +802,7 @@ def ezville_loop(config):
                             CMD_QUEUE.insert(0, send_data)
                         else:
                             if elfin_log:
-                                log('[SIGNAL] 5회 명령을 재전송하였으나 수행에 실패했습니다.. 다음의 Queue 삭제: {}'.format(send_data))
+                                log('[SIGNAL] {}회 명령을 재전송하였으나 수행에 실패했습니다.. 다음의 Queue 삭제: {}'.format(str(CMD_RETRY_COUNT),send_data))
                     return
             except Exception as err:
                 log('[ERROR] send_to_elfin(): {}'.format(err))
