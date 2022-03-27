@@ -224,6 +224,7 @@ def ezville_loop(config):
     OUTING = ''
     
     # Command를 EW11로 보내는 방식 설정 (명령 간격 및 재시도 횟수)
+    CMD_COUNT = config['command_send_count']
     CMD_INTERVAL = config['command_interval']
     CMD_RETRY_COUNT = config['command_retry_count']
 
@@ -751,6 +752,7 @@ def ezville_loop(config):
         nonlocal comm_mode, soc
         nonlocal CMD_QUEUE
         nonlocal DISCOVERY_MODE
+        nonlocal CMD_COUNT
         nonlocal CMD_INTERVAL
         nonlocal CMD_RETRY_COUNT
                                                                                              
@@ -782,15 +784,16 @@ def ezville_loop(config):
                         send_data = CMD_QUEUE.pop(0)
                         if elfin_log:
                             log('[SIGNAL] 신호 전송: {}'.format(send_data))
-
-                        if comm_mode == 'mqtt':
-                            mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
-                        else:
-                            try:
-                                soc.sendall(bytes.fromhex(send_data['sendcmd']))
-                            except OSError:
-                                connect_socket(soc)
-                                soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                        
+                        for i in range(CMD_COUNT):
+                            if comm_mode == 'mqtt':
+                                mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
+                            else:
+                                try:
+                                    soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                                except OSError:
+                                    connect_socket(soc)
+                                    soc.sendall(bytes.fromhex(send_data['sendcmd']))
                         log(str(time.time()))
                         await asyncio.sleep(CMD_INTERVAL)
 
