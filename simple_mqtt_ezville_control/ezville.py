@@ -935,13 +935,17 @@ def ezville_loop(config):
             send_to_ew11()               
         
             # 0.001초 대기 후 루프 진행
-            await asyncio.sleep(COMMAND_LOOP_DELAY)     
+            await asyncio.sleep(COMMAND_LOOP_DELAY)    
+            
+            
     if comm_mode == 'socket':
         th0 = Thread(target = asyncio.run(serial_recv_loop()))
         th0.start()
+        
     th1 = Thread(target = asyncio.run(state_update_run()))
     th2 = Thread(target = asyncio.run(command_run()))
-    th3 = Thread(target = asyncio.run(ew11_health_check())
+    th3 = Thread(target = asyncio.run(ew11_health_check()))
+                 
     th1.start()
     th2.start()
     th3.start()
