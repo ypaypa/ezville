@@ -828,7 +828,7 @@ def ezville_loop(config):
 
                 except:
                     log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
-            else
+            else:
                 log('[LOG] EW11 연결 상태 Okay')
             await asyncio.sleep(EW11_TIMEOUT)        
           
