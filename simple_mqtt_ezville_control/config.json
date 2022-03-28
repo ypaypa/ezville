@@ -13,7 +13,7 @@
   "options": {
     "DEBUG": false,
     "mqtt_log": true,
-    "elfin_log": false,
+    "ew11_log": false,
     "mode": "mixed",
     "mqtt_server": "192.168.x.x",
     "mqtt_id": "id",
@@ -31,7 +31,7 @@
   "schema": {
     "DEBUG": "bool",
     "mqtt_log": "bool",
-    "elfin_log": "bool",
+    "ew11_log": "bool",
     "mode": "str",
     "mqtt_server": "str",
     "mqtt_id": "str",
