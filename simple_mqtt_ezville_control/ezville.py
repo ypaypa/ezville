@@ -872,6 +872,7 @@ def ezville_loop(config):
     if comm_mode == 'mixed' or comm_mode == 'socket':
         soc = initiate_socket()  
 
+        
     # Discovery 및 강제 업데이트 시간 설정
     target_time = time.time() + DISCOVERY_DURATION
     force_target_time = target_time + FORCE_PERIOD
@@ -931,11 +932,12 @@ def ezville_loop(config):
             # 0.02초 대기 후 루프 진행
             await asyncio.sleep(STATE_LOOP_DELAY)
             
+            
     async def command_run():
         nonlocal COMMAND_LOOP_DELAY
         
         while True:
-            send_to_ew11()               
+            await send_to_ew11()               
         
             # 0.001초 대기 후 루프 진행
             await asyncio.sleep(COMMAND_LOOP_DELAY)    
