@@ -224,12 +224,15 @@ def ezville_loop(config):
     GROUPON = ''
     OUTING = ''
     
-    # Command를 EW11로 보내는 방식 설정 (명령 간격 및 재시도 횟수)
+    # Command를 EW11로 보내는 방식 설정 (동시 명령 횟수, 명령 간격 및 재시도 횟수)
     CMD_COUNT = config['command_send_count']
     CMD_INTERVAL = config['command_interval']
     CMD_RETRY_COUNT = config['command_retry_count']
-
     
+    # State 업데이트 루프와 Command 루프의 Delay Time 설정
+    STATE_LOOP_DELAY = config['state_loop_delay']
+    COMMAND_LOOP_DELAY = config['command_loop_delay']
+
     def on_connect(client, userdata, flags, rc):
         nonlocal comm_mode
         if rc == 0:
@@ -876,7 +879,7 @@ def ezville_loop(config):
         nonlocal FORCE_PERIOD
         nonlocal FORCE_DURATION
         nonlocal FORCE_UPDATE
-        nonlocal LOOP_TIME
+        nonlocal STATE_LOOP_DELAY
         
         while True:
             if comm_mode == 'socket':
@@ -909,7 +912,9 @@ def ezville_loop(config):
             # 0.02초 대기 후 루프 진행
             await asyncio.sleep(0.02)
             
-    async def command_run():       
+    async def command_run():
+        nonlocal COMMAND_LOOP_DELAY
+        
         while True:
             send_to_elfin()               
         
