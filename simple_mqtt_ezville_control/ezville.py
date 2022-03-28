@@ -178,8 +178,8 @@ config_dir = '/data'
 
 HA_TOPIC = 'ezville'
 STATE_TOPIC = HA_TOPIC + '/{}/{}/state'
-ELFIN_TOPIC = 'ew11'
-ELFIN_SEND_TOPIC = ELFIN_TOPIC + '/send'
+EW11_TOPIC = 'ew11'
+EW11_SEND_TOPIC = EW11_TOPIC + '/send'
 
 
 def ezville_loop(config):
@@ -188,11 +188,11 @@ def ezville_loop(config):
     debug = config['DEBUG']
     comm_mode = config['mode']
     mqtt_log = config['mqtt_log']
-    elfin_log = config['elfin_log']
+    ew11_log = config['ew11_log']
     
     # SOCKET 정보
-    SOC_ADDRESS = config['elfin_server']
-    SOC_PORT = config['elfin_port']
+    SOC_ADDRESS = config['ew11_server']
+    SOC_PORT = config['ew11_port']
     
     # EW11 혹은 HA 전달 메시지 저장소
     MSG_QUEUE = Queue()
@@ -232,6 +232,11 @@ def ezville_loop(config):
     # State 업데이트 루프와 Command 루프의 Delay Time 설정
     STATE_LOOP_DELAY = config['state_loop_delay']
     COMMAND_LOOP_DELAY = config['command_loop_delay']
+    SERIAL_RECV_DELAY = config['serial_recv_delay']
+    
+    # EW11 동작상태 확인용 메시지 수신 시간 체크 주기 및 체크용 시간 변수
+    EW11_TIMEOUT = config['ew11_timeout']
+    last_received_time = 0
 
     def on_connect(client, userdata, flags, rc):
         nonlocal comm_mode
@@ -240,9 +245,9 @@ def ezville_loop(config):
             if comm_mode == 'socket':
                 client.subscribe(HA_TOPIC + '/#', 0)
             elif comm_mode == 'mixed':
-                client.subscribe([(HA_TOPIC + '/#', 0), (ELFIN_TOPIC + '/recv', 0)])
+                client.subscribe([(HA_TOPIC + '/#', 0), (EW11_TOPIC + '/recv', 0)])
             else:
-                client.subscribe([(HA_TOPIC + '/#', 0), (ELFIN_TOPIC + '/recv', 0), (ELFIN_TOPIC + '/send', 1)])
+                client.subscribe([(HA_TOPIC + '/#', 0), (EW11_TOPIC + '/recv', 0), (EW11_TOPIC + '/send', 1)])
         else:
             errcode = {1: 'Connection refused - incorrect protocol version',
                        2: 'Connection refused - invalid client identifier',
@@ -260,6 +265,8 @@ def ezville_loop(config):
     async def process_message():
         # MSG_QUEUE의 message를 하나씩 pop
         nonlocal MSG_QUEUE
+        nonlocal last_received_time
+        
         stop = False
         while not stop:
             if MSG_QUEUE.empty():
@@ -270,7 +277,9 @@ def ezville_loop(config):
 
                 if topics[0] == HA_TOPIC and topics[-1] == 'command':
                     await HA_process(topics, msg.payload.decode('utf-8'))
-                elif topics[0] == ELFIN_TOPIC and topics[-1] == 'recv':
+                elif topics[0] == EW11_TOPIC and topics[-1] == 'recv':
+                    # Que에서 확인된 시간 기준으로 EW11 Health Check함.
+                    last_received_time = time.time()
                     await EW11_process(msg.payload.hex().upper())
 
                     
@@ -431,7 +440,7 @@ def ezville_loop(config):
         raw_data = RESIDUE + raw_data
         DISCOVERY = DISCOVERY_MODE
         
-        if elfin_log:
+        if ew11_log:
             log('[SIGNAL] receved: {}'.format(raw_data))
         
         k = 0
@@ -752,7 +761,7 @@ def ezville_loop(config):
         return  
                                                                                     
                                                                                     
-    async def send_to_elfin():
+    async def send_to_ew11():
         nonlocal comm_mode, soc
         nonlocal CMD_QUEUE
         nonlocal DISCOVERY_MODE
@@ -762,58 +771,62 @@ def ezville_loop(config):
                                                                                              
         while not DISCOVERY_MODE:
             try:
-#                if time.time_ns() - COLLECTDATA['LastRecv'] > 10000000000:  # 10s
-#                if time.time_ns() - COLLECTDATA['LastRecv'] > 100000000000: 
-#                    log(str(COLLECTDATA['LastRecv']) + "  :  " + str(time.time_ns()))
-#                    log('[WARNING] 10초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.')
-#                    try:
-#                        elfin_id = config['elfin_id']
-#                        elfin_password = config['elfin_password']
-#                        elfin_server = config['elfin_server']
-
-#                        ew11 = telnetlib.Telnet(elfin_server)
-
-#                        ew11.read_until(b"login:")
-#                        ew11.write(elfin_id.encode('utf-8') + b'\n')
-#                        ew11.read_until(b"password:")
-#                        ew11.write(elfin_password.encode('utf-8') + b'\n')
-#                        ew11.write('Restart'.encode('utf-8') + b'\n')
-
-#                        await asyncio.sleep(10)
-#                    except:
-#                        log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
-#                    COLLECTDATA['LastRecv'] = time.time_ns()
-#                elif time.time_ns() - COLLECTDATA['LastRecv'] > 100000000:
-                    if CMD_QUEUE:
-                        send_data = CMD_QUEUE.pop(0)
-                        if elfin_log:
-                            log('[SIGNAL] 신호 전송: {}'.format(send_data))
+                if CMD_QUEUE:
+                    send_data = CMD_QUEUE.pop(0)
+                    if ew11_log:
+                        log('[SIGNAL] 신호 전송: {}'.format(send_data))
                         
-                        for i in range(CMD_COUNT):
-                            if comm_mode == 'mqtt':
-                                mqtt_client.publish(ELFIN_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
-                            else:
-                                try:
-                                    soc.sendall(bytes.fromhex(send_data['sendcmd']))
-                                except OSError:
-                                    connect_socket(soc)
-                                    soc.sendall(bytes.fromhex(send_data['sendcmd']))
-                        log(str(time.time()))
-                        await asyncio.sleep(CMD_INTERVAL)
-
-                        if send_data['count'] < CMD_RETRY_COUNT:
-                            send_data['count'] = send_data['count'] + 1
-                            #CMD_QUEUE.append(send_data)
-                            CMD_QUEUE.insert(0, send_data)
+                    for i in range(CMD_COUNT):
+                        if comm_mode == 'mqtt':
+                            mqtt_client.publish(EW11_SEND_TOPIC, bytes.fromhex(send_data['sendcmd']))
                         else:
-                            if elfin_log:
-                                log('[SIGNAL] {}회 명령을 재전송하였으나 수행에 실패했습니다.. 다음의 Queue 삭제: {}'.format(str(CMD_RETRY_COUNT),send_data))
-                    return
-            except Exception as err:
-                log('[ERROR] send_to_elfin(): {}'.format(err))
+                            try:
+                                soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                            except OSError:
+                                connect_socket(soc)
+                                soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                    log(str(time.time()))
+                    await asyncio.sleep(CMD_INTERVAL)
+
+                    if send_data['count'] < CMD_RETRY_COUNT:
+                        send_data['count'] = send_data['count'] + 1
+                        CMD_QUEUE.insert(0, send_data)
+                    else:
+                        if ew11_log:
+                            log('[SIGNAL] {}회 명령을 재전송하였으나 수행에 실패했습니다.. 다음의 Queue 삭제: {}'.format(str(CMD_RETRY_COUNT),send_data))
                 return
-                                                                                    
-                                                                                    
+        except Exception as err:
+            log('[ERROR] send_to_ew11(): {}'.format(err))
+            return
+
+    async def ew11_health_check():
+        nonlocal last_received_time
+        nonlocal EW11_TIMEOUT
+        
+        while True:
+            timestamp = time.time()
+        
+            # TIMEOUT 시간 동안 새로 받은 EW11 패킷이 없으면 재시작
+            if last_recevied_time > 0 and timestamp - EW11_TIMEOUT > last_received_time:
+                log('[WARNING] {}초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.'.format(EW11_TIMEOUT))
+                    try:
+                        ew11_id = config['ew11_id']
+                        ew11_password = config['ew11_password']
+                        ew11_server = config['ew11_server']
+
+                        ew11 = telnetlib.Telnet(ew11_server)
+
+                        ew11.read_until(b"login:")
+                        ew11.write(ew11_id.encode('utf-8') + b'\n')
+                        ew11.read_until(b"password:")
+                        ew11.write(ew11_password.encode('utf-8') + b'\n')
+                        ew11.write('Restart'.encode('utf-8') + b'\n')
+
+                    except:
+                        log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
+            
+            await asyncio.sleep(EW11_TIMEOUT)        
+                        
     # MQTT 통신 시작
     mqtt_client = mqtt.Client('mqtt-ezville')
     mqtt_client.username_pw_set(config['mqtt_id'], config['mqtt_password'])
@@ -854,23 +867,26 @@ def ezville_loop(config):
     
     log('장치 등록을 시작합니다...')
     
-    async def recv_from_elfin():
+    async def serial_recv_loop():
         nonlocal soc
         nonlocal MSG_QUEUE
+        nonlocal BUFFER_SIZE
+        nonlocal SERIAL_RECV_DELAY
         
         class MSG:
             topic = ''
             payload = bytearray()
         
         msg = MSG()
-
-        # EW11 버퍼 크기만큼 데이터 받기
-        DATA = soc.recv(64)
-        msg.topic = ELFIN_TOPIC + '/recv'
-        msg.payload = DATA
         
-        MSG_QUEUE.put(msg)
-
+        while True:
+            # EW11 버퍼 크기만큼 데이터 받기
+            DATA = soc.recv(BUFFER_SIZE)
+            msg.topic = EW11_TOPIC + '/recv'
+            msg.payload = DATA
+        
+            MSG_QUEUE.put(msg)
+            await asyncio.sleep(SERIAL_RECV_DELAY) 
         
     async def state_update_run():
         nonlocal target_time, force_target_time, force_stop_time
@@ -882,17 +898,7 @@ def ezville_loop(config):
         nonlocal STATE_LOOP_DELAY
         
         while True:
-            if comm_mode == 'socket':
-                await asyncio.gather(
-                    recv_from_elfin(),                    
-                    process_message(),
-                    send_to_elfin()
-                )
-            else:
-                await asyncio.gather(
-                    process_message(),
-                    send_to_elfin()               
-                )           
+            await process_message()                    
             
             timestamp = time.time()
             if timestamp > target_time and DISCOVERY_MODE:
@@ -910,21 +916,24 @@ def ezville_loop(config):
                 FORCE_UPDATE = False
                 
             # 0.02초 대기 후 루프 진행
-            await asyncio.sleep(0.02)
+            await asyncio.sleep(STATE_LOOP_DELAY)
             
     async def command_run():
         nonlocal COMMAND_LOOP_DELAY
         
         while True:
-            send_to_elfin()               
+            send_to_ew11()               
         
             # 0.001초 대기 후 루프 진행
-            await asyncio.sleep(0.001)     
-        
+            await asyncio.sleep(COMMAND_LOOP_DELAY)     
+    
     th1 = Thread(target = asyncio.run(state_update_run()))
     th2 = Thread(target = asyncio.run(command_run()))
     th1.start()
     th2.start()
+    if comm_mode == 'socket':
+        th3 = Thread(target = asyncio.run(serial_recv_loop()))
+        th3.start()
         
 #    async def main_run():
 #        nonlocal target_time, force_target_time, force_stop_time
@@ -938,14 +947,14 @@ def ezville_loop(config):
 #        while True:
 #            if comm_mode == 'socket':
 #                await asyncio.gather(
-#                    recv_from_elfin(),                    
+#                    recv_from_ew11(),                    
 #                    process_message(),
-#                    send_to_elfin()
+#                    send_to_ew11()
 #                )
 #            else:
 #                await asyncio.gather(
 #                    process_message(),
-#                    send_to_elfin()               
+#                    send_to_ew11()               
 #                )           
 #            
 #            timestamp = time.time()
