@@ -806,7 +806,7 @@ def ezville_loop(config):
                 return
 
         
-    async def ew11_health_check():
+    async def ew11_health_loop():
         nonlocal last_received_time
         nonlocal EW11_TIMEOUT
         
@@ -902,7 +902,7 @@ def ezville_loop(config):
             await asyncio.sleep(SERIAL_RECV_DELAY) 
         
         
-    async def state_update_run():
+    async def state_update_loop():
         nonlocal target_time, force_target_time, force_stop_time
         nonlocal comm_mode
         nonlocal DISCOVERY_MODE
@@ -933,7 +933,7 @@ def ezville_loop(config):
             await asyncio.sleep(STATE_LOOP_DELAY)
             
             
-    async def command_run():
+    async def command_loop():
         nonlocal COMMAND_LOOP_DELAY
         
         while True:
@@ -942,19 +942,46 @@ def ezville_loop(config):
             log('KKKK')
             # 0.001초 대기 후 루프 진행
             await asyncio.sleep(COMMAND_LOOP_DELAY)    
-            
-            
+    
+    
+    def serial_run():
+        asyncio.run(serial_recv_loop())
+        
+    def state_run():
+        asyncio.run(state_update_loop())
+        
+    def command_run():
+        asyncio.run(command_loop())
+        
+    def ew11_run():
+        asyncio.run(ew11_health_loop())
+
+ 
     if comm_mode == 'socket':
-        th0 = Thread(target = asyncio.run(serial_recv_loop()))
+        th0 = Thread(target = serial_run())
         th0.start()
         
-    th1 = Thread(target = asyncio.run(state_update_run()))
-    th2 = Thread(target = asyncio.run(command_run()))
-    th3 = Thread(target = asyncio.run(ew11_health_check()))
+    th1 = Thread(target = state_run())
+    th2 = Thread(target = command_run())
+    th3 = Thread(target = ew11_run()))
                  
     th1.start()
     th2.start()
     th3.start()
+
+                       
+                         
+#    if comm_mode == 'socket':
+#        th0 = Thread(target = asyncio.run(serial_recv_loop()))
+#        th0.start()
+        
+#    th1 = Thread(target = asyncio.run(state_update_run()))
+#    th2 = Thread(target = asyncio.run(command_run()))
+#    th3 = Thread(target = asyncio.run(ew11_health_check()))
+                 
+#    th1.start()
+#    th2.start()
+#    th3.start()
         
 #    async def main_run():
 #        nonlocal target_time, force_target_time, force_stop_time
