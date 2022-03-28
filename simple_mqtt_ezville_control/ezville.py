@@ -234,6 +234,9 @@ def ezville_loop(config):
     COMMAND_LOOP_DELAY = config['command_loop_delay']
     SERIAL_RECV_DELAY = config['serial_recv_delay']
     
+    # EW11에 설정된 BUFFER SIZE
+    EW11_BUFFER_SIZE = config['ew11_buffer_size']
+    
     # EW11 동작상태 확인용 메시지 수신 시간 체크 주기 및 체크용 시간 변수
     EW11_TIMEOUT = config['ew11_timeout']
     last_received_time = 0
@@ -879,7 +882,7 @@ def ezville_loop(config):
     async def serial_recv_loop():
         nonlocal soc
         nonlocal MSG_QUEUE
-        nonlocal BUFFER_SIZE
+        nonlocal EW11_BUFFER_SIZE
         nonlocal SERIAL_RECV_DELAY
         
         class MSG:
@@ -890,7 +893,7 @@ def ezville_loop(config):
         
         while True:
             # EW11 버퍼 크기만큼 데이터 받기
-            DATA = soc.recv(BUFFER_SIZE)
+            DATA = soc.recv(EW11_BUFFER_SIZE)
             msg.topic = EW11_TOPIC + '/recv'
             msg.payload = DATA
         
