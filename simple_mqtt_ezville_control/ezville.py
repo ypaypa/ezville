@@ -2,10 +2,11 @@ import paho.mqtt.client as mqtt
 import json
 import time
 import asyncio
+import threading
 import telnetlib
-
 import socket
 
+from threading import Thread
 from queue import Queue
 
 # DEVICE 별 패킷 정보
@@ -866,14 +867,16 @@ def ezville_loop(config):
         msg.payload = DATA
         
         MSG_QUEUE.put(msg)
-    
-    async def main_run():
+
+        
+    async def state_update_run():
         nonlocal target_time, force_target_time, force_stop_time
         nonlocal comm_mode
         nonlocal DISCOVERY_MODE
         nonlocal FORCE_PERIOD
         nonlocal FORCE_DURATION
         nonlocal FORCE_UPDATE
+        nonlocal LOOP_TIME
         
         while True:
             if comm_mode == 'socket':
@@ -905,8 +908,60 @@ def ezville_loop(config):
                 
             # 0.02초 대기 후 루프 진행
             await asyncio.sleep(0.02)
-                                                                                 
-    asyncio.run(main_run())
+            
+    async def command_run():       
+        while True:
+            send_to_elfin()               
+        
+            # 0.001초 대기 후 루프 진행
+            await asyncio.sleep(0.001)     
+        
+    th1 = Thread(target = asyncio.run(state_update_run()))
+    th2 = Thread(target = asyncio.run(command_run()))
+    th1.start()
+    th2.start()
+        
+#    async def main_run():
+#        nonlocal target_time, force_target_time, force_stop_time
+#        nonlocal comm_mode
+#        nonlocal DISCOVERY_MODE
+#        nonlocal FORCE_PERIOD
+#        nonlocal FORCE_DURATION
+#        nonlocal FORCE_UPDATE
+#        nonlocal LOOP_TIME
+#        
+#        while True:
+#            if comm_mode == 'socket':
+#                await asyncio.gather(
+#                    recv_from_elfin(),                    
+#                    process_message(),
+#                    send_to_elfin()
+#                )
+#            else:
+#                await asyncio.gather(
+#                    process_message(),
+#                    send_to_elfin()               
+#                )           
+#            
+#            timestamp = time.time()
+#            if timestamp > target_time and DISCOVERY_MODE:
+#                DISCOVERY_MODE = False
+#                log('IOT 제어 입력 수행을 시작합니다...')
+#            
+#            # 정해진 시간이 지나면 FORCE 모드 발동
+#            if timestamp > force_target_time and not FORCE_UPDATE:
+#                force_stop_time = timestamp + FORCE_DURATION
+#                FORCE_UPDATE = True
+#                
+#            # 정해진 시간이 지나면 FORCE 모드 종료    
+#            if timestamp > force_stop_time and FORCE_UPDATE:
+#                force_target_time = timestamp + FORCE_PERIOD
+#                FORCE_UPDATE = False
+#                
+#            # 0.02초 대기 후 루프 진행
+#            await asyncio.sleep(0.001)
+#                                                                                 
+#    asyncio.run(main_run())
 
 if __name__ == '__main__':
     with open(config_dir + '/options.json') as file:
