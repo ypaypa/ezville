@@ -945,16 +945,29 @@ def ezville_loop(config):
     
     
     def serial_run():
-        asyncio.run(serial_recv_loop())
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        loop.run_until_complete(serial_recv_loop())
         
     def state_run():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        loop.run_until_complete(state_update_loop())
         asyncio.run(state_update_loop())
         
     def command_run():
-        asyncio.run(command_loop())
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        loop.run_until_complete(command_loop())
         
     def ew11_run():
-        asyncio.run(ew11_health_loop())
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        loop.run_until_complete(ew11_health_loop())
 
  
     if comm_mode == 'socket':
