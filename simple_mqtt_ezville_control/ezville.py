@@ -238,6 +238,7 @@ def ezville_loop(config):
     EW11_TIMEOUT = config['ew11_timeout']
     last_received_time = 0
 
+    
     def on_connect(client, userdata, flags, rc):
         nonlocal comm_mode
         if rc == 0:
@@ -256,11 +257,12 @@ def ezville_loop(config):
                        5: 'Connection refused - not authorised'}
             log(errcode[rc])
          
-        
+
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
         MSG_QUEUE.put(msg)
-            
+ 
+
     # MQTT message를 분류하여 처리
     async def process_message():
         # MSG_QUEUE의 message를 하나씩 pop
@@ -739,7 +741,8 @@ def ezville_loop(config):
             if debug:
                 log('[DEBUG] {} is already set: {}'.format(deviceID, onoff))
         return
-    
+ 
+
     async def update_temperature(device, id1, id2, curTemp, setTemp):
         nonlocal HOMESTATE
         nonlocal FORCE_UPDATE
@@ -799,6 +802,7 @@ def ezville_loop(config):
             log('[ERROR] send_to_ew11(): {}'.format(err))
             return
 
+        
     async def ew11_health_check():
         nonlocal last_received_time
         nonlocal EW11_TIMEOUT
@@ -826,7 +830,8 @@ def ezville_loop(config):
                         log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
             
             await asyncio.sleep(EW11_TIMEOUT)        
-                        
+          
+        
     # MQTT 통신 시작
     mqtt_client = mqtt.Client('mqtt-ezville')
     mqtt_client.username_pw_set(config['mqtt_id'], config['mqtt_password'])
@@ -834,6 +839,7 @@ def ezville_loop(config):
     mqtt_client.on_message = on_message
     mqtt_client.connect_async(config['mqtt_server'])
     mqtt_client.loop_start()
+    
     
     def initiate_socket():
         # SOCKET 통신 시작
@@ -851,11 +857,13 @@ def ezville_loop(config):
                     time.sleep(1)
                     retry_count += 1
                     continue
-                    
+             
+            
     def connect_socket(socket):
         nonlocal SOC_ADDRESS
         nonlocal SOC_PORT
         socket.connect((SOC_ADDRESS, SOC_PORT))
+
         
     if comm_mode == 'mixed' or comm_mode == 'socket':
         soc = initiate_socket()  
@@ -887,6 +895,7 @@ def ezville_loop(config):
         
             MSG_QUEUE.put(msg)
             await asyncio.sleep(SERIAL_RECV_DELAY) 
+        
         
     async def state_update_run():
         nonlocal target_time, force_target_time, force_stop_time
@@ -926,14 +935,15 @@ def ezville_loop(config):
         
             # 0.001초 대기 후 루프 진행
             await asyncio.sleep(COMMAND_LOOP_DELAY)     
-    
+    if comm_mode == 'socket':
+        th0 = Thread(target = asyncio.run(serial_recv_loop()))
+        th0.start()
     th1 = Thread(target = asyncio.run(state_update_run()))
     th2 = Thread(target = asyncio.run(command_run()))
+    th3 = Thread(target = asyncio.run(ew11_health_check())
     th1.start()
     th2.start()
-    if comm_mode == 'socket':
-        th3 = Thread(target = asyncio.run(serial_recv_loop()))
-        th3.start()
+    th3.start()
         
 #    async def main_run():
 #        nonlocal target_time, force_target_time, force_stop_time
