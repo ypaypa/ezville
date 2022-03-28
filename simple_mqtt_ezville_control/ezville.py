@@ -814,7 +814,7 @@ def ezville_loop(config):
             timestamp = time.time()
         
             # TIMEOUT 시간 동안 새로 받은 EW11 패킷이 없으면 재시작
-            if last_recevied_time > 0 and timestamp - EW11_TIMEOUT > last_received_time:
+            if last_received_time > 0 and timestamp - EW11_TIMEOUT > last_received_time:
                 log('[WARNING] {}초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.'.format(EW11_TIMEOUT))
                 try:
                     ew11_id = config['ew11_id']
@@ -939,8 +939,7 @@ def ezville_loop(config):
         while True:
             await send_to_ew11()               
             
-            log('KKKK')
-            # 0.001초 대기 후 루프 진행
+            # COMMAND_LOOP_DELAY 초 대기 후 루프 진행
             await asyncio.sleep(COMMAND_LOOP_DELAY)    
  
     loop = asyncio.get_event_loop()
