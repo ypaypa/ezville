@@ -813,22 +813,23 @@ def ezville_loop(config):
             # TIMEOUT 시간 동안 새로 받은 EW11 패킷이 없으면 재시작
             if last_recevied_time > 0 and timestamp - EW11_TIMEOUT > last_received_time:
                 log('[WARNING] {}초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.'.format(EW11_TIMEOUT))
-                    try:
-                        ew11_id = config['ew11_id']
-                        ew11_password = config['ew11_password']
-                        ew11_server = config['ew11_server']
+                try:
+                    ew11_id = config['ew11_id']
+                    ew11_password = config['ew11_password']
+                    ew11_server = config['ew11_server']
 
-                        ew11 = telnetlib.Telnet(ew11_server)
+                    ew11 = telnetlib.Telnet(ew11_server)
 
-                        ew11.read_until(b"login:")
-                        ew11.write(ew11_id.encode('utf-8') + b'\n')
-                        ew11.read_until(b"password:")
-                        ew11.write(ew11_password.encode('utf-8') + b'\n')
-                        ew11.write('Restart'.encode('utf-8') + b'\n')
+                    ew11.read_until(b"login:")
+                    ew11.write(ew11_id.encode('utf-8') + b'\n')
+                    ew11.read_until(b"password:")
+                    ew11.write(ew11_password.encode('utf-8') + b'\n')
+                    ew11.write('Restart'.encode('utf-8') + b'\n')
 
-                    except:
-                        log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
-            
+                except:
+                    log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
+            else
+                log('[LOG] EW11 연결 상태 Okay')
             await asyncio.sleep(EW11_TIMEOUT)        
           
         
