@@ -798,9 +798,9 @@ def ezville_loop(config):
                         if ew11_log:
                             log('[SIGNAL] {}회 명령을 재전송하였으나 수행에 실패했습니다.. 다음의 Queue 삭제: {}'.format(str(CMD_RETRY_COUNT),send_data))
                 return
-        except Exception as err:
-            log('[ERROR] send_to_ew11(): {}'.format(err))
-            return
+            except Exception as err:
+                log('[ERROR] send_to_ew11(): {}'.format(err))
+                return
 
         
     async def ew11_health_check():
