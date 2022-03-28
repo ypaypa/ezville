@@ -27,6 +27,7 @@
     "command_retry_count": "10",
     "state_loop_delay": "0.02",
     "command_loop_delay": "0.0001",
+    "serial_recv_delay": "0.001",
     "ew11_timeout": "100"
   },
   "schema": {
@@ -46,6 +47,7 @@
     "command_retry_count": "int",
     "state_loop_delay": "float",
     "command_loop_delay": "float",
+    "serial_recv_delay": "float",
     "ew11_timeout": "int"
   }
 }
