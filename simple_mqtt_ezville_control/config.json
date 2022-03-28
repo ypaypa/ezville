@@ -24,7 +24,9 @@
     "elfin_password": "elfin_password",
     "command_send_count": "2",
     "command_interval": "0.03",
-    "command_retry_count": "5"
+    "command_retry_count": "10",
+    "state_loop_delay": "0.02",
+    "command_loop_delay": "0.0001"
   },
   "schema": {
     "DEBUG": "bool",
@@ -40,6 +42,8 @@
     "elfin_password": "str",
     "command_send_count": "int",
     "command_interval": "float",
-    "command_retry_count": "int"
+    "command_retry_count": "int",
+    "state_loop_delay": "float",
+    "command_loop_delay": "float"
   }
 }
