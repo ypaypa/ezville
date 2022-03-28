@@ -974,9 +974,9 @@ def ezville_loop(config):
         th0 = Thread(target = serial_run())
         th0.start()
         
-    th1 = Thread(target = state_run())
-    th2 = Thread(target = command_run())
-    th3 = Thread(target = ew11_run())
+    th1 = Thread(target = state_run)
+    th2 = Thread(target = command_run)
+    th3 = Thread(target = ew11_run)
                  
     th1.start()
     th2.start()
