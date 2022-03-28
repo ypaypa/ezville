@@ -26,7 +26,8 @@
     "command_interval": "0.03",
     "command_retry_count": "10",
     "state_loop_delay": "0.02",
-    "command_loop_delay": "0.0001"
+    "command_loop_delay": "0.0001",
+    "ew11_timeout": "100"
   },
   "schema": {
     "DEBUG": "bool",
@@ -44,6 +45,7 @@
     "command_interval": "float",
     "command_retry_count": "int",
     "state_loop_delay": "float",
-    "command_loop_delay": "float"
+    "command_loop_delay": "float",
+    "ew11_timeout": "int"
   }
 }
