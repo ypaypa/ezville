@@ -942,45 +942,54 @@ def ezville_loop(config):
             log('KKKK')
             # 0.001초 대기 후 루프 진행
             await asyncio.sleep(COMMAND_LOOP_DELAY)    
+ 
+    loop = asyncio.get_event_loop()
+    if comm_mode == 'socket':
+        loop.create_task(serial_recv_loop())
+    loop.create_task(state_update_loop())
+    loop.create_task(command_loop())
+    loop.create_task(ew11_health_loop())
     
+    loop.run_forever()
+   
     
-    def serial_run():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+#    def serial_run():
+#        loop = asyncio.new_event_loop()
+#        asyncio.set_event_loop(loop)
 
-        loop.run_until_complete(serial_recv_loop())
+#        loop.run_until_complete(serial_recv_loop())
         
-    def state_run():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+#    def state_run():
+#        loop = asyncio.new_event_loop()
+#        asyncio.set_event_loop(loop)
 
-        loop.run_until_complete(state_update_loop())
-        asyncio.run(state_update_loop())
+#        loop.run_until_complete(state_update_loop())
+#        asyncio.run(state_update_loop())
         
-    def command_run():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+#    def command_run():
+#        loop = asyncio.new_event_loop()
+#        asyncio.set_event_loop(loop)
 
-        loop.run_until_complete(command_loop())
+#        loop.run_until_complete(command_loop())
         
-    def ew11_run():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+#    def ew11_run():
+#        loop = asyncio.new_event_loop()
+#        asyncio.set_event_loop(loop)
 
-        loop.run_until_complete(ew11_health_loop())
+#        loop.run_until_complete(ew11_health_loop())
 
  
-    if comm_mode == 'socket':
-        th0 = Thread(target = serial_run())
-        th0.start()
+#    if comm_mode == 'socket':
+#        th0 = Thread(target = serial_run())
+#        th0.start()
         
-    th1 = Thread(target = state_run)
-    th2 = Thread(target = command_run)
-    th3 = Thread(target = ew11_run)
+#    th1 = Thread(target = state_run)
+#    th2 = Thread(target = command_run)
+#    th3 = Thread(target = ew11_run)
                  
-    th1.start()
-    th2.start()
-    th3.start()
+#    th1.start()
+#    th2.start()
+#    th3.start()
 
                        
                          
