@@ -938,7 +938,8 @@ def ezville_loop(config):
         
         while True:
             await send_to_ew11()               
-        
+            
+            log('KKKK')
             # 0.001초 대기 후 루프 진행
             await asyncio.sleep(COMMAND_LOOP_DELAY)    
             
