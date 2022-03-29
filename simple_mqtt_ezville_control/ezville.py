@@ -808,9 +808,9 @@ def ezville_loop(config):
                                 
                     log(send_data['sendcmd'] + ' ' + str(time.time()))
                     
-                    # 최소 0.04초는 ACK 처리를 기다림 (초당 30번 데이터가 들어오므로 ACK 못 받으면 시작)
+                    # 최소 0.1초는 ACK 처리를 기다림 (초당 30번 데이터가 들어오므로 ACK 못 받으면 시작)
                     if send_data['count'] == 0:
-                        await asyncio.sleep(0.04)
+                        await asyncio.sleep(0.1)
                     # 이후에는 정해진 간격 혹은 Random Backoff 시간 간격을 주고 ACK 확인
                     else:
                         if RANDOM_BACKOFF:
