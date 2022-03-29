@@ -778,10 +778,14 @@ def ezville_loop(config):
         nonlocal CMD_INTERVAL
         nonlocal CMD_RETRY_COUNT
         nonlocal RANDOM_BACKOFF
+        nonlocal COMMAND_LOOP_DELAY
                                                                                              
         while not DISCOVERY_MODE:
             try:
                 if CMD_QUEUE:
+                    # 명령 수행 동안은 COMMAND_LOOP_DELAY를 짧게 가져가고 CMD_INTERVAL로 조정
+                    COMMAND_LOOP_DELAY = 0.0001
+                    
                     send_data = CMD_QUEUE.pop(0)
                     if ew11_log:
                         log('[SIGNAL] 신호 전송: {}'.format(send_data))
@@ -808,9 +812,13 @@ def ezville_loop(config):
                     else:
                         if ew11_log:
                             log('[SIGNAL] {}회 명령을 재전송하였으나 수행에 실패했습니다.. 다음의 Queue 삭제: {}'.format(str(CMD_RETRY_COUNT),send_data))
+                        # COMMAND_LOOP_DELAY 복구
+                        COMMAND_LOOP_DELAY = config['command_loop_delay']
                 return
             except Exception as err:
                 log('[ERROR] send_to_ew11(): {}'.format(err))
+                # COMMAND_LOOP_DELAY 복구
+                COMMAND_LOOP_DELAY = config['command_loop_delay']
                 return
 
         
