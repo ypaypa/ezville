@@ -776,6 +776,7 @@ def ezville_loop(config):
         nonlocal CMD_COUNT
         nonlocal CMD_INTERVAL
         nonlocal CMD_RETRY_COUNT
+        nonlocal RANDOM_BACKOFF
                                                                                              
         while not DISCOVERY_MODE:
             try:
@@ -793,8 +794,12 @@ def ezville_loop(config):
                             except OSError:
                                 soc = reconnect_socket(soc)
                                 soc.sendall(bytes.fromhex(send_data['sendcmd']))
-                    log(str(time.time()))
-                    await asyncio.sleep(CMD_INTERVAL)
+                    log(send_data['sendcmd'] + ' ' + str(time.time()))
+                    
+                    if RANDOM_BACKOFF:
+                        await asyncio.sleep(random.randint(0, int(CMD_INTERVAL * 1000))/1000)    
+                    else:
+                        await asyncio.sleep(CMD_INTERVAL)
 
                     if send_data['count'] < CMD_RETRY_COUNT:
                         send_data['count'] = send_data['count'] + 1
@@ -952,7 +957,7 @@ def ezville_loop(config):
                 force_target_time = timestamp + FORCE_PERIOD
                 FORCE_UPDATE = False
                 
-            # 0.02초 대기 후 루프 진행
+            # STATE_LOOP_DELAY 초 대기 후 루프 진행
             await asyncio.sleep(STATE_LOOP_DELAY)
             
             
