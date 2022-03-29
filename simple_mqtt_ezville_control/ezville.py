@@ -711,10 +711,10 @@ def ezville_loop(config):
                 RESIDUE = ""
                 k = k + packet_length
                 
-                log(str(k) + str(time.time()))
             else:
                 k+=1
-
+        
+        log(str(k) + str(time.time()))
 
     async def mqtt_discovery(payload):
         intg = payload.pop("_intg")
