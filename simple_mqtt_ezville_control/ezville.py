@@ -319,10 +319,9 @@ def ezville_loop(config):
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '01' + away + '0000')
                             recvcmd = 'NULL'
                             
-                            if sendcmd:
-                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-                                if debug:
-                                    log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                            if debug:
+                                log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
                                     
                         elif topics[2] == 'setTemp':
                             curTemp = HOMESTATE.get(topics[1] + 'curTemp')
@@ -335,12 +334,12 @@ def ezville_loop(config):
                             else:
                                 setTemp = value
                                 sendcmd = checksum('F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['cmd'] + '01' + "{:02X}".format(setTemp) + '0000')
-                                recvcmd = ['F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['ack']]
+                                recvcmd = 'F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['ack']
 
-                                if sendcmd:
-                                    CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-                                    if debug:
-                                        log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                                
+                                if debug:
+                                   log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
 
 #                    elif device == 'Fan':
 #                        if topics[2] == 'power':
@@ -364,43 +363,34 @@ def ezville_loop(config):
                         pwr = '01' if value == 'ON' else '00'
                         
                         sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '030' + str(sid) + pwr + '000000')
-
-                        if sendcmd:
-                            recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
-                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-                            if debug:
-                                log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
-                        else:
-                            if debug:
-                                log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+                        recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
+                    
+                        CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                        if debug:
+                            log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
                                 
                     elif device == 'plug':                         
                         pwr = '01' if value == 'ON' else '00'
 
                         sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '020' + str(sid) + pwr + '0000')
-
-                        if sendcmd:
-                            recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
-                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-                            if debug:
-                                log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
-                        else:
-                            if debug:
-                                log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+                        recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
+                        
+                        CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                        if debug:
+                            log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
                                 
                     elif device == 'gasvalve':
                         # 가스 밸브는 ON 제어를 받지 않음
                         if value == 'OFF':
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '0' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '0100' + '0000')
+                            recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
 
-                            if sendcmd:
-                                recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
-                                CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-                                if debug:
-                                    log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
-                            else:
-                                if debug:
-                                    log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                            if debug:
+                                log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                    else:
+                        if debug:
+                            log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
                                     
             else:
                 if device == 'batch':
@@ -422,13 +412,9 @@ def ezville_loop(config):
                     sendcmd = checksum('F7' + RS485_DEVICE[device]['state']['id'] + '0' + str(idx) + RS485_DEVICE[device]['state']['cmd'] + '0300' + CMD + '000000')
                     recvcmd = 'NULL'
                     
-                    if sendcmd:
-                        CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-                        if debug:
-                            log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
-                    else:
-                        if debug:
-                            log('[DEBUG] There is no command for {}'.format('/'.join(topics))) 
+                    CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
+                    if debug:
+                        log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
                 else:
                     if debug:
                         log('[DEBUG] There is no command about {}'.format('/'.join(topics)))
