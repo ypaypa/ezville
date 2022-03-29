@@ -884,8 +884,8 @@ def ezville_loop(config):
         socket.connect((SOC_ADDRESS, SOC_PORT))
         
         
-    def reconnect_socket(socket):
-        socket.close()
+    def reconnect_socket(soc):
+        soc.close()
         
         retry_count = 0
         while True:
