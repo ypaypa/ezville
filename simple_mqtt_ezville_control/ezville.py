@@ -713,8 +713,7 @@ def ezville_loop(config):
                 
             else:
                 k+=1
-        
-        log(str(k) + str(time.time()))
+                
 
     async def mqtt_discovery(payload):
         intg = payload.pop("_intg")
