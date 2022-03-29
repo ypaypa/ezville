@@ -475,6 +475,7 @@ def ezville_loop(config):
                     # ACK 패킷인지 확인
                     elif packet[2:4] in ACK_HEADER and packet[6:8] in ACK_HEADER[packet[2:4]][1]:
                         ACK_PACKET = True
+                        log("ACK: " + packet)
                     
                     if STATE_PACKET or ACK_PACKET:
                         # 현재 DISCOVERY MODE인 경우 패킷 정보 기반 장치 등록 실시
@@ -619,7 +620,7 @@ def ezville_loop(config):
                             # 앞서 보낸 명령에 대한 Acknowledge 인 경우 CMD_QUEUE에서 해당 명령 삭제
                             if ACK_PACKET:
                                 for que in CMD_QUEUE:
-                                    if packet[0:8] in que['recvcmd']:
+                                    if packet[0:8] == que['recvcmd']:
                                         CMD_QUEUE.remove(que)
                                         log("ACK: " + packet)
                                         # COMMAND_LOOP_DELAY 복구
