@@ -444,6 +444,8 @@ def ezville_loop(config):
         nonlocal FORCE_UPDATE
         nonlocal ELEVUP, ELEVDOWN, GROUPON, OUTING
         
+        nonlocal COMMAND_LOOP_DELAY
+        
         raw_data = RESIDUE + raw_data
         DISCOVERY = DISCOVERY_MODE
         
@@ -476,9 +478,17 @@ def ezville_loop(config):
                     k+=1
                     continue
                 else:
-                    # STATE 패킷인지 우선 확인
-                    if packet[2:4] in STATE_HEADER and (packet[6:8] in STATE_HEADER[packet[2:4]][1]): 
-                        #                                or packet[6:8] == ACK_HEADER[packet[2:4]][1]):
+                    STATE_PACKET = False
+                    ACK_PACKET = False
+                    
+                    # STATE 패킷인지 확인
+                    if packet[2:4] in STATE_HEADER and (packet[6:8] in STATE_HEADER[packet[2:4]][1])
+                        STATE_PACKET = True
+                    # STATE 패킷인지 확인
+                    elif packet[2:4] in ACK_HEADER and (packet[6:8] in ACK_HEADER[packet[2:4]][1])
+                        ACK_PACKET = True
+                    
+                    if STATE_PACKET or ACK_PACKET:
                         # 현재 DISCOVERY MODE인 경우 패킷 정보 기반 장치 등록 실시
                         if DISCOVERY:
                             name = STATE_HEADER[packet[2:4]][0]                            
@@ -531,7 +541,8 @@ def ezville_loop(config):
                                         await update_state(name, 'away', rid, src, awayonoff)
                                         await update_temperature(name, rid, src, curT, setT)
                                         
-                            elif name == 'plug':
+                            # plug는 ACK PACKET에 상태 정보가 없으므로 STATE_PACKET만 처리
+                            elif name == 'plug' and STATE_PACKET:
                                 # ROOM ID
                                 rid = int(packet[5], 16)
                                 # ROOM의 plug 갯수
@@ -580,8 +591,9 @@ def ezville_loop(config):
                                     onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
                                         
                                     await update_state(name, 'power', rid, spc, onoff)
-                                    
-                            elif name == 'batch':
+                            
+                            # 일괄차단기 ACK PACKET은 상태 업데이트에 반영하지 않음
+                            elif name == 'batch' and STATE_PACKET:
                                 # 일괄차단기는 하나라서 강제 설정
                                 rid = 1
                                 # 일괄차단기는 하나라서 강제 설정
@@ -617,10 +629,13 @@ def ezville_loop(config):
                         # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
                         else:
                             # 앞서 보낸 명령에 대한 Acknowledge 인 경우 CMD_QUEUE에서 해당 명령 삭제
-                            if packet[6:8] == ACK_HEADER[packet[2:4]][1]:
+                            if ACK_PACKET:
                                 for que in CMD_QUEUE:
                                     if packet[0:8] or 'NULL' in que['recvcmd']:
                                         CMD_QUEUE.remove(que)
+                                        # COMMAND_LOOP_DELAY 복구
+                                        COMMAND_LOOP_DELAY = config['command_loop_delay']
+                                        
                                         if debug:
                                             log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
                                         break
@@ -662,7 +677,7 @@ def ezville_loop(config):
                                         # 한번 처리한 패턴은 CACHE 저장
                                         MSG_CACHE[packet[0:10]] = packet[10:]
                                         
-                                elif name == 'plug':
+                                elif name == 'plug' and STATE_PACKET:
                                     # ROOM ID
                                     rid = int(packet[5], 16)
                                     # ROOM의 plug 갯수
@@ -679,6 +694,7 @@ def ezville_loop(config):
                                         await update_state(name, 'auto', rid, id, onoff)
                                         await update_state(name, 'current', rid, id, power_num)
                                         
+                                # plug는 ACK PACKET에 상태 정보가 없으므로 STATE_PACKET만 처리        
                                 elif name == 'gasvalve':
                                     # Gas Value는 하나라서 강제 설정
                                     rid = 1
@@ -689,7 +705,7 @@ def ezville_loop(config):
                                         
                                     await update_state(name, 'power', rid, spc, onoff)
                                     
-                                elif name == 'batch':
+                                elif name == 'batch' and STATE_PACKET:
                                     # 일괄차단기는 하나라서 강제 설정
                                     rid = 1
                                     # 일괄차단기는 하나라서 강제 설정
@@ -783,7 +799,7 @@ def ezville_loop(config):
         while not DISCOVERY_MODE:
             try:
                 if CMD_QUEUE:
-                    # 명령 수행 동안은 COMMAND_LOOP_DELAY를 짧게 가져가고 CMD_INTERVAL로 조정
+                    # 명령 수행 동안은 COMMAND_LOOP_DELAY를 짧게 가져가고 CMD_INTERVAL이 
                     COMMAND_LOOP_DELAY = 0.0001
                     
                     send_data = CMD_QUEUE.pop(0)
