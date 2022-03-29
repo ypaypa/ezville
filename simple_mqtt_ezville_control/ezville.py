@@ -710,6 +710,8 @@ def ezville_loop(config):
                        
                 RESIDUE = ""
                 k = k + packet_length
+                
+                log(str(k) + str(time.time()))
             else:
                 k+=1
 
