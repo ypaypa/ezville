@@ -228,6 +228,7 @@ def ezville_loop(config):
     CMD_COUNT = config['command_send_count']
     CMD_INTERVAL = config['command_interval']
     CMD_RETRY_COUNT = config['command_retry_count']
+    RANDOM_BACKOFF = config['random_backoff']
     
     # State 업데이트 루프와 Command 루프의 Delay Time 설정
     STATE_LOOP_DELAY = config['state_loop_delay']
