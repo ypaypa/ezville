@@ -287,6 +287,7 @@ def ezville_loop(config):
                 elif topics[0] == EW11_TOPIC and topics[-1] == 'recv':
                     # Que에서 확인된 시간 기준으로 EW11 Health Check함.
                     last_received_time = time.time()
+                    
                     await EW11_process(msg.payload.hex().upper())
 
                     
@@ -417,6 +418,7 @@ def ezville_loop(config):
                     CMD = "{:0>2X}".format(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
                     
                     # 일괄 차단기는 state를 변경하여 제공해서 월패드에서 조작하도록 해야함
+                    # 월패드의 ACK는 무시
                     sendcmd = checksum('F7' + RS485_DEVICE[device]['state']['id'] + '0' + str(idx) + RS485_DEVICE[device]['state']['cmd'] + '0300' + CMD + '000000')
                     recvcmd = 'NULL'
                     
@@ -626,7 +628,7 @@ def ezville_loop(config):
                                     await update_state(name, 'group', rid, sbc, grouponoff)
                                     await update_state(name, 'outing', rid, sbc, outingonoff)
                                                                                     
-                        # DISCOVERY_MODE가 아닌 경우 상태 업데이트만 실시
+                        # DISCOVERY_MODE가 아닌 경우 상태 업데이트 및 ACK 처리 실시
                         else:
                             # 앞서 보낸 명령에 대한 Acknowledge 인 경우 CMD_QUEUE에서 해당 명령 삭제
                             if ACK_PACKET:
@@ -799,7 +801,7 @@ def ezville_loop(config):
         while not DISCOVERY_MODE:
             try:
                 if CMD_QUEUE:
-                    # 명령 수행 동안은 COMMAND_LOOP_DELAY를 짧게 가져가고 CMD_INTERVAL이 
+                    # 명령 수행 동안은 COMMAND_LOOP_DELAY를 짧게 가져가고 CMD_INTERVAL로 명령 간격 조정
                     COMMAND_LOOP_DELAY = 0.0001
                     
                     send_data = CMD_QUEUE.pop(0)
@@ -815,16 +817,24 @@ def ezville_loop(config):
                             except OSError:
                                 soc = reconnect_socket(soc)
                                 soc.sendall(bytes.fromhex(send_data['sendcmd']))
+                                
                     log(send_data['sendcmd'] + ' ' + str(time.time()))
                     
-                    if RANDOM_BACKOFF:
-                        await asyncio.sleep(random.randint(0, int(CMD_INTERVAL * 1000))/1000)    
+                    # 최소 0.04초는 ACK 처리를 기다림 (초당 30번 데이터가 들어오므로 ACK 못 받으면 시작)
+                    if send_data['count'] == 0:
+                        await asyncio.sleep(0.04)
+                    # 이후에는 정해진 간격 혹은 Random Backoff 시간 간격을 주고 ACK 확인
                     else:
-                        await asyncio.sleep(CMD_INTERVAL)
+                        if RANDOM_BACKOFF:
+                            await asyncio.sleep(random.randint(0, int(CMD_INTERVAL * 1000))/1000)    
+                        else:
+                            await asyncio.sleep(CMD_INTERVAL)
 
                     if send_data['count'] < CMD_RETRY_COUNT:
-                        send_data['count'] = send_data['count'] + 1
-                        CMD_QUEUE.insert(0, send_data)
+                        # ACK가 없는 입력은 한번만 보내고 끝냄 
+                        if send_data['recvcmd'] != 'NULL':
+                            send_data['count'] = send_data['count'] + 1
+                            CMD_QUEUE.insert(0, send_data)
                     else:
                         if ew11_log:
                             log('[SIGNAL] {}회 명령을 재전송하였으나 수행에 실패했습니다.. 다음의 Queue 삭제: {}'.format(str(CMD_RETRY_COUNT),send_data))
