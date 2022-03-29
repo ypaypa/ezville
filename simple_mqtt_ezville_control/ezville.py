@@ -789,7 +789,7 @@ def ezville_loop(config):
                             try:
                                 soc.sendall(bytes.fromhex(send_data['sendcmd']))
                             except OSError:
-                                connect_socket(soc)
+                                soc = reconnect_socket(soc)
                                 soc.sendall(bytes.fromhex(send_data['sendcmd']))
                     log(str(time.time()))
                     await asyncio.sleep(CMD_INTERVAL)
@@ -847,27 +847,43 @@ def ezville_loop(config):
     
     def initiate_socket():
         # SOCKET 통신 시작
-            log('Socket 연결을 시작합니다')
+        log('Socket 연결을 시작합니다')
             
-            retry_count = 0
-            while True:
-                try:
-                    soc = socket.socket()
-                    soc.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-                    connect_socket(soc)
-                    return soc
-                except ConnectionRefusedError as e:
-                    log('Server에서 연결을 거부합니다. 재시도 예정 (' + str(retry_count) + '회 재시도)')
-                    time.sleep(1)
-                    retry_count += 1
-                    continue
+        retry_count = 0
+        while True:
+            try:
+                soc = socket.socket()
+                soc.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                connect_socket(soc)
+                return soc
+            except ConnectionRefusedError as e:
+                log('Server에서 연결을 거부합니다. 재시도 예정 (' + str(retry_count) + '회 재시도)')
+                time.sleep(1)
+                retry_count += 1
+                continue
              
-            
     def connect_socket(socket):
         nonlocal SOC_ADDRESS
         nonlocal SOC_PORT
         socket.connect((SOC_ADDRESS, SOC_PORT))
-
+        
+        
+    def reconnect_socket(socket):
+        socket.close()
+        
+        retry_count = 0
+        while True:
+            try:
+                soc = socket.socket()
+                soc.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                connect_socket(soc)
+                return soc
+            except ConnectionRefusedError as e:
+                log('Server에서 연결을 거부합니다. 재시도 예정 (' + str(retry_count) + '회 재시도)')
+                time.sleep(1)
+                retry_count += 1
+                continue
+        
         
     if comm_mode == 'mixed' or comm_mode == 'socket':
         soc = initiate_socket()  
@@ -893,12 +909,17 @@ def ezville_loop(config):
         msg = MSG()
         
         while True:
-            # EW11 버퍼 크기만큼 데이터 받기
-            DATA = soc.recv(EW11_BUFFER_SIZE)
-            msg.topic = EW11_TOPIC + '/recv'
-            msg.payload = DATA
-        
-            MSG_QUEUE.put(msg)
+            try:
+                # EW11 버퍼 크기만큼 데이터 받기
+                DATA = soc.recv(EW11_BUFFER_SIZE)
+                msg.topic = EW11_TOPIC + '/recv'
+                msg.payload = DATA   
+                
+                MSG_QUEUE.put(msg)
+                
+            except OSError:
+                soc = reconnect_socket(soc)
+         
             await asyncio.sleep(SERIAL_RECV_DELAY) 
         
         
