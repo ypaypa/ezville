@@ -23,14 +23,14 @@
     "ew11_id": "admin",
     "ew11_password": "elfin_password",
     "command_send_count": 2,
-    "command_interval": 0.03,
+    "command_interval": 0.02,
     "command_retry_count": 10,
     "random_backoff": true,
     "state_loop_delay": 0.02,
-    "command_loop_delay": 0.0001,
-    "serial_recv_delay": 0.001,
+    "command_loop_delay": 0.02,
+    "serial_recv_delay": 0.02,
     "ew11_buffer_size": 128,
-    "ew11_timeout": 100
+    "ew11_timeout": 3600
   },
   "schema": {
     "DEBUG": "bool",
