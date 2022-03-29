@@ -482,10 +482,10 @@ def ezville_loop(config):
                     ACK_PACKET = False
                     
                     # STATE 패킷인지 확인
-                    if packet[2:4] in STATE_HEADER and (packet[6:8] in STATE_HEADER[packet[2:4]][1])
+                    if packet[2:4] in STATE_HEADER and packet[6:8] in STATE_HEADER[packet[2:4]][1]:
                         STATE_PACKET = True
-                    # STATE 패킷인지 확인
-                    elif packet[2:4] in ACK_HEADER and (packet[6:8] in ACK_HEADER[packet[2:4]][1])
+                    # ACK 패킷인지 확인
+                    elif packet[2:4] in ACK_HEADER and packet[6:8] in ACK_HEADER[packet[2:4]][1]:
                         ACK_PACKET = True
                     
                     if STATE_PACKET or ACK_PACKET:
