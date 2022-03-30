@@ -29,6 +29,8 @@
     "state_loop_delay": 0.02,
     "command_loop_delay": 0.02,
     "serial_recv_delay": 0.02,
+    "force_update_period": 600,
+    "force_update_duration": 2,
     "ew11_buffer_size": 128,
     "ew11_timeout": 3600
   },
@@ -51,6 +53,8 @@
     "state_loop_delay": "float",
     "command_loop_delay": "float",
     "serial_recv_delay": "float",
+    "force_update_period": "int",
+    "force_update_duration": "int",
     "ew11_buffer_size": "int",
     "ew11_timeout": "int"
   }
