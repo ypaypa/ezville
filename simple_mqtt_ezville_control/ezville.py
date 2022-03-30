@@ -215,6 +215,7 @@ def ezville_loop(config):
     
     # 강제 주기적 업데이트 설정 - 매 force_update_period 마다 force_update_duration초간 HA 업데이트 실시
     FORCE_UPDATE = False
+    FORCE_MODE = config['force_update_mode']
     FORCE_PERIOD = config['force_update_period']
     FORCE_DURATION = config['force_update_duration']
     
@@ -245,7 +246,7 @@ def ezville_loop(config):
     def on_connect(client, userdata, flags, rc):
         nonlocal comm_mode
         if rc == 0:
-            log("MQTT Broker 연결 성공")
+            log("[INFO] MQTT Broker 연결 성공")
             if comm_mode == 'socket':
                 client.subscribe(HA_TOPIC + '/#', 0)
             elif comm_mode == 'mixed':
@@ -534,7 +535,7 @@ def ezville_loop(config):
 
         # Discovery에 등록
         topic = "homeassistant/{}/ezville_wallpad/{}/config".format(intg, payload["name"])
-        log("장치 등록:  {}".format(topic))
+        log("[INFO] 장치 등록:  {}".format(topic))
         mqtt_client.publish(topic, json.dumps(payload))
 
                                                                                     
@@ -724,7 +725,7 @@ def ezville_loop(config):
             log(send_data['sendcmd'] + ' ' + str(time.time()))
                     
             # 최소 0.2초는 ACK 처리를 기다림 (초당 30번 데이터가 들어오므로 ACK 못 받으면 시작)
-            if send_data['count'] == 0:
+            if i == 0:
                 await asyncio.sleep(0.2)
             # 이후에는 정해진 간격 혹은 Random Backoff 시간 간격을 주고 ACK 확인
             else:
@@ -875,13 +876,13 @@ def ezville_loop(config):
             timestamp = time.time()
             
             # 정해진 시간이 지나면 FORCE 모드 발동
-            if timestamp > force_target_time and not FORCE_UPDATE:
+            if timestamp > force_target_time and not FORCE_UPDATE and FORCE_MODE:
                 force_stop_time = timestamp + FORCE_DURATION
                 FORCE_UPDATE = True
                 log('[INFO] 상태 강제 업데이트 실시')
                 
             # 정해진 시간이 지나면 FORCE 모드 종료    
-            if timestamp > force_stop_time and FORCE_UPDATE:
+            if timestamp > force_stop_time and FORCE_UPDATE and FORCE_MODE:
                 force_target_time = timestamp + FORCE_PERIOD
                 FORCE_UPDATE = False
                 log('[INFO] 상태 강제 업데이트 종료')
