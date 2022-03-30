@@ -213,10 +213,10 @@ def ezville_loop(config):
     # EW11 전달 패킷 중 처리 후 남은 짜투리 패킷 저장
     RESIDUE = ""
     
-    # 강제 주기적 업데이트 설정 - 매 300초 마다 3초간 HA 업데이트 실시
+    # 강제 주기적 업데이트 설정 - 매 force_update_period 마다 force_update_duration초간 HA 업데이트 실시
     FORCE_UPDATE = False
-    FORCE_PERIOD = 300
-    FORCE_DURATION = 3
+    FORCE_PERIOD = config['force_update_period']
+    FORCE_DURATION = config['force_update_duration']
     
     # 현관스위치 요구 상태
     ELEVUP = ''
@@ -245,7 +245,7 @@ def ezville_loop(config):
     def on_connect(client, userdata, flags, rc):
         nonlocal comm_mode
         if rc == 0:
-            log("Connected to MQTT broker..")
+            log("MQTT Broker 연결 성공")
             if comm_mode == 'socket':
                 client.subscribe(HA_TOPIC + '/#', 0)
             elif comm_mode == 'mixed':
@@ -534,7 +534,7 @@ def ezville_loop(config):
 
         # Discovery에 등록
         topic = "homeassistant/{}/ezville_wallpad/{}/config".format(intg, payload["name"])
-        log("Add new device:  {}".format(topic))
+        log("장치 등록:  {}".format(topic))
         mqtt_client.publish(topic, json.dumps(payload))
 
                                                                                     
@@ -551,9 +551,7 @@ def ezville_loop(config):
                     
             if mqtt_log:
                 log('[LOG] ->> HA : {} >> {}'.format(topic, onoff))
-        else:
-            if debug:
-                log('[DEBUG] {} is already set: {}'.format(deviceID, onoff))
+
         return
  
 
@@ -572,9 +570,7 @@ def ezville_loop(config):
                 
                 if mqtt_log:
                     log('[LOG] ->> HA : {} -> {}'.format(topic, val))
-            else:
-                if debug:
-                    log('[DEBUG] {} is already set: {}'.format(key, val))
+                    
         return  
 
     
@@ -615,16 +611,14 @@ def ezville_loop(config):
                     recvcmd = 'NULL'
                     statcmd = [key, value]
                     
-                    CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd, 'count': 0})
+                    CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                    
                     if debug:
-                        log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
-                else:
-                    if debug:
-                        log('[DEBUG] There is no command about {}'.format('/'.join(topics)))
+                        log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
             
             elif value == cur_state:
-                if debug:
-                    log('[DEBUG] {} is already set: {}'.format(key, value))
+                pass
+            
             else:
                 if device == 'thermostat':                        
                     if topics[2] == 'away':
@@ -634,29 +628,22 @@ def ezville_loop(config):
                         recvcmd = 'NULL'
                         statcmd = [key, value]
                            
-                        CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd, 'count': 0})
+                        CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                             
                         if debug:
-                            log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                            log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
                                     
-                    elif topics[2] == 'setTemp':
-                        curTemp = HOMESTATE.get(topics[1] + 'curTemp')
-                        setTemp = HOMESTATE.get(topics[1] + 'setTemp')
-                            
+                    elif topics[2] == 'setTemp':                            
                         value = int(float(value))
-                        if value == int(setTemp):
-                            if debug:
-                                log('[DEBUG] {} is already set: {}'.format(topics[1], value))
-                        else:
-                            setTemp = value
-                            sendcmd = checksum('F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['cmd'] + '01' + "{:02X}".format(setTemp) + '0000')
-                            recvcmd = 'F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['ack']
-                            statcmd = [key, value]
+   
+                        sendcmd = checksum('F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['cmd'] + '01' + "{:02X}".format(value) + '0000')
+                        recvcmd = 'F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['ack']
+                        statcmd = [key, value]
 
-                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd, 'count': 0})
-                                
-                            if debug:
-                               log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                        CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd]})
+                               
+                        if debug:
+                            log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
 
 #                    elif device == 'Fan':
 #                        if topics[2] == 'power':
@@ -683,9 +670,10 @@ def ezville_loop(config):
                     recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
                     statcmd = [key, value]
                     
-                    CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd, 'count': 0})
+                    CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd]})
+                               
                     if debug:
-                        log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                        log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
                                 
                 elif device == 'plug':                         
                     pwr = '01' if value == 'ON' else '00'
@@ -694,9 +682,10 @@ def ezville_loop(config):
                     recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
                     statcmd = [key, value]
                         
-                    CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd, 'count': 0})
+                    CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd]})
+                               
                     if debug:
-                        log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
+                        log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
                                 
                 elif device == 'gasvalve':
                     # 가스 밸브는 ON 제어를 받지 않음
@@ -705,12 +694,10 @@ def ezville_loop(config):
                         recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
                         statcmd = [key, value]
 
-                        CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd, 'count': 0})
+                        CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd]})
+                               
                         if debug:
-                            log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
-                else:
-                    if debug:
-                        log('[DEBUG] There is no command for {}'.format('/'.join(topics)))
+                            log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
     
     
     async def send_to_ew11(send_data):
@@ -782,9 +769,9 @@ def ezville_loop(config):
                     ew11.write('Restart'.encode('utf-8') + b'\n')
 
                 except:
-                    log('[WARNING] 기기 재시작 오류! 기기 상태를 확인하세요.')
+                    log('[ERROR] 기기 재시작 오류! 기기 상태를 확인하세요.')
             else:
-                log('[LOG] EW11 연결 상태 Okay')
+                log('[INFO] EW11 연결 상태 문제 없음')
             await asyncio.sleep(EW11_TIMEOUT)        
           
         
@@ -799,7 +786,7 @@ def ezville_loop(config):
     
     def initiate_socket():
         # SOCKET 통신 시작
-        log('Socket 연결을 시작합니다')
+        log('[INFO] Socket 연결을 시작합니다')
             
         retry_count = 0
         while True:
@@ -809,7 +796,7 @@ def ezville_loop(config):
                 connect_socket(soc)
                 return soc
             except ConnectionRefusedError as e:
-                log('Server에서 연결을 거부합니다. 재시도 예정 (' + str(retry_count) + '회 재시도)')
+                log('[ERROR] Server에서 연결을 거부합니다. 재시도 예정 (' + str(retry_count) + '회 재시도)')
                 time.sleep(1)
                 retry_count += 1
                 continue
@@ -831,7 +818,7 @@ def ezville_loop(config):
                 connect_socket(soc)
                 return soc
             except ConnectionRefusedError as e:
-                log('Server에서 연결을 거부합니다. 재시도 예정 (' + str(retry_count) + '회 재시도)')
+                log('[ERROR] Server에서 연결을 거부합니다. 재시도 예정 (' + str(retry_count) + '회 재시도)')
                 time.sleep(1)
                 retry_count += 1
                 continue
@@ -845,7 +832,7 @@ def ezville_loop(config):
     force_target_time = time.time() + FORCE_PERIOD
     force_stop_time = force_target_time + FORCE_DURATION
     
-    log('장치 등록을 시작합니다...')
+    log('[INFO] 장치 등록 및 상태 업데이트를 시작합니다')
     
     async def serial_recv_loop():
         nonlocal soc
@@ -891,11 +878,13 @@ def ezville_loop(config):
             if timestamp > force_target_time and not FORCE_UPDATE:
                 force_stop_time = timestamp + FORCE_DURATION
                 FORCE_UPDATE = True
+                log('[INFO] 상태 강제 업데이트 실시')
                 
             # 정해진 시간이 지나면 FORCE 모드 종료    
             if timestamp > force_stop_time and FORCE_UPDATE:
                 force_target_time = timestamp + FORCE_PERIOD
                 FORCE_UPDATE = False
+                log('[INFO] 상태 강제 업데이트 종료')
                 
             # STATE_LOOP_DELAY 초 대기 후 루프 진행
             await asyncio.sleep(STATE_LOOP_DELAY)
