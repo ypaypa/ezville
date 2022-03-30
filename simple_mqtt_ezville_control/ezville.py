@@ -721,8 +721,8 @@ def ezville_loop(config):
                 except OSError:
                     soc = reconnect_socket(soc)
                     soc.sendall(bytes.fromhex(send_data['sendcmd']))
-                                
-            log(send_data['sendcmd'] + ' ' + str(time.time()))
+            if debug:                     
+                log('DEBUG: ' + send_data['sendcmd'] + ' ' + str(time.time()))
                     
             # 최소 0.2초는 ACK 처리를 기다림 (초당 30번 데이터가 들어오므로 ACK 못 받으면 시작)
             if i == 0:
