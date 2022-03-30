@@ -734,7 +734,8 @@ def ezville_loop(config):
                 else:
                     await asyncio.sleep(CMD_INTERVAL)
             
-            print(send_data['statcmd'][1] + '  :  ' + HOMESTATE.get(send_data['statcmd'][0])
+            print(send_data['statcmd'][1] + '  :  ' + HOMESTATE.get(send_data['statcmd'][0]))
+                  
             if send_data['statcmd'][1] == HOMESTATE.get(send_data['statcmd'][0]):
                 COMMAND_LOOP_DELAY = config['command_loop_delay']
                 return
