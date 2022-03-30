@@ -23,7 +23,7 @@
     "ew11_id": "admin",
     "ew11_password": "elfin_password",
     "command_interval": 0.06,
-    "command_retry_count": 10,
+    "command_retry_count": 20,
     "random_backoff": true,
     "discovery_delay": 0.01,
     "state_loop_delay": 0.02,
