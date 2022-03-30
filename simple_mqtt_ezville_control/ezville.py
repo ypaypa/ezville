@@ -206,10 +206,9 @@ def ezville_loop(config):
     # 이전에 전달된 패킷인지 판단을 위한 캐쉬
     MSG_CACHE = {}
     
-    # MQTT Discovery Que 및 모드 조절
+    # MQTT Discovery Que
+    DISCOVERY_DELAY = config['discovery_delay']
     DISCOVERY_LIST = []
-#    DISCOVERY_MODE = True
-#    DISCOVERY_DURATION = 20
     
     # EW11 전달 패킷 중 처리 후 남은 짜투리 패킷 저장
     RESIDUE = ""
@@ -226,7 +225,6 @@ def ezville_loop(config):
     OUTING = ''
     
     # Command를 EW11로 보내는 방식 설정 (동시 명령 횟수, 명령 간격 및 재시도 횟수)
-#    CMD_COUNT = config['command_send_count']
     CMD_INTERVAL = config['command_interval']
     CMD_RETRY_COUNT = config['command_retry_count']
     RANDOM_BACKOFF = config['random_backoff']
@@ -293,8 +291,8 @@ def ezville_loop(config):
     
     # EW11 전달된 메시지 처리
     async def EW11_process(raw_data):
-#        nonlocal DISCOVERY_MODE, DISCOVERY_LIST
         nonlocal DISCOVERY_LIST
+        nonlocal DISCOVERY_DELAY
         nonlocal RESIDUE
         nonlocal CMD_QUEUE
         nonlocal MSG_CACHE
@@ -304,7 +302,6 @@ def ezville_loop(config):
         nonlocal COMMAND_LOOP_DELAY
         
         raw_data = RESIDUE + raw_data
-#        DISCOVERY = DISCOVERY_MODE
         
         if ew11_log:
             log('[SIGNAL] receved: {}'.format(raw_data))
@@ -367,7 +364,7 @@ def ezville_loop(config):
                                    
                                         # 장치 등록 후 1초 후에 State 업데이트
                                         await mqtt_discovery(payload)
-                                        await asyncio.sleep(1.0)
+                                        await asyncio.sleep(DISCOVERY_DELAY)
                                     
                                     # State 업데이트까지 진행
                                     onoff = 'ON' if int(packet[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
@@ -396,7 +393,7 @@ def ezville_loop(config):
                                    
                                         # 장치 등록 후 1초 후에 State 업데이트
                                         await mqtt_discovery(payload)
-                                        await asyncio.sleep(1.0)
+                                        await asyncio.sleep(DISCOVERY_DELAY)
                                     
                                     setT = packet[16 + 4 * rid:18 + 4 * rid]
                                     curT = packet[18 + 4 * rid:20 + 4 * rid]
@@ -432,7 +429,7 @@ def ezville_loop(config):
                                    
                                                 # 장치 등록 후 1초 후에 State 업데이트
                                                 await mqtt_discovery(payload)
-                                                await asyncio.sleep(1.0)                          
+                                                await asyncio.sleep(DISCOVERY_DELAY)                          
                                     
                                         # BIT0: 대기전력 On/Off, BIT1: 자동모드 On/Off
                                         # 위와 같지만 일단 on-off 여부만 판단
@@ -473,7 +470,7 @@ def ezville_loop(config):
                                    
                                     # 장치 등록 후 1초 후에 State 업데이트
                                     await mqtt_discovery(payload)
-                                    await asyncio.sleep(1.0)                                
+                                    await asyncio.sleep(DISCOVERY_DELAY)                                
                                 
                                 onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
                                         
@@ -502,7 +499,7 @@ def ezville_loop(config):
                                    
                                         # 장치 등록 후 1초 후에 State 업데이트
                                         await mqtt_discovery(payload)
-                                        await asyncio.sleep(1.0)           
+                                        await asyncio.sleep(DISCOVERY_DELAY)           
                                 
                                 # 일괄 차단기는 버튼 상태 변수 업데이트
                                 states = bin(int(packet[12:14], 16))[2:].zfill(8)
@@ -521,107 +518,6 @@ def ezville_loop(config):
                                 
                                 MSG_CACHE[packet[0:10]] = packet[10:]
                                                                                     
-#                        # DISCOVERY_MODE가 아닌 경우 상태 업데이트 및 ACK 처리 실시
-#                        else:
-#                            # 앞서 보낸 명령에 대한 Acknowledge 인 경우 CMD_QUEUE에서 해당 명령 삭제
-#                            if ACK_PACKET:
-#                                for que in CMD_QUEUE:
-#                                    if packet[0:8] == que['recvcmd']:
-#                                        CMD_QUEUE.remove(que)
-#                                        
-#                                        # COMMAND_LOOP_DELAY 복구
-#                                        COMMAND_LOOP_DELAY = config['command_loop_delay']
-#                                        
-#                                        if debug:
-#                                            log('[DEBUG] Found matched hex: {}. Delete a queue: {}'.format(raw_data, que))
-#                                        break
-                            
-#                            # MSG_CACHE에 없는 새로운 패킷이거나 FORCE_UPDATE 실행된 경우만 실행
-#                            if MSG_CACHE.get(packet[0:10]) != packet[10:] or FORCE_UPDATE:
-#                                name = STATE_HEADER[packet[2:4]][0]                             
-#                  
-#                                if name == 'light':
-#                                    # ROOM ID
-#                                    rid = int(packet[5], 16)
-#                                    # ROOM의 light 갯수 + 1
-#                                    slc = int(packet[8:10], 16) 
-#                                    
-#                                    for id in range(1, slc):
-#                                        onoff = 'ON' if int(packet[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
-#                                        
-#                                        await update_state(name, 'power', rid, id, onoff)
-#                                        
-#                                        # 한번 처리한 패턴은 CACHE 저장
-#                                        MSG_CACHE[packet[0:10]] = packet[10:]
-#                                    
-#                                elif name == 'thermostat':
-#                                    # room 갯수
-#                                    rc = int((int(packet[8:10], 16) - 5) / 2)
-#                                    # room의 조절기 수 (현재 하나 뿐임)
-#                                    src = 1
-#                                
-#                                    for rid in range(1, rc + 1):
-#                                        setT = packet[16 + 4 * rid:18 + 4 * rid]
-#                                        curT = packet[18 + 4 * rid:20 + 4 * rid]
-#                                        onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
-#                                        awayonoff = 'ON' if int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
-#                                    
-#                                        await update_state(name, 'power', rid, src, onoff)
-#                                        await update_state(name, 'away', rid, src, awayonoff)
-#                                        await update_temperature(name, rid, src, curT, setT)
-#                                        
-#                                        # 한번 처리한 패턴은 CACHE 저장
-#                                        MSG_CACHE[packet[0:10]] = packet[10:]
-#                                        
-#                                elif name == 'plug' and STATE_PACKET:
-#                                    # ROOM ID
-#                                    rid = int(packet[5], 16)
-#                                    # ROOM의 plug 갯수
-#                                    spc = int(packet[10:12], 16) 
-#                                
-#                                    for id in range(1, spc + 1):
-#                                        # BIT0: 대기전력 On/Off, BIT1: 자동모드 On/Off
-#                                        # 위와 같지만 일단 on-off 여부만 판단
-#                                        onoff = 'ON' if int(packet[7 + 6 * id], 16) > 0 else 'OFF'
-#                                        autoonoff = 'ON' if int(packet[6 + 6 * id], 16) > 0 else 'OFF'
-#                                        power_num = "{:.2f}".format(int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100)
-#                                        
-#                                        await update_state(name, 'power', rid, id, onoff)
-#                                        await update_state(name, 'auto', rid, id, onoff)
-#                                        await update_state(name, 'current', rid, id, power_num)
-#                                        
-#                                # plug는 ACK PACKET에 상태 정보가 없으므로 STATE_PACKET만 처리        
-#                                elif name == 'gasvalve':
-#                                    # Gas Value는 하나라서 강제 설정
-#                                    rid = 1
-#                                    # Gas Value는 하나라서 강제 설정
-#                                    spc = 1 
-#                                    
-#                                    onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
-#                                        
-#                                    await update_state(name, 'power', rid, spc, onoff)
-#                                    
-#                                elif name == 'batch' and STATE_PACKET:
-#                                    # 일괄차단기는 하나라서 강제 설정
-#                                    rid = 1
-#                                    # 일괄차단기는 하나라서 강제 설정
-#                                    sbc = 1
-#                                    
-#                                    # 일괄 차단기는 버튼 상태 변수 업데이트
-#                                    states = bin(int(packet[12:14], 16))[2:].zfill(8)
-#                                    
-#                                    ELEVDOWN = states[5]                                        
-#                                    ELEVUP = states[4]
-#                                    GROUPON = states[2]
-#                                    OUTING = states[1]
-#                                    
-#                                    grouponoff = 'ON' if GROUPON == '0' else 'OFF'
-#                                    outingonoff = 'ON' if OUTING == '1' else 'OFF'
-#                                    
-#                                    # 스위치 구성은 업데이트
-#                                    await update_state(name, 'group', rid, sbc, grouponoff)
-#                                    await update_state(name, 'outing', rid, sbc, outingonoff)
-                       
                 RESIDUE = ""
                 k = k + packet_length
                 
@@ -820,8 +716,6 @@ def ezville_loop(config):
     async def send_to_ew11(send_data):
         nonlocal comm_mode, soc
         nonlocal CMD_QUEUE
-#        nonlocal DISCOVERY_MODE
-#        nonlocal CMD_COUNT
         nonlocal CMD_INTERVAL
         nonlocal CMD_RETRY_COUNT
         nonlocal RANDOM_BACKOFF
@@ -948,7 +842,6 @@ def ezville_loop(config):
 
         
     # Discovery 및 강제 업데이트 시간 설정
-#    target_time = time.time() + DISCOVERY_DURATION
     force_target_time = time.time() + FORCE_PERIOD
     force_stop_time = force_target_time + FORCE_DURATION
     
@@ -982,10 +875,8 @@ def ezville_loop(config):
         
         
     async def state_update_loop():
-#        nonlocal target_time, force_target_time, force_stop_time
         nonlocal force_target_time, force_stop_time
         nonlocal comm_mode
-#        nonlocal DISCOVERY_MODE
         nonlocal FORCE_PERIOD
         nonlocal FORCE_DURATION
         nonlocal FORCE_UPDATE
@@ -995,9 +886,6 @@ def ezville_loop(config):
             await process_message()                    
             
             timestamp = time.time()
-#            if timestamp > target_time and DISCOVERY_MODE:
-#                DISCOVERY_MODE = False
-#                log('IOT 제어 입력 수행을 시작합니다...')
             
             # 정해진 시간이 지나면 FORCE 모드 발동
             if timestamp > force_target_time and not FORCE_UPDATE:
