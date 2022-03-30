@@ -639,7 +639,7 @@ def ezville_loop(config):
    
                         sendcmd = checksum('F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['cmd'] + '01' + "{:02X}".format(value) + '0000')
                         recvcmd = 'F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['ack']
-                        statcmd = [key, value]
+                        statcmd = [key, str(value)]
 
                         CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                                
