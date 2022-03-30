@@ -226,7 +226,7 @@ def ezville_loop(config):
     OUTING = ''
     
     # Command를 EW11로 보내는 방식 설정 (동시 명령 횟수, 명령 간격 및 재시도 횟수)
-    CMD_COUNT = config['command_send_count']
+#    CMD_COUNT = config['command_send_count']
     CMD_INTERVAL = config['command_interval']
     CMD_RETRY_COUNT = config['command_retry_count']
     RANDOM_BACKOFF = config['random_backoff']
@@ -982,7 +982,8 @@ def ezville_loop(config):
         
         
     async def state_update_loop():
-        nonlocal target_time, force_target_time, force_stop_time
+#        nonlocal target_time, force_target_time, force_stop_time
+        nonlocal force_target_time, force_stop_time
         nonlocal comm_mode
 #        nonlocal DISCOVERY_MODE
         nonlocal FORCE_PERIOD
