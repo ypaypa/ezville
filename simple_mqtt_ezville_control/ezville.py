@@ -949,7 +949,7 @@ def ezville_loop(config):
         
     # Discovery 및 강제 업데이트 시간 설정
 #    target_time = time.time() + DISCOVERY_DURATION
-    force_target_time = target_time + FORCE_PERIOD
+    force_target_time = time.time() + FORCE_PERIOD
     force_stop_time = force_target_time + FORCE_DURATION
     
     log('장치 등록을 시작합니다...')
