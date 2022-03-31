@@ -8,7 +8,7 @@
 
 
 
-**2. 설치 방법**
+<h2>2. 설치 방법</h2>
 
 - ① 애드온 스토어 -> 저장소 -> [https://github.com/ktdo79/addons](https://github.com/ktdo79/addons) 추가하기 
 - ② MQTT 기반 Simple EzVille Wallpad Control 설치
@@ -17,16 +17,23 @@
 
 
 
-**3. 설정 방법**
+<h2>3. 설정 방법</h2>
 
-3.1. EW11 설정
+<h3>3.1. EW11 설정</h3>
 
-3.1.1. Serial Port 설정
+<h4>3.1.1. Serial Port 설정</h4>
 
 - Buffer Size를 128로 변경 
 
-3.1.2. Communication Settings 설정
+<h4>3.1.2. Communication Settings 설정</h4>
 
-- ① +Add를 누르고 MQTT 추가
-- ② Server 주소 = Home Assistant IP 주소, Port는 Mosquitto Broker 설정 Port, Buffer Size는 128
-- ③
+<h5>3.1.2.1. MQTT 설정</h5>
+
+1. +Add를 누르고 MQTT 추가 
+2. Server 주소 = Home Assistant IP 주소, Port는 Mosquitto Broker 설정 Port, Buffer Size는 128 로 설정
+3. Subscribe Topic는 ew11/send, Publish Topic은 ew11/recv 로 설정
+4. Mosquitto Broker에 ID/Password가 있으면 MQTT Account, Password에 기입
+
+<h5>3.1.2.2. netp 설정</h5>
+
+1. Buffer Size를 128로 변경
