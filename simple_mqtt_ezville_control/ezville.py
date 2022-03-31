@@ -186,10 +186,10 @@ EW11_SEND_TOPIC = EW11_TOPIC + '/send'
 def ezville_loop(config):
     
     # config 
-    debug = config['DEBUG']
+    debug = config['DEBUG_LOG']
     comm_mode = config['mode']
-    mqtt_log = config['mqtt_log']
-    ew11_log = config['ew11_log']
+    mqtt_log = config['MQTT_LOG']
+    ew11_log = config['EW11_LOG']
     
     # SOCKET 정보
     SOC_ADDRESS = config['ew11_server']
