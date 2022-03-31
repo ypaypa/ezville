@@ -36,7 +36,7 @@
     "ew11_timeout": 3600
   },
   "schema": {
-    "DEBUG": "bool",
+    "DEBUG_LOG": "bool",
     "MQTT_LOG": "bool",
     "EW11_LOG": "bool",
     "mode": "str",
