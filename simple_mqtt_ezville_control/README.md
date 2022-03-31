@@ -19,21 +19,21 @@
 
 ## 3. 설정 방법
 
-<h3>3.1. EW11 설정</h3>
+### 3.1. EW11 설정
 
-<h4>3.1.1. Serial Port 설정</h4>
+#### 3.1.1. Serial Port 설정
 
 - Buffer Size를 128로 변경 
 
-<h4>3.1.2. Communication Settings 설정</h4>
+#### 3.1.2. Communication Settings 설정
 
-<h5>3.1.2.1. MQTT 설정</h5>
+##### 3.1.2.1. MQTT 설정
 
 1. +Add를 누르고 MQTT 추가 
 2. Server 주소 = Home Assistant IP 주소, Port는 Mosquitto Broker 설정 Port, Buffer Size는 128 로 설정
 3. Subscribe Topic는 ew11/send, Publish Topic은 ew11/recv 로 설정
 4. Mosquitto Broker에 ID/Password가 있으면 MQTT Account, Password에 기입
 
-<h5>3.1.2.2. netp 설정</h5>
+##### 3.1.2.2. netp 설정
 
 1. Buffer Size를 128로 변경
