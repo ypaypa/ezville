@@ -11,9 +11,9 @@
   "startup": "application",
   "boot": "auto",
   "options": {
-    "DEBUG": false,
-    "mqtt_log": false,
-    "ew11_log": false,
+    "DEBUG_LOG": false,
+    "MQTT_LOG": false,
+    "EW11_LOG": false,
     "mode": "mixed",
     "mqtt_server": "192.168.x.x",
     "mqtt_id": "id",
