@@ -1,6 +1,6 @@
-**MQTT 기반 Simple EzVille Wallpad Control**
+<h1>MQTT 기반 Simple EzVille Wallpad Control</h1>
 
-**1. 지원 기능**
+<h2>1. 지원 기능</h2>
 
 - 조명, 난방 (외출 모드), 대기전력차단, 엘리베이터콜 상태 조회 및 제어 지원
 - 대기전력소모, 현관 스위치 상태 (외출 모드, 그룹 조명) 센서 지원
