@@ -37,8 +37,8 @@
   },
   "schema": {
     "DEBUG": "bool",
-    "mqtt_log": "bool",
-    "ew11_log": "bool",
+    "MQTT_LOG": "bool",
+    "EW11_LOG": "bool",
     "mode": "str",
     "mqtt_server": "str",
     "mqtt_id": "str",
