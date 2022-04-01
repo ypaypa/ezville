@@ -411,12 +411,6 @@ def ezville_loop(config):
                                     else:
                                         onoff = 'off'
 
-                                    log(onoff)
-                                    
- #                                   onoff = 'heat' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'off'
- #                                   if onoff == 'off' and int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1:
- #                                       onoff = 'fan_only'
-
                                     await update_state(name, 'power', rid, src, onoff)
                                     await update_temperature(name, rid, src, curT, setT)
                                     
