@@ -384,9 +384,7 @@ def ezville_loop(config):
                                 
                                 onoff_state = bin(int(packet[12:14], 16))[2:].zfill(8)
                                 away_state = bin(int(packet[14:16], 16))[2:].zfill(8)
-
-                                log(onoff_state + ' ' + away_state)
-                                      
+                                
                                 for rid in range(1, rc + 1):
                                     discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, src)
                                     
@@ -404,11 +402,11 @@ def ezville_loop(config):
                                     setT = packet[16 + 4 * rid:18 + 4 * rid]
                                     curT = packet[18 + 4 * rid:20 + 4 * rid]
                                     
-                                    if onoff_state[rid - 1] == '1':
+                                    if onoff_state[8 - rid ] == '1':
                                         onoff = 'heat'
-                                    elif onoff_state[rid - 1] == '0' and away_state[rid - 1] == '1':
+                                    elif onoff_state[8 - rid] == '0' and away_state[8 - rid] == '1':
                                         onoff = 'fan_only'
-                                    elif onoff_state[rid - 1] == '0' and away_state[rid - 1] == '0':
+                                    elif onoff_state[8 - rid] == '0' and away_state[8 - rid] == '0':
                                         onoff = 'off'
                                     else:
                                         onoff = 'off'
