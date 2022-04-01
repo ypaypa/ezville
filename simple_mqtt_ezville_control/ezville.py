@@ -382,6 +382,9 @@ def ezville_loop(config):
                                 # room의 조절기 수 (현재 하나 뿐임)
                                 src = 1
                                 
+                                onoff_state = bin(int(packet[12:14], 16))[2:].zfill(8)
+                                away_state = bin(int(packet[14:16], 16))[2:].zfill(8)
+                                
                                 for rid in range(1, rc + 1):
                                     discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, src)
                                     
@@ -398,9 +401,19 @@ def ezville_loop(config):
                                     
                                     setT = packet[16 + 4 * rid:18 + 4 * rid]
                                     curT = packet[18 + 4 * rid:20 + 4 * rid]
-                                    onoff = 'heat' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'off'
-                                    if onoff == 'off' and int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1:
+                                    
+                                    if onoff_state[rid - 1] == 1:
+                                        onoff = 'heat'
+                                    elif onoff_state[rid - 1] == 0 and away_state[rid - 1] == 1:
                                         onoff = 'fan_only'
+                                    elif onoff_state[rid - 1] == 0 and away_state[rid - 1] == 0:
+                                        onoff = 'off'
+                                    else
+                                        onoff = 'off'
+                                    
+ #                                   onoff = 'heat' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'off'
+ #                                   if onoff == 'off' and int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1:
+ #                                       onoff = 'fan_only'
 
                                     await update_state(name, 'power', rid, src, onoff)
                                     await update_temperature(name, rid, src, curT, setT)
