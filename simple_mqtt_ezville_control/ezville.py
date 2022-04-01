@@ -553,6 +553,9 @@ def ezville_loop(config):
         if onoff != HOMESTATE.get(key) or FORCE_UPDATE:
             HOMESTATE[key] = onoff
             
+            # 소문자로 변경
+            onoff = onoff.lower()
+            
             topic = STATE_TOPIC.format(deviceID, state)
             mqtt_client.publish(topic, onoff.encode())
                     
