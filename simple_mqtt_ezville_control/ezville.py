@@ -641,7 +641,7 @@ def ezville_loop(config):
                         # Thermostat는 외출 모드를 Fan 모드로 연결
                         elif value == 'FAN_ONLY':
  
-                            sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '0101 + '0000')
+                            sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '01010000')
                             recvcmd = 'F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['ack']
                             statcmd = [key, value]
                            
