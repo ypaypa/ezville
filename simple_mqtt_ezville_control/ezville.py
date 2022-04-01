@@ -404,11 +404,11 @@ def ezville_loop(config):
                                     setT = packet[16 + 4 * rid:18 + 4 * rid]
                                     curT = packet[18 + 4 * rid:20 + 4 * rid]
                                     
-                                    if onoff_state[rid - 1] == 1:
+                                    if onoff_state[rid - 1] == '1':
                                         onoff = 'heat'
-                                    elif onoff_state[rid - 1] == 0 and away_state[rid - 1] == 1:
+                                    elif onoff_state[rid - 1] == '0' and away_state[rid - 1] == '1':
                                         onoff = 'fan_only'
-                                    elif onoff_state[rid - 1] == 0 and away_state[rid - 1] == 0:
+                                    elif onoff_state[rid - 1] == '0' and away_state[rid - 1] == '0':
                                         onoff = 'off'
                                     else:
                                         onoff = 'off'
