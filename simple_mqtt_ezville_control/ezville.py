@@ -69,10 +69,7 @@ DISCOVERY_PAYLOAD = {
         "temp_stat_t": "~/setTemp/state",
         "temp_cmd_t": "~/setTemp/command",
         "curr_temp_t": "~/curTemp/state",
-# 외출 모드는 fan_only로 매핑
-#        "away_mode_stat_t": "~/away/state",
-#        "away_mode_cmd_t": "~/away/command",
-        "modes": [ "off", "heat", "fan_only" ],
+        "modes": [ "off", "heat", "fan_only" ],     # 외출 모드는 fan_only로 매핑
         "min_temp": "5",
         "max_temp": 40
     } ],
