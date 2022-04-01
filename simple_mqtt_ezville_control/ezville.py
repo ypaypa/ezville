@@ -21,7 +21,7 @@ RS485_DEVICE = {
         "state":    { "id": "36", "cmd": "81" },
         
         "power":    { "id": "36", "cmd": "43", "ack": "C3" },
-        "away":    { "id": "36", "cmd": "45", "ack": "00" },
+        "away":    { "id": "36", "cmd": "45", "ack": "C5" },
         "target":   { "id": "36", "cmd": "44", "ack": "C4" }
     },
     "plug": {
