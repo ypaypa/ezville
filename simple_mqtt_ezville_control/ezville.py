@@ -408,7 +408,7 @@ def ezville_loop(config):
                                         onoff = 'fan_only'
                                     elif onoff_state[rid - 1] == 0 and away_state[rid - 1] == 0:
                                         onoff = 'off'
-                                    else
+                                    else:
                                         onoff = 'off'
                                     
  #                                   onoff = 'heat' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'off'
