@@ -19,7 +19,8 @@ RS485_DEVICE = {
     },
     "thermostat": {
         "state":    { "id": "36", "cmd": "81" },
-
+        
+        "power":    { "id": "36", "cmd": "43", "ack": "C3" },
         "away":    { "id": "36", "cmd": "45", "ack": "00" },
         "target":   { "id": "36", "cmd": "44", "ack": "C4" }
     },
@@ -63,13 +64,15 @@ DISCOVERY_PAYLOAD = {
         "_intg": "climate",
         "~": "ezville/thermostat_{:0>2d}_{:0>2d}",
         "name": "ezville_thermostat_{:0>2d}_{:0>2d}",
+        "mode_cmd_t": "~/power/command",
         "mode_stat_t": "~/power/state",
         "temp_stat_t": "~/setTemp/state",
         "temp_cmd_t": "~/setTemp/command",
         "curr_temp_t": "~/curTemp/state",
-        "away_mode_stat_t": "~/away/state",
-        "away_mode_cmd_t": "~/away/command",
-        "modes": [ "off", "heat" ],
+# 외출 모드는 fan_only로 매핑
+#        "away_mode_stat_t": "~/away/state",
+#        "away_mode_cmd_t": "~/away/command",
+        "modes": [ "off", "heat", "fan_only" ],
         "min_temp": "5",
         "max_temp": 40
     } ],
@@ -398,11 +401,13 @@ def ezville_loop(config):
                                     
                                     setT = packet[16 + 4 * rid:18 + 4 * rid]
                                     curT = packet[18 + 4 * rid:20 + 4 * rid]
-                                    onoff = 'ON' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
-                                    awayonoff = 'ON' if int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
+                                    onoff = 'HEAT' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
+                                    if onoff == 'HEAT' and int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1:
+                                        onoff = 'FAN_ONLY'
+#                                    awayonoff = 'ON' if int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
 
                                     await update_state(name, 'power', rid, src, onoff)
-                                    await update_state(name, 'away', rid, src, awayonoff)
+#                                    await update_state(name, 'away', rid, src, awayonoff)
                                     await update_temperature(name, rid, src, curT, setT)
                                     
                                     # 직전 처리 State 패킷은 저장
@@ -548,10 +553,6 @@ def ezville_loop(config):
         if onoff != HOMESTATE.get(key) or FORCE_UPDATE:
             HOMESTATE[key] = onoff
             
-            # thermostat이면 hear / off로 변경하여 전송
-            if device == 'thermostat' and state == 'power':
-                onoff = 'heat' if onoff == 'ON' else value.lower()
-            
             topic = STATE_TOPIC.format(deviceID, state)
             mqtt_client.publish(topic, onoff.encode())
                     
@@ -595,7 +596,8 @@ def ezville_loop(config):
             idx = int(device_info[1])
             sid = int(device_info[2])
             cur_state = HOMESTATE.get(key)
-            value = 'ON' if value == 'heat' else value.upper()
+            
+            value = value.upper()
             
             if cur_state == None:
                 if device == 'batch':
@@ -627,15 +629,32 @@ def ezville_loop(config):
             
             else:
                 if device == 'thermostat':                        
-                    if topics[2] == 'away':
-                        away = '01' if value == 'ON' else '00'
+                    if topics[2] == 'power':
+                        if value == 'HEAT':
                             
-                        sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '01' + away + '0000')
-                        recvcmd = 'NULL'
-                        statcmd = [key, value]
+                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '01010000')
+                            recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
+                            statcmd = [key, value]
                            
-                        CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
-                            
+                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                        
+                        # Thermostat는 외출 모드를 Fan 모드로 연결
+                        else if value == 'FAN_ONLY':
+ 
+                            sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '0101 + '0000')
+                            recvcmd = 'F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['ack']
+                            statcmd = [key, value]
+                           
+                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                        
+                        else if value == 'OFF':
+                        
+                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '01000000')
+                            recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
+                            statcmd = [key, value]
+                           
+                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})                    
+                                               
                         if debug:
                             log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
                                     
