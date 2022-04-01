@@ -363,7 +363,7 @@ def ezville_loop(config):
                                         payload["~"] = payload["~"].format(rid, id)
                                         payload["name"] = payload["name"].format(rid, id)
                                    
-                                        # 장치 등록 후 1초 후에 State 업데이트
+                                        # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                         await mqtt_discovery(payload)
                                         await asyncio.sleep(DISCOVERY_DELAY)
                                     
@@ -392,7 +392,7 @@ def ezville_loop(config):
                                         payload["~"] = payload["~"].format(rid, src)
                                         payload["name"] = payload["name"].format(rid, src)
                                    
-                                        # 장치 등록 후 1초 후에 State 업데이트
+                                        # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                         await mqtt_discovery(payload)
                                         await asyncio.sleep(DISCOVERY_DELAY)
                                     
@@ -428,7 +428,7 @@ def ezville_loop(config):
                                                 payload["~"] = payload["~"].format(rid, id)
                                                 payload["name"] = payload["name"].format(rid, id)
                                    
-                                                # 장치 등록 후 1초 후에 State 업데이트
+                                                # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                                 await mqtt_discovery(payload)
                                                 await asyncio.sleep(DISCOVERY_DELAY)                          
                                     
@@ -469,7 +469,7 @@ def ezville_loop(config):
                                     payload["~"] = payload["~"].format(rid, spc)
                                     payload["name"] = payload["name"].format(rid, spc)
                                    
-                                    # 장치 등록 후 1초 후에 State 업데이트
+                                    # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                     await mqtt_discovery(payload)
                                     await asyncio.sleep(DISCOVERY_DELAY)                                
                                 
@@ -498,7 +498,7 @@ def ezville_loop(config):
                                         payload["~"] = payload["~"].format(rid, sbc)
                                         payload["name"] = payload["name"].format(rid, sbc)
                                    
-                                        # 장치 등록 후 1초 후에 State 업데이트
+                                        # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                         await mqtt_discovery(payload)
                                         await asyncio.sleep(DISCOVERY_DELAY)           
                                 
