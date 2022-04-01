@@ -544,9 +544,14 @@ def ezville_loop(config):
         nonlocal FORCE_UPDATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
         key = deviceID + state
-
+        
         if onoff != HOMESTATE.get(key) or FORCE_UPDATE:
             HOMESTATE[key] = onoff
+            
+            # thermostat이면 hear / off로 변경하여 전송
+            if device == 'thermostat' and state == 'power':
+                onoff = 'heat' if onoff == 'ON' else value.lower()
+            
             topic = STATE_TOPIC.format(deviceID, state)
             mqtt_client.publish(topic, onoff.encode())
                     
