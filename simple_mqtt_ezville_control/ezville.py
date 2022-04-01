@@ -401,13 +401,11 @@ def ezville_loop(config):
                                     
                                     setT = packet[16 + 4 * rid:18 + 4 * rid]
                                     curT = packet[18 + 4 * rid:20 + 4 * rid]
-                                    onoff = 'HEAT' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
-                                    if onoff == 'HEAT' and int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1:
-                                        onoff = 'FAN_ONLY'
-#                                    awayonoff = 'ON' if int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1 else 'OFF'
+                                    onoff = 'heat' if int(packet[12:14], 16) & 0x1F >> (rc - rid) & 1 else 'off'
+                                    if onoff == 'off' and int(packet[14:16], 16) & 0x1F >> (rc - rid) & 1:
+                                        onoff = 'fan_only'
 
                                     await update_state(name, 'power', rid, src, onoff)
-#                                    await update_state(name, 'away', rid, src, awayonoff)
                                     await update_temperature(name, rid, src, curT, setT)
                                     
                                     # 직전 처리 State 패킷은 저장
@@ -553,9 +551,6 @@ def ezville_loop(config):
         if onoff != HOMESTATE.get(key) or FORCE_UPDATE:
             HOMESTATE[key] = onoff
             
-            # 소문자로 변경
-            onoff = onoff.lower()
-            
             topic = STATE_TOPIC.format(deviceID, state)
             mqtt_client.publish(topic, onoff.encode())
                     
@@ -599,9 +594,7 @@ def ezville_loop(config):
             idx = int(device_info[1])
             sid = int(device_info[2])
             cur_state = HOMESTATE.get(key)
-            
-            value = value.upper()
-            
+                        
             if cur_state == None:
                 if device == 'batch':
                     # 일괄 차단기는 4가지 모드로 조절               
@@ -633,7 +626,7 @@ def ezville_loop(config):
             else:
                 if device == 'thermostat':                        
                     if topics[2] == 'power':
-                        if value == 'HEAT':
+                        if value == 'heat':
                             
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '01010000')
                             recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
@@ -642,7 +635,7 @@ def ezville_loop(config):
                             CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                         
                         # Thermostat는 외출 모드를 Fan 모드로 연결
-                        elif value == 'FAN_ONLY':
+                        elif value == 'fan_only':
  
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '01010000')
                             recvcmd = 'F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['ack']
@@ -650,7 +643,7 @@ def ezville_loop(config):
                            
                             CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                         
-                        elif value == 'OFF':
+                        elif value == 'off':
                         
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '01000000')
                             recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
