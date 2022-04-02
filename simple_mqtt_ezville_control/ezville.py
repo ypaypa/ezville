@@ -809,15 +809,6 @@ def ezville_loop(config):
                 log('[INFO] EW11 연결 상태 문제 없음')
             await asyncio.sleep(EW11_TIMEOUT)        
           
-        
-    # MQTT 통신 시작
-    mqtt_client = mqtt.Client('mqtt-ezville')
-    mqtt_client.username_pw_set(config['mqtt_id'], config['mqtt_password'])
-    mqtt_client.on_connect = on_connect
-    mqtt_client.on_message = on_message
-    mqtt_client.connect_async(config['mqtt_server'])
-    mqtt_client.loop_start()
-  
     
     def initiate_socket():
         # SOCKET 통신 시작
@@ -857,18 +848,8 @@ def ezville_loop(config):
                 time.sleep(1)
                 retry_count += 1
                 continue
-        
-        
-    if comm_mode == 'mixed' or comm_mode == 'socket':
-        soc = initiate_socket()  
+    
 
-        
-    # Discovery 및 강제 업데이트 시간 설정
-    force_target_time = time.time() + FORCE_PERIOD
-    force_stop_time = force_target_time + FORCE_DURATION
-    
-    log('[INFO] 장치 등록 및 상태 업데이트를 시작합니다')
-    
     async def serial_recv_loop():
         nonlocal soc
         nonlocal MSG_QUEUE
@@ -936,6 +917,7 @@ def ezville_loop(config):
             # COMMAND_LOOP_DELAY 초 대기 후 루프 진행
             await asyncio.sleep(COMMAND_LOOP_DELAY)    
  
+
     # EW11 재실행 시 리스타트 실시
     async def restart_control():
         nonlocal mqtt_client
@@ -959,19 +941,44 @@ def ezville_loop(config):
         # 1초 마다 실행
         await asyncio.sleep(1.0)
 
-
+    # asyncio loop 획득 및 EW11 오류시 재시작 coroutine task 등록
     loop = asyncio.get_event_loop()
-    loop.create_task(restart_control())
+    loop.create_task(restart_control()
+
+        
+    # MQTT 통신
+    mqtt_client = mqtt.Client('mqtt-ezville')
+    mqtt_client.username_pw_set(config['mqtt_id'], config['mqtt_password'])
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect_async(config['mqtt_server'])
+        
+    # Discovery 및 강제 업데이트 시간 설정
+    force_target_time = time.time() + FORCE_PERIOD
+    force_stop_time = force_target_time + FORCE_DURATION
+    
 
     while True:
+        # MQTT 통신 시작
+        mqtt_client.loop_start()
+        # socket 통신 시작       
+        if comm_mode == 'mixed' or comm_mode == 'socket':
+            soc = initiate_socket()  
+
+        log('[INFO] 장치 등록 및 상태 업데이트를 시작합니다')
+
+        # socket 데이터 수신 loop 실행
         if comm_mode == 'socket':
             loop.create_task(serial_recv_loop())
+        # EW11 패킷 기반 state 업데이트 loop 실행
         loop.create_task(state_update_loop())
+        # Home Assistant 명령 실행 loop 실행
         loop.create_task(command_loop())
+        # EW11 상태 체크 loop 실행
         loop.create_task(ew11_health_loop())
     
         loop.run_forever()
-    
+
 
 if __name__ == '__main__':
     with open(config_dir + '/options.json') as file:
