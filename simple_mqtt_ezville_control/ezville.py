@@ -941,7 +941,7 @@ def ezville_loop(config):
             loop.stop()
             
         # 1초 마다 실행
-        await asyncio.sleep(1.0)
+        await asyncio.sleep(0.1)
 
     # asyncio loop 획득 및 EW11 오류시 재시작 task 등록
     loop = asyncio.get_event_loop()
