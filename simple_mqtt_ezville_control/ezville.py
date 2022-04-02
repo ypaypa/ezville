@@ -3,7 +3,7 @@ import json
 import time
 import asyncio
 import threading
-import telnetlib
+from telnetlib import Telnet
 import socket
 import random
 
@@ -789,6 +789,7 @@ def ezville_loop(config):
             if timestamp - last_received_time > EW11_TIMEOUT: 
                 log('[WARNING] {}초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.'.format(EW11_TIMEOUT))
                 try:
+
                     ew11_id = config['ew11_id']
                     ew11_password = config['ew11_password']
                     ew11_server = config['ew11_server']
@@ -800,8 +801,10 @@ def ezville_loop(config):
                     ew11.read_until(b"password:")
                     ew11.write(ew11_password.encode('utf-8') + b'\n')
                     ew11.write('Restart'.encode('utf-8') + b'\n')
+                    ew11.read_until(b"Restart..")
 
                     restart_flag = True
+                    await asyncio.sleep(10)
 
                 except:
                     log('[ERROR] 기기 재시작 오류! 기기 상태를 확인하세요.')
@@ -941,7 +944,7 @@ def ezville_loop(config):
             loop.stop()
             
         # 1초 마다 실행
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(1)
 
     # asyncio loop 획득 및 EW11 오류시 재시작 task 등록
     loop = asyncio.get_event_loop()
