@@ -932,9 +932,10 @@ def ezville_loop(config):
             if comm_mode == 'mixed' or comm_mode == 'socket':
                 nonlocal soc
                 soc.close()
-           
-           # flag 원복
-           restart_flag =False
+                       
+            # flag 원복
+            restart_flag =False
+
             # asyncio loop 종료
             loop.stop()
             
