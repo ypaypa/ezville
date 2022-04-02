@@ -240,7 +240,7 @@ def ezville_loop(config):
     
     # EW11 동작상태 확인용 메시지 수신 시간 체크 주기 및 체크용 시간 변수
     EW11_TIMEOUT = config['ew11_timeout']
-    last_received_time = 0
+    last_received_time = time.time()
 
     
     def on_connect(client, userdata, flags, rc):
@@ -783,7 +783,7 @@ def ezville_loop(config):
             timestamp = time.time()
         
             # TIMEOUT 시간 동안 새로 받은 EW11 패킷이 없으면 재시작
-            if timestamp - last_received_time > EW11_TIMEOUT:
+            if timestamp - last_received_time > EW11_TIMEOUT: 
                 log('[WARNING] {}초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.'.format(EW11_TIMEOUT))
                 try:
                     ew11_id = config['ew11_id']
@@ -812,7 +812,7 @@ def ezville_loop(config):
     mqtt_client.on_message = on_message
     mqtt_client.connect_async(config['mqtt_server'])
     mqtt_client.loop_start()
-    
+  
     
     def initiate_socket():
         # SOCKET 통신 시작
