@@ -944,7 +944,7 @@ def ezville_loop(config):
 
     # asyncio loop 획득 및 EW11 오류시 재시작 coroutine task 등록
     loop = asyncio.get_event_loop()
-    loop.create_task(restart_control()
+    loop.create_task(restart_control())
 
         
     # MQTT 통신
@@ -968,17 +968,22 @@ def ezville_loop(config):
 
         log('[INFO] 장치 등록 및 상태 업데이트를 시작합니다')
 
+        tasklist = []
         # socket 데이터 수신 loop 실행
         if comm_mode == 'socket':
-            loop.create_task(serial_recv_loop())
+            tasklist.append(loop.create_task(serial_recv_loop()))
         # EW11 패킷 기반 state 업데이트 loop 실행
-        loop.create_task(state_update_loop())
+        tasklist.append(loop.create_task(state_update_loop()))
         # Home Assistant 명령 실행 loop 실행
-        loop.create_task(command_loop())
+        tasklist.append(loop.create_task(command_loop()))
         # EW11 상태 체크 loop 실행
-        loop.create_task(ew11_health_loop())
+        tasklist.append(loop.create_task(ew11_health_loop()))
     
         loop.run_forever()
+        
+        # 이전 task는 취소
+        for task in tasklist:
+            task.cancel()
 
 
 if __name__ == '__main__':
