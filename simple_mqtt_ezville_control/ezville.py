@@ -287,7 +287,6 @@ def ezville_loop(config):
                     # Que에서 확인된 시간 기준으로 EW11 Health Check함.
                     last_received_time = time.time()
 
-                    log(msg.payload.hex().upper())
                     await EW11_process(msg.payload.hex().upper())
                    
     
