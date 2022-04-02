@@ -934,7 +934,7 @@ def ezville_loop(config):
                 soc.close()
                        
             # flag 원복
-            restart_flag =False
+            restart_flag = False
 
             # asyncio loop 종료
             log('[WARNING] asyncio loop 종료')
@@ -943,7 +943,7 @@ def ezville_loop(config):
         # 1초 마다 실행
         await asyncio.sleep(1.0)
 
-    # asyncio loop 획득 및 EW11 오류시 재시작 coroutine task 등록
+    # asyncio loop 획득 및 EW11 오류시 재시작 task 등록
     loop = asyncio.get_event_loop()
     loop.create_task(restart_control())
 
