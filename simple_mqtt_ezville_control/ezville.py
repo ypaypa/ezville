@@ -241,7 +241,9 @@ def ezville_loop(config):
     # EW11 동작상태 확인용 메시지 수신 시간 체크 주기 및 체크용 시간 변수
     EW11_TIMEOUT = config['ew11_timeout']
     last_received_time = time.time()
-
+    
+    # EW11 재시작 확인
+    restart_flag = False
     
     def on_connect(client, userdata, flags, rc):
         nonlocal comm_mode
@@ -777,6 +779,7 @@ def ezville_loop(config):
         
     async def ew11_health_loop():
         nonlocal last_received_time
+        nonlocal restart_flag
         nonlocal EW11_TIMEOUT
         
         while True:
@@ -797,6 +800,8 @@ def ezville_loop(config):
                     ew11.read_until(b"password:")
                     ew11.write(ew11_password.encode('utf-8') + b'\n')
                     ew11.write('Restart'.encode('utf-8') + b'\n')
+
+                    restart_flag = True
 
                 except:
                     log('[ERROR] 기기 재시작 오류! 기기 상태를 확인하세요.')
@@ -939,101 +944,8 @@ def ezville_loop(config):
     loop.create_task(ew11_health_loop())
     
     loop.run_forever()
-   
+
     
-#    def serial_run():
-#        loop = asyncio.new_event_loop()
-#        asyncio.set_event_loop(loop)
-
-#        loop.run_until_complete(serial_recv_loop())
-        
-#    def state_run():
-#        loop = asyncio.new_event_loop()
-#        asyncio.set_event_loop(loop)
-
-#        loop.run_until_complete(state_update_loop())
-#        asyncio.run(state_update_loop())
-        
-#    def command_run():
-#        loop = asyncio.new_event_loop()
-#        asyncio.set_event_loop(loop)
-
-#        loop.run_until_complete(command_loop())
-        
-#    def ew11_run():
-#        loop = asyncio.new_event_loop()
-#        asyncio.set_event_loop(loop)
-
-#        loop.run_until_complete(ew11_health_loop())
-
- 
-#    if comm_mode == 'socket':
-#        th0 = Thread(target = serial_run())
-#        th0.start()
-        
-#    th1 = Thread(target = state_run)
-#    th2 = Thread(target = command_run)
-#    th3 = Thread(target = ew11_run)
-                 
-#    th1.start()
-#    th2.start()
-#    th3.start()
-
-                       
-                         
-#    if comm_mode == 'socket':
-#        th0 = Thread(target = asyncio.run(serial_recv_loop()))
-#        th0.start()
-        
-#    th1 = Thread(target = asyncio.run(state_update_run()))
-#    th2 = Thread(target = asyncio.run(command_run()))
-#    th3 = Thread(target = asyncio.run(ew11_health_check()))
-                 
-#    th1.start()
-#    th2.start()
-#    th3.start()
-        
-#    async def main_run():
-#        nonlocal target_time, force_target_time, force_stop_time
-#        nonlocal comm_mode
-#        nonlocal DISCOVERY_MODE
-#        nonlocal FORCE_PERIOD
-#        nonlocal FORCE_DURATION
-#        nonlocal FORCE_UPDATE
-#        nonlocal LOOP_TIME
-#        
-#        while True:
-#            if comm_mode == 'socket':
-#                await asyncio.gather(
-#                    recv_from_ew11(),                    
-#                    process_message(),
-#                    send_to_ew11()
-#                )
-#            else:
-#                await asyncio.gather(
-#                    process_message(),
-#                    send_to_ew11()               
-#                )           
-#            
-#            timestamp = time.time()
-#            if timestamp > target_time and DISCOVERY_MODE:
-#                DISCOVERY_MODE = False
-#                log('IOT 제어 입력 수행을 시작합니다...')
-#            
-#            # 정해진 시간이 지나면 FORCE 모드 발동
-#            if timestamp > force_target_time and not FORCE_UPDATE:
-#                force_stop_time = timestamp + FORCE_DURATION
-#                FORCE_UPDATE = True
-#                
-#            # 정해진 시간이 지나면 FORCE 모드 종료    
-#            if timestamp > force_stop_time and FORCE_UPDATE:
-#                force_target_time = timestamp + FORCE_PERIOD
-#                FORCE_UPDATE = False
-#                
-#            # 0.02초 대기 후 루프 진행
-#            await asyncio.sleep(0.001)
-#                                                                                 
-#    asyncio.run(main_run())
 
 if __name__ == '__main__':
     with open(config_dir + '/options.json') as file:
