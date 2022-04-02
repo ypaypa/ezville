@@ -803,6 +803,8 @@ def ezville_loop(config):
 
                     restart_flag = True
 
+                    return
+
                 except:
                     log('[ERROR] 기기 재시작 오류! 기기 상태를 확인하세요.')
             else:
