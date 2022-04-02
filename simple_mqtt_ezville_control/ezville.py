@@ -936,15 +936,40 @@ def ezville_loop(config):
             # COMMAND_LOOP_DELAY 초 대기 후 루프 진행
             await asyncio.sleep(COMMAND_LOOP_DELAY)    
  
-    loop = asyncio.get_event_loop()
-    if comm_mode == 'socket':
-        loop.create_task(serial_recv_loop())
-    loop.create_task(state_update_loop())
-    loop.create_task(command_loop())
-    loop.create_task(ew11_health_loop())
-    
-    loop.run_forever()
 
+    async def restart_control():
+        nonlocal mqtt_client
+        nonlocal restart_flag
+
+        if restart_flag:
+            loop = asyncio.get_event_loop()
+
+            mttq_client.loop_stop()
+            loop.stop()
+            
+            # 1초간 딜레이 추가
+            await asyncio.sleep(1.0)
+            
+            # socket 재연결
+            if comm_mode == 'socket':
+                nonlocal soc
+                soc = reconnect_socket(soc)
+            # MTTQ 재연결
+            mttq_client.loop_start()
+            restart_flag = False
+
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(restart_control())
+
+    while True:
+        if comm_mode == 'socket':
+            loop.create_task(serial_recv_loop())
+        loop.create_task(state_update_loop())
+        loop.create_task(command_loop())
+        loop.create_task(ew11_health_loop())
+    
+        loop.run_forever()
     
 
 if __name__ == '__main__':
