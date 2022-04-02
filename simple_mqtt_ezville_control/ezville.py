@@ -803,8 +803,6 @@ def ezville_loop(config):
 
                     restart_flag = True
 
-                    return
-
                 except:
                     log('[ERROR] 기기 재시작 오류! 기기 상태를 확인하세요.')
             else:
@@ -939,6 +937,7 @@ def ezville_loop(config):
             restart_flag =False
 
             # asyncio loop 종료
+            log('[WARNING] asyncio loop 종료')
             loop.stop()
             
         # 1초 마다 실행
