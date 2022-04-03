@@ -247,6 +247,9 @@ def ezville_loop(config):
     
     # EW11 재시작 확인용 Flag
     restart_flag = False
+  
+    # MQTT 연결 확인 Flag
+    flag_connected = False
     
     
     def on_connect(client, userdata, flags, rc):
@@ -270,8 +273,16 @@ def ezville_loop(config):
 
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
+        nonlocal flag_connected
+
+        flag_connected = True
         MSG_QUEUE.put(msg)
  
+
+    def on_disconnect(client, userdata, rc):
+        nonlocal flag_connected 
+        flag_connected = False
+
 
     # MQTT message를 분류하여 처리
     async def process_message():
@@ -957,6 +968,7 @@ def ezville_loop(config):
     mqtt_client = mqtt.Client('mqtt-ezville')
     mqtt_client.username_pw_set(config['mqtt_id'], config['mqtt_password'])
     mqtt_client.on_connect = on_connect
+    mqtt_client.on_disconnect = on_disconnect
     mqtt_client.on_message = on_message
     mqtt_client.connect_async(config['mqtt_server'])
         
@@ -968,6 +980,9 @@ def ezville_loop(config):
     while True:
         # MQTT 통신 시작
         mqtt_client.loop_start()
+        while not flag_connected:
+            sleep(1)
+        
         # socket 통신 시작       
         if comm_mode == 'mixed' or comm_mode == 'socket':
             soc = initiate_socket()  
