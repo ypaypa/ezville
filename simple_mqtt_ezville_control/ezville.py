@@ -928,7 +928,7 @@ def ezville_loop(config):
                 
                 # MTTQ 및 socket 연결 종료
                 log("[WARNING] 모든 통신 종료")
-                mttq_client.loop_stop()
+                mqtt_client.loop_stop()
                 if comm_mode == 'mixed' or comm_mode == 'socket':
                     nonlocal soc
                     soc.close()
