@@ -3,7 +3,7 @@ import json
 import time
 import asyncio
 import threading
-from telnetlib import Telnet
+import telnetlib
 import socket
 import random
 
@@ -202,7 +202,7 @@ def ezville_loop(config):
     CMD_QUEUE = []
     
     # 기존 STATE 저장용 공간
-    HOMESTATE = {}
+    DEVICE_STATE = {}
     
     # 이전에 전달된 패킷인지 판단을 위한 캐쉬
     MSG_CACHE = {}
@@ -235,6 +235,7 @@ def ezville_loop(config):
     STATE_LOOP_DELAY = config['state_loop_delay']
     COMMAND_LOOP_DELAY = config['command_loop_delay']
     SERIAL_RECV_DELAY = config['serial_recv_delay']
+    RESTART_CHECK_DELAY = config['restart_check_delay']
     
     # EW11에 설정된 BUFFER SIZE
     EW11_BUFFER_SIZE = config['ew11_buffer_size']
@@ -243,8 +244,9 @@ def ezville_loop(config):
     EW11_TIMEOUT = config['ew11_timeout']
     last_received_time = time.time()
     
-    # EW11 재시작 확인
+    # EW11 재시작 확인용 Flag
     restart_flag = False
+    
     
     def on_connect(client, userdata, flags, rc):
         nonlocal comm_mode
@@ -552,13 +554,13 @@ def ezville_loop(config):
 
                                                                                     
     async def update_state(device, state, id1, id2, onoff):
-        nonlocal HOMESTATE
+        nonlocal DEVICE_STATE
         nonlocal FORCE_UPDATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
         key = deviceID + state
         
-        if onoff != HOMESTATE.get(key) or FORCE_UPDATE:
-            HOMESTATE[key] = onoff
+        if onoff != DEVICE_STATE.get(key) or FORCE_UPDATE:
+            DEVICE_STATE[key] = onoff
             
             topic = STATE_TOPIC.format(deviceID, state)
             mqtt_client.publish(topic, onoff.encode())
@@ -570,15 +572,15 @@ def ezville_loop(config):
  
 
     async def update_temperature(device, id1, id2, curTemp, setTemp):
-        nonlocal HOMESTATE
+        nonlocal DEVICE_STATE
         nonlocal FORCE_UPDATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
         temperature = {'curTemp': "{}".format(str(int(curTemp, 16))), 'setTemp': "{}".format(str(int(setTemp, 16)))}
         for state in temperature:
             key = deviceID + state
             val = temperature[state]
-            if val != HOMESTATE.get(key) or FORCE_UPDATE:
-                HOMESTATE[key] = val
+            if val != DEVICE_STATE.get(key) or FORCE_UPDATE:
+                DEVICE_STATE[key] = val
                 topic = STATE_TOPIC.format(deviceID, state)
                 mqtt_client.publish(topic, val.encode())
                 
@@ -602,7 +604,7 @@ def ezville_loop(config):
             key = topics[1] + topics[2]
             idx = int(device_info[1])
             sid = int(device_info[2])
-            cur_state = HOMESTATE.get(key)
+            cur_state = DEVICE_STATE.get(key)
                         
             if cur_state == None:
                 if device == 'batch':
@@ -765,9 +767,9 @@ def ezville_loop(config):
                     await asyncio.sleep(CMD_INTERVAL)
                     
             if debug:
-                log('[DEBUG] Iter. No.: ' + str(i + 1) + ', Target: ' + send_data['statcmd'][1] + ', Current: ' + HOMESTATE.get(send_data['statcmd'][0]))
+                log('[DEBUG] Iter. No.: ' + str(i + 1) + ', Target: ' + send_data['statcmd'][1] + ', Current: ' + DEVICE_STATE.get(send_data['statcmd'][0]))
                   
-            if send_data['statcmd'][1] == HOMESTATE.get(send_data['statcmd'][0]):
+            if send_data['statcmd'][1] == DEVICE_STATE.get(send_data['statcmd'][0]):
                 COMMAND_LOOP_DELAY = config['command_loop_delay']
                 return
 
@@ -791,7 +793,6 @@ def ezville_loop(config):
             if timestamp - last_received_time > EW11_TIMEOUT:
                 log('[WARNING] {}초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.'.format(EW11_TIMEOUT))
                 try:
-                    
                     await reset_EW11()
                     
                     restart_flag = True
@@ -942,8 +943,8 @@ def ezville_loop(config):
                 log('[WARNING] asyncio loop 종료')
                 loop.stop()
             
-            # 1초 마다 실행
-            await asyncio.sleep(1)
+            # RESTART_CHECK_DELAY초 마다 실행
+            await asyncio.sleep(RESTART_CHECK_DELAY)
 
             
     # asyncio loop 획득 및 EW11 오류시 재시작 task 등록
