@@ -984,6 +984,7 @@ def ezville_loop(config):
         loop.run_forever()
         
         # 이전 task는 취소
+        log("[INFO] 이전 실행 Task 종료")
         for task in tasklist:
             task.cancel()
 
