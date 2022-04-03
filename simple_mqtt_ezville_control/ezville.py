@@ -747,7 +747,8 @@ def ezville_loop(config):
                 try:
                     soc.sendall(bytes.fromhex(send_data['sendcmd']))
                 except OSError:
-                    soc = reconnect_socket(soc)
+                    soc.close()
+                    soc = initiate_socket(soc)
                     soc.sendall(bytes.fromhex(send_data['sendcmd']))
             if debug:                     
                 log('DEBUG: ' + send_data['sendcmd'] + ' ' + str(time.time()))
@@ -789,29 +790,35 @@ def ezville_loop(config):
             if timestamp - last_received_time > EW11_TIMEOUT: 
                 log('[WARNING] {}초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.'.format(EW11_TIMEOUT))
                 try:
-
-                    ew11_id = config['ew11_id']
-                    ew11_password = config['ew11_password']
-                    ew11_server = config['ew11_server']
-
-                    ew11 = telnetlib.Telnet(ew11_server)
-
-                    ew11.read_until(b"login:")
-                    ew11.write(ew11_id.encode('utf-8') + b'\n')
-                    ew11.read_until(b"password:")
-                    ew11.write(ew11_password.encode('utf-8') + b'\n')
-                    ew11.write('Restart'.encode('utf-8') + b'\n')
-                    ew11.read_until(b"Restart..")
-
+                
+                    #await reset_EW11()
+                    
                     restart_flag = True
-                    await asyncio.sleep(10)
 
                 except:
                     log('[ERROR] 기기 재시작 오류! 기기 상태를 확인하세요.')
             else:
                 log('[INFO] EW11 연결 상태 문제 없음')
             await asyncio.sleep(EW11_TIMEOUT)        
-          
+
+    async def reset_EW11(): 
+        ew11_id = config['ew11_id']
+        ew11_password = config['ew11_password']
+        ew11_server = config['ew11_server']
+
+        ew11 = telnetlib.Telnet(ew11_server)
+
+        ew11.read_until(b"login:")
+        ew11.write(ew11_id.encode('utf-8') + b'\n')
+        ew11.read_until(b"password:")
+        ew11.write(ew11_password.encode('utf-8') + b'\n')
+        ew11.write('Restart'.encode('utf-8') + b'\n')
+        ew11.read_until(b"Restart..")
+        
+        log("[INFO] EW11 리셋 완료")
+        # 리셋 후 10초간 Delay
+        await asyncio.sleep(10)
+        
     
     def initiate_socket():
         # SOCKET 통신 시작
@@ -830,27 +837,11 @@ def ezville_loop(config):
                 retry_count += 1
                 continue
              
+            
     def connect_socket(socket):
         nonlocal SOC_ADDRESS
         nonlocal SOC_PORT
         socket.connect((SOC_ADDRESS, SOC_PORT))
-        
-        
-    def reconnect_socket(soc):
-        soc.close()
-        
-        retry_count = 0
-        while True:
-            try:
-                soc = socket.socket()
-                soc.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-                connect_socket(soc)
-                return soc
-            except ConnectionRefusedError as e:
-                log('[ERROR] Server에서 연결을 거부합니다. 재시도 예정 (' + str(retry_count) + '회 재시도)')
-                time.sleep(1)
-                retry_count += 1
-                continue
     
 
     async def serial_recv_loop():
@@ -875,7 +866,8 @@ def ezville_loop(config):
                 MSG_QUEUE.put(msg)
                 
             except OSError:
-                soc = reconnect_socket(soc)
+                soc.close()
+                soc = initiate_socket(soc)
          
             await asyncio.sleep(SERIAL_RECV_DELAY) 
         
