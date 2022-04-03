@@ -919,26 +919,31 @@ def ezville_loop(config):
         nonlocal mqtt_client
         nonlocal restart_flag
         nonlocal soc
-
-        if restart_flag:
-            loop = asyncio.get_event_loop()
-
-            # MTTQ 및 socket 연결 종료
-            mttq_client.loop_stop()
-            if comm_mode == 'mixed' or comm_mode == 'socket':
-                nonlocal soc
-                soc.close()
+        
+        while True:
+            if restart_flag:
+                log("[WARNING] 재시작 확인")
+                
+                loop = asyncio.get_event_loop()
+                
+                # MTTQ 및 socket 연결 종료
+                log("[WARNING] 모든 통신 종료")
+                mttq_client.loop_stop()
+                if comm_mode == 'mixed' or comm_mode == 'socket':
+                    nonlocal soc
+                    soc.close()
                        
-            # flag 원복
-            restart_flag = False
+                # flag 원복
+                restart_flag = False
 
-            # asyncio loop 종료
-            log('[WARNING] asyncio loop 종료')
-            loop.stop()
+                # asyncio loop 종료
+                log('[WARNING] asyncio loop 종료')
+                loop.stop()
             
-        # 1초 마다 실행
-        await asyncio.sleep(1)
+            # 1초 마다 실행
+            await asyncio.sleep(1)
 
+            
     # asyncio loop 획득 및 EW11 오류시 재시작 task 등록
     loop = asyncio.get_event_loop()
     loop.create_task(restart_control())
