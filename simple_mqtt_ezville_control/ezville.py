@@ -140,6 +140,7 @@ STATE_HEADER = {
     if 'state' in prop
 }
 
+# ACK 확인용 Dictionary
 ACK_HEADER = {
     prop[cmd]['id']: (device, prop[cmd]['ack'])
     for device, prop in RS485_DEVICE.items()
@@ -801,6 +802,7 @@ def ezville_loop(config):
                 log('[INFO] EW11 연결 상태 문제 없음')
             await asyncio.sleep(EW11_TIMEOUT)        
 
+            
     async def reset_EW11(): 
         ew11_id = config['ew11_id']
         ew11_password = config['ew11_password']
