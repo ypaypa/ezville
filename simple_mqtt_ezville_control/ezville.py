@@ -981,7 +981,7 @@ def ezville_loop(config):
         # MQTT 통신 시작
         mqtt_client.loop_start()
         while not flag_connected:
-            sleep(1)
+            time.sleep(1)
         
         # socket 통신 시작       
         if comm_mode == 'mixed' or comm_mode == 'socket':
