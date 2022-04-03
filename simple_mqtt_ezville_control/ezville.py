@@ -69,7 +69,8 @@ DISCOVERY_PAYLOAD = {
         "temp_stat_t": "~/setTemp/state",
         "temp_cmd_t": "~/setTemp/command",
         "curr_temp_t": "~/curTemp/state",
-        "modes": [ "off", "heat", "fan_only" ],     # 외출 모드는 fan_only로 매핑
+#        "modes": [ "off", "heat", "fan_only" ],     # 외출 모드는 fan_only로 매핑
+        "modes": [ "heat", "fan_only" ],     # 외출 모드는 fan_only로 매핑
         "min_temp": "5",
         "max_temp": 40
     } ],
@@ -411,10 +412,10 @@ def ezville_loop(config):
                                         onoff = 'heat'
                                     elif onoff_state[8 - rid] == '0' and away_state[8 - rid] == '1':
                                         onoff = 'fan_only'
-                                    elif onoff_state[8 - rid] == '0' and away_state[8 - rid] == '0':
-                                        onoff = 'off'
-                                    else:
-                                        onoff = 'off'
+#                                    elif onoff_state[8 - rid] == '0' and away_state[8 - rid] == '0':
+#                                        onoff = 'off'
+#                                    else:
+#                                        onoff = 'off'
 
                                     await update_state(name, 'power', rid, src, onoff)
                                     await update_temperature(name, rid, src, curT, setT)
@@ -654,13 +655,13 @@ def ezville_loop(config):
                            
                             CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                         
-                        elif value == 'off':
-                        
-                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '01000000')
-                            recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
-                            statcmd = [key, value]
-                           
-                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})                    
+#                        elif value == 'off':
+#                        
+#                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '01000000')
+#                            recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
+#                            statcmd = [key, value]
+#                           
+#                            CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})                    
                                                
                         if debug:
                             log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
