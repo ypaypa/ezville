@@ -787,7 +787,8 @@ def ezville_loop(config):
             timestamp = time.time()
         
             # TIMEOUT 시간 동안 새로 받은 EW11 패킷이 없으면 재시작
-            if timestamp - last_received_time > EW11_TIMEOUT: 
+            #if timestamp - last_received_time > EW11_TIMEOUT:
+            if timestamp - force_target_time > EW11_TIMEOUT:
                 log('[WARNING] {}초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.'.format(EW11_TIMEOUT))
                 try:
                 
