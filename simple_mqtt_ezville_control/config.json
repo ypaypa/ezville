@@ -26,9 +26,10 @@
     "command_retry_count": 30,
     "random_backoff": true,
     "discovery_delay": 0.2,
-    "state_loop_delay": 0.02,
-    "command_loop_delay": 0.02,
-    "serial_recv_delay": 0.02,
+    "state_loop_delay": 0.1,
+    "command_loop_delay": 0.1,
+    "serial_recv_delay": 0.03,
+    "restart_check_delay": 2.0,
     "force_update_mode": true,
     "force_update_period": 600,
     "force_update_duration": 2,
@@ -54,10 +55,11 @@
     "state_loop_delay": "float",
     "command_loop_delay": "float",
     "serial_recv_delay": "float",
+    "restart_check_delay": "float",
     "force_update_mode": "bool",
-    "force_update_period": "int",
-    "force_update_duration": "int",
+    "force_update_period": "float",
+    "force_update_duration": "float",
     "ew11_buffer_size": "int",
-    "ew11_timeout": "int"
+    "ew11_timeout": "float"
   }
 }
