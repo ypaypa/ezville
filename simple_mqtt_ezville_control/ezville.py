@@ -279,6 +279,7 @@ def ezville_loop(config):
 
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
+        nonlocal MQTT_ONLINE
         
         MSG_QUEUE.put(msg)
         
@@ -288,7 +289,7 @@ def ezville_loop(config):
             if status == 'online':
                 log('[INFO] MQTT Integration Online')
                 MQTT_ONLINE = True
-             elif status == 'offline':
+            elif status == 'offline':
                 log('[INFO] MQTT Integration Offline')
                 MQTT_ONLINE = False
  
@@ -303,7 +304,6 @@ def ezville_loop(config):
         # MSG_QUEUE의 message를 하나씩 pop
         nonlocal MSG_QUEUE
         nonlocal last_received_time
-        nonlocal MQTT_ONLINE
         
         stop = False
         while not stop:
