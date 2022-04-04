@@ -289,7 +289,7 @@ def ezville_loop(config):
         nonlocal MQTT_ONLINE
         nonlocal REBOOT_CONTROL
         nonlocal REBOOT_DELAY
-        nonlocal start_delay
+        nonlocal startup_delay
         
         MSG_QUEUE.put(msg)
  
