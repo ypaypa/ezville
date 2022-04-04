@@ -633,7 +633,7 @@ def ezville_loop(config):
     # HA에서 전달된 메시지 처리        
     async def HA_process(topics, value):
         nonlocal CMD_QUEUE
-        nonlocal ELEVUP, ELEVDOWN, GROUPON, OUTING
+#        nonlocal ELEVUP, ELEVDOWN, GROUPON, OUTING
         device_info = topics[1].split('_')
         device = device_info[0]
         
@@ -650,13 +650,25 @@ def ezville_loop(config):
                 if device == 'batch':
                     # 일괄 차단기는 4가지 모드로 조절               
                     if topics[2] == 'elevator-up':
-                        ELEVUP = '1'    
+                        ELEVUP = '1' 
+                        ELEVDOWN = '0'
+                        OUTING = '0'
+                        GROUPON = '1'
                     elif topics[2] == 'elevator-down':
+                        ELEVUP = '0' 
                         ELEVDOWN = '1'
+                        OUTING = '0'
+                        GROUPON = '1'
                     elif topics[2] == 'group':
+                        ELEVUP = '0' 
+                        ELEVDOWN = '0'
+                        OUTING = '0'
                         GROUPON = '0'
                     elif topics[2] == 'outing':
+                        ELEVUP = '0' 
+                        ELEVDOWN = '0'
                         OUTING = '1'
+                        GROUPON = '1'
                             
                     CMD = "{:0>2X}".format(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
                     
@@ -664,7 +676,7 @@ def ezville_loop(config):
                     # 월패드의 ACK는 무시
                     sendcmd = checksum('F7' + RS485_DEVICE[device]['state']['id'] + '0' + str(idx) + RS485_DEVICE[device]['state']['cmd'] + '0300' + CMD + '000000')
                     recvcmd = 'NULL'
-                    statcmd = [key, value]
+                    statcmd = [key, 'NULL']
                     
                     CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                     
@@ -795,7 +807,10 @@ def ezville_loop(config):
                     soc.sendall(bytes.fromhex(send_data['sendcmd']))
             if debug:                     
                 log('DEBUG: ' + send_data['sendcmd'] + ' ' + str(time.time()))
-                    
+             
+            if send_data['statcmd'][1] == 'NULL':
+                return
+      
             # 최소 0.2초는 ACK 처리를 기다림 (초당 30번 데이터가 들어오므로 ACK 못 받으면 시작)
             if i == 0:
                 await asyncio.sleep(0.2)
@@ -808,7 +823,7 @@ def ezville_loop(config):
                     
             if debug:
                 log('[DEBUG] Iter. No.: ' + str(i + 1) + ', Target: ' + send_data['statcmd'][1] + ', Current: ' + DEVICE_STATE.get(send_data['statcmd'][0]))
-                  
+              
             if send_data['statcmd'][1] == DEVICE_STATE.get(send_data['statcmd'][0]):
                 COMMAND_LOOP_DELAY = config['command_loop_delay']
                 return
