@@ -253,7 +253,14 @@ def ezville_loop(config):
     
     # Addon 정상 시작 Flag
     ADDON_STARTED = False
-    
+ 
+    # Reboot 연관 제어 Flag
+    REBOOT_CONTROL = config['reboot_control']
+    REBOOT_DELAY = config['reboot_delay']
+
+    # 시작 시 인위적인 Delay 필요시 사용
+    startup _delay = 0
+   
     
     def on_connect(client, userdata, flags, rc):
         nonlocal comm_mode
@@ -280,19 +287,24 @@ def ezville_loop(config):
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
         nonlocal MQTT_ONLINE
+        nonlocal REBOOT_CONTROL
+        nonlocal REBOOT_DELAY
+        nonlocal start_delay
         
         MSG_QUEUE.put(msg)
-        log(msg.topic)
-        
+ 
         # MQTT Integration의 Birth/Last Will Testament Topic은 바로 처리
-        if msg.topic == 'homeassistant/status':
-            status = msg.payload.decode('utf-8')
-            if status == 'online':
-                log('[INFO] MQTT Integration Online')
-                MQTT_ONLINE = True
-            elif status == 'offline':
-                log('[INFO] MQTT Integration Offline')
-                MQTT_ONLINE = False
+        if REBOOT_CONTROL:
+            if msg.topic == 'homeassistant/status':
+                status = msg.payload.decode('utf-8')
+                if status == 'online':
+                    log('[INFO] MQTT Integration Online')
+                    MQTT_ONLINE = True
+                    if not msg.retain:
+                        startup_delay = REBOOT_DELAY
+                elif status == 'offline':
+                    log('[INFO] MQTT Integration Offline')
+                    MQTT_ONLINE = False
  
 
     def on_disconnect(client, userdata, rc):
@@ -1018,6 +1030,10 @@ def ezville_loop(config):
         log('[INFO] 장치 등록 및 상태 업데이트를 시작합니다')
 
         tasklist = []
+ 
+        # 필요시 Discovery 등의 지연을 위해 Delay 부여 
+        time.sleep(startup_delay)      
+  
         # socket 데이터 수신 loop 실행
         if comm_mode == 'socket':
             tasklist.append(loop.create_task(serial_recv_loop()))
