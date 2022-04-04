@@ -315,10 +315,10 @@ def ezville_loop(config):
                     status = msg.payload.decode('utf-8')
                     if status == 'online':
                         log('[INFO] MQTT Integration Online')
-                        MQTT_ONLINE = True:
+                        MQTT_ONLINE = True
                     elif status == 'offline':
                         log('[INFO] MQTT Integration Offline')
-                        MQTT_ONLINE = False:
+                        MQTT_ONLINE = False
                    
     
     # EW11 전달된 메시지 처리
