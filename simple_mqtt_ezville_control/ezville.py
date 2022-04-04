@@ -248,8 +248,11 @@ def ezville_loop(config):
     # EW11 재시작 확인용 Flag
     restart_flag = False
   
-    # MQTT 연결 확인 Flag
-    flag_connected = False
+    # MQTT Integration 활성화 확인 Flag
+    MQTT_ONLINE = False
+    
+    # Addon 정상 시작 Flag
+    ADDON_STARTED = False
     
     
     def on_connect(client, userdata, flags, rc):
@@ -257,11 +260,11 @@ def ezville_loop(config):
         if rc == 0:
             log("[INFO] MQTT Broker 연결 성공")
             if comm_mode == 'socket':
-                client.subscribe(HA_TOPIC + '/#', 0)
+                client.subscribe([(HA_TOPIC + '/#', 0), ('homeassitant/status', 0)])
             elif comm_mode == 'mixed':
-                client.subscribe([(HA_TOPIC + '/#', 0), (EW11_TOPIC + '/recv', 0)])
+                client.subscribe([(HA_TOPIC + '/#', 0), (EW11_TOPIC + '/recv', 0), ('homeassitant/status', 0)])
             else:
-                client.subscribe([(HA_TOPIC + '/#', 0), (EW11_TOPIC + '/recv', 0), (EW11_TOPIC + '/send', 1)])
+                client.subscribe([(HA_TOPIC + '/#', 0), (EW11_TOPIC + '/recv', 0), (EW11_TOPIC + '/send', 1), ('homeassitant/status', 0)])
         else:
             errcode = {1: 'Connection refused - incorrect protocol version',
                        2: 'Connection refused - invalid client identifier',
@@ -273,15 +276,13 @@ def ezville_loop(config):
 
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
-        nonlocal flag_connected
 
-        flag_connected = True
         MSG_QUEUE.put(msg)
  
 
     def on_disconnect(client, userdata, rc):
-        nonlocal flag_connected 
-        flag_connected = False
+        log('INFO: MQTT 연결 해제')
+        pass
 
 
     # MQTT message를 분류하여 처리
@@ -289,6 +290,7 @@ def ezville_loop(config):
         # MSG_QUEUE의 message를 하나씩 pop
         nonlocal MSG_QUEUE
         nonlocal last_received_time
+        nonlocal MQTT_ONLINE
         
         stop = False
         while not stop:
@@ -305,6 +307,14 @@ def ezville_loop(config):
                     last_received_time = time.time()
 
                     await EW11_process(msg.payload.hex().upper())
+                elif topics[0] == 'homeassistant' and topic[1] = 'status':
+                    status = msg.payload.decode('utf-8')
+                    if status == 'online':
+                        log('[INFO] MQTT Integration Online')
+                        MQTT_ONLINE = True:
+                    elif status == 'offline':
+                        log('[INFO] MQTT Integration Offline')
+                        MQTT_ONLINE = False:
                    
     
     # EW11 전달된 메시지 처리
@@ -934,10 +944,16 @@ def ezville_loop(config):
         nonlocal mqtt_client
         nonlocal restart_flag
         nonlocal soc
+        nonlocal DISCOVERY_LIST
+        nonlocal MQTT_ONLINE
+        nonlocal ADDON_STARTED
         
         while True:
-            if restart_flag:
-                log("[WARNING] 재시작 확인")
+            if restart_flag or (not MQTT_ONLINE and ADDON_STARTED):
+                if restart_flag:
+                    log("[WARNING] EW11 재시작 확인")
+                elif not MQTT_ONLINE and ADDON_STARTED:
+                    log("[WARNING] 동작 중 MQTT Integration Offline 변경")
                 
                 loop = asyncio.get_event_loop()
                 
@@ -950,6 +966,9 @@ def ezville_loop(config):
                        
                 # flag 원복
                 restart_flag = False
+                
+                # DISCOVERY_LIST 삭제 (다시 DISCOVERY 시작하게 함)
+                DISCOVERY_LIST = []
 
                 # asyncio loop 종료
                 log('[WARNING] asyncio loop 종료')
@@ -980,7 +999,8 @@ def ezville_loop(config):
     while True:
         # MQTT 통신 시작
         mqtt_client.loop_start()
-        while not flag_connected:
+        # MQTT Integration의 Birth/Last Will Testament를 기다림 (1초 단위)
+        while not MQTT_ONLINE:
             time.sleep(1)
         
         # socket 통신 시작       
@@ -999,7 +1019,9 @@ def ezville_loop(config):
         tasklist.append(loop.create_task(command_loop()))
         # EW11 상태 체크 loop 실행
         tasklist.append(loop.create_task(ew11_health_loop()))
-    
+        
+        # ADDON 정상 시작 Flag 설정
+        ADDON_STARTED = True
         loop.run_forever()
         
         # 이전 task는 취소
