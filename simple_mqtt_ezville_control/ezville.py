@@ -282,6 +282,7 @@ def ezville_loop(config):
         nonlocal MQTT_ONLINE
         
         MSG_QUEUE.put(msg)
+        log(msg.payload.decode('utf-8'))
         
         # MQTT Integration의 Birth/Last Will Testament Topic은 바로 처리
         if msg.topic == 'homeassistant/status':
