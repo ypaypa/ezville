@@ -261,13 +261,13 @@ def ezville_loop(config):
             log("[INFO] MQTT Broker 연결 성공")
             # Socket인 경우 MQTT 장치의 명령 관련과 MQTT Status (Birth/Last Will Testament) Topic만 구독
             if comm_mode == 'socket':
-                client.subscribe([(HA_TOPIC + '/#', 0), ('homeassitant/status', 0)])
+                client.subscribe([(HA_TOPIC + '/#', 0), ('homeassistant/status', 0)])
             # Mixed인 경우 MQTT 장치 및 EW11의 명령/수신 관련 Topic 과 MQTT Status (Birth/Last Will Testament) Topic 만 구독
             elif comm_mode == 'mixed':
-                client.subscribe([(HA_TOPIC + '/#', 0), (EW11_TOPIC + '/recv', 0), ('homeassitant/status', 0)])
+                client.subscribe([(HA_TOPIC + '/#', 0), (EW11_TOPIC + '/recv', 0), ('homeassistant/status', 0)])
             # MQTT 인 경우 모든 Topic 구독
             else:
-                client.subscribe([(HA_TOPIC + '/#', 0), (EW11_TOPIC + '/recv', 0), (EW11_TOPIC + '/send', 1), ('homeassitant/status', 0)])
+                client.subscribe([(HA_TOPIC + '/#', 0), (EW11_TOPIC + '/recv', 0), (EW11_TOPIC + '/send', 1), ('homeassistant/status', 0)])
         else:
             errcode = {1: 'Connection refused - incorrect protocol version',
                        2: 'Connection refused - invalid client identifier',
