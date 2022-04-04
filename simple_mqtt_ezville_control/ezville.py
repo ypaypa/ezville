@@ -965,6 +965,7 @@ def ezville_loop(config):
         nonlocal DISCOVERY_LIST
         nonlocal MQTT_ONLINE
         nonlocal ADDON_STARTED
+        nonlocal RESTART_CHECK_DELAY
         
         while True:
             if restart_flag or (not MQTT_ONLINE and ADDON_STARTED):
