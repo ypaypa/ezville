@@ -259,7 +259,7 @@ def ezville_loop(config):
     REBOOT_DELAY = config['reboot_delay']
 
     # 시작 시 인위적인 Delay 필요시 사용
-    startup _delay = 0
+    startup_delay = 0
    
     
     def on_connect(client, userdata, flags, rc):
