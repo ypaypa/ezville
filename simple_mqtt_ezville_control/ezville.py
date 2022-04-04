@@ -984,7 +984,7 @@ def ezville_loop(config):
                        
                 # flag 원복
                 restart_flag = False
-                MQTT_ONLIE = False
+                MQTT_ONLINE = False
                 ADDON_STARTED = False
                 
                 # DISCOVERY_LIST 삭제 (다시 DISCOVERY 시작하게 함)
@@ -1020,7 +1020,7 @@ def ezville_loop(config):
         # MQTT 통신 시작
         mqtt_client.loop_start()
         # MQTT Integration의 Birth/Last Will Testament를 기다림 (1초 단위)
-        while not MQTT_ONLINE:
+        while not MQTT_ONLINE and REBOOT_CONTROL:
             time.sleep(1)
         
         # socket 통신 시작       
