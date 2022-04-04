@@ -966,6 +966,8 @@ def ezville_loop(config):
                        
                 # flag 원복
                 restart_flag = False
+                MQTT_ONLIE = False
+                ADDON_STARTED = False
                 
                 # DISCOVERY_LIST 삭제 (다시 DISCOVERY 시작하게 함)
                 DISCOVERY_LIST = []
