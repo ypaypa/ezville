@@ -34,7 +34,7 @@
     "force_update_period": 600,
     "force_update_duration": 2,
     "reboot_control": false,
-    "reboot_delay": 60,
+    "reboot_delay": 300,
     "ew11_buffer_size": 128,
     "ew11_timeout": 3600
   },
