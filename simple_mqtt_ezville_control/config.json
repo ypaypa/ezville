@@ -33,6 +33,8 @@
     "force_update_mode": true,
     "force_update_period": 600,
     "force_update_duration": 2,
+    "reboot_control": false,
+    "reboot_delay": 60,
     "ew11_buffer_size": 128,
     "ew11_timeout": 3600
   },
@@ -59,6 +61,8 @@
     "force_update_mode": "bool",
     "force_update_period": "float",
     "force_update_duration": "float",
+    "reboot_control": "bool",
+    "reboot_delay": "float",
     "ew11_buffer_size": "int",
     "ew11_timeout": "float"
   }
