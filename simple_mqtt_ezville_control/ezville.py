@@ -279,8 +279,18 @@ def ezville_loop(config):
 
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
-
+        
         MSG_QUEUE.put(msg)
+        
+        # MQTT Integration의 Birth/Last Will Testament Topic은 바로 처리
+        if msg.topic == 'homeassistant/status':
+            status = msg.payload.decode('utf-8')
+            if status == 'online':
+                log('[INFO] MQTT Integration Online')
+                MQTT_ONLINE = True
+             elif status == 'offline':
+                log('[INFO] MQTT Integration Offline')
+                MQTT_ONLINE = False
  
 
     def on_disconnect(client, userdata, rc):
@@ -310,16 +320,6 @@ def ezville_loop(config):
                     last_received_time = time.time()
 
                     await EW11_process(msg.payload.hex().upper())
-                # MQTT Integration의 Birth/Last Will Testament Topic은 바로 처리
-                elif topics[0] == 'homeassistant' and topics[1] == 'status':
-                    status = msg.payload.decode('utf-8')
-                    log(status)
-                    if status == 'online':
-                        log('[INFO] MQTT Integration Online')
-                        MQTT_ONLINE = True
-                    elif status == 'offline':
-                        log('[INFO] MQTT Integration Offline')
-                        MQTT_ONLINE = False
                    
     
     # EW11 전달된 메시지 처리
