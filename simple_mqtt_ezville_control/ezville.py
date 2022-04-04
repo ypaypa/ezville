@@ -311,7 +311,7 @@ def ezville_loop(config):
 
                     await EW11_process(msg.payload.hex().upper())
                 # MQTT Integration의 Birth/Last Will Testament Topic은 바로 처리
-                elif topics[0] == 'homeassistant' and topic[1] == 'status':
+                elif topics[0] == 'homeassistant' and topics[1] == 'status':
                     status = msg.payload.decode('utf-8')
                     log(status)
                     if status == 'online':
