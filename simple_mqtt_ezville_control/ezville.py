@@ -966,12 +966,13 @@ def ezville_loop(config):
         nonlocal MQTT_ONLINE
         nonlocal ADDON_STARTED
         nonlocal RESTART_CHECK_DELAY
+        nonlocal REBOOT_CONTROL
         
         while True:
-            if restart_flag or (not MQTT_ONLINE and ADDON_STARTED):
+            if restart_flag or (not MQTT_ONLINE and ADDON_STARTED and REBOOT_CONTROL):
                 if restart_flag:
                     log("[WARNING] EW11 재시작 확인")
-                elif not MQTT_ONLINE and ADDON_STARTED:
+                elif not MQTT_ONLINE and ADDON_STARTED and REBOOT_CONTROL:
                     log("[WARNING] 동작 중 MQTT Integration Offline 변경")
                 
                 loop = asyncio.get_event_loop()
