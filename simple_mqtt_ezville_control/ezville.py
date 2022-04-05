@@ -71,8 +71,8 @@ DISCOVERY_PAYLOAD = {
         'curr_temp_t': '~/curTemp/state',
 #        "modes": [ "off", "heat", "fan_only" ],     # 외출 모드는 fan_only로 매핑
         'modes': [ 'heat', 'off' ],     # 외출 모드는 off로 매핑
-        min_temp: '5',
-        max_temp: '40'
+        'min_temp': '5',
+        'max_temp': '40'
     } ],
     'plug': [ {
         '_intg': 'switch',
