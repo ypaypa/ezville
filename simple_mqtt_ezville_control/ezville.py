@@ -1054,6 +1054,7 @@ def ezville_loop(config):
         mqtt_client.loop_start()
         # MQTT Integration의 Birth/Last Will Testament를 기다림 (1초 단위)
         while not MQTT_ONLINE and REBOOT_CONTROL:
+            log('[INFO] Waiting for MQTT connection')
             time.sleep(1)
         
         # socket 통신 시작       
@@ -1085,6 +1086,7 @@ def ezville_loop(config):
         log('[INFO] 이전 실행 Task 종료')
         for task in tasklist:
             task.cancel()
+
         ADDON_STARTED = False
         
         # 주요 변수     
