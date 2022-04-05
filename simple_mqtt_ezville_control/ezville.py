@@ -12,125 +12,125 @@ from queue import Queue
 
 # DEVICE 별 패킷 정보
 RS485_DEVICE = {
-    "light": {
-        "state":    { "id": "0E", "cmd": "81" },
+    'light': {
+        'state':    { 'id': '0E', 'cmd': '81' },
 
-        "power":    { "id": "0E", "cmd": "41", "ack": "C1" }
+        'power':    { 'id': '0E', 'cmd': '41', 'ack': 'C1' }
     },
-    "thermostat": {
-        "state":    { "id": "36", "cmd": "81" },
+    'thermostat': {
+        'state':    { 'id': '36', 'cmd': '81' },
         
-        "power":    { "id": "36", "cmd": "43", "ack": "C3" },
-        "away":    { "id": "36", "cmd": "45", "ack": "C5" },
-        "target":   { "id": "36", "cmd": "44", "ack": "C4" }
+        'power':    { 'id': '36', 'cmd': '43', 'ack': 'C3' },
+        'away':    { 'id': '36', 'cmd': '45', 'ack': 'C5' },
+        'target':   { 'id': '36', 'cmd': '44', 'ack': 'C4' }
     },
-    "plug": {
-        "state":    { "id": "50", "cmd": "81" },
+    'plug': {
+        'state':    { 'id': '50', 'cmd': '81' },
 
-        "power":    { "id": "50", "cmd": "43", "ack": "C3" }
+        'power':    { 'id': '50', 'cmd': '43', 'ack': 'C3' }
     },
-    "gasvalve": {
-        "state":    { "id": "12", "cmd": "81" },
+    'gasvalve': {
+        'state':    { 'id': '12', 'cmd': '81' },
 
-        "power":    { "id": "12", "cmd": "41", "ack": "C1" } # 잠그기만 가능
+        'power':    { 'id': '12', 'cmd': '41', 'ack': 'C1' } # 잠그기만 가능
     },
-    "batch": {
-        "state":    { "id": "33", "cmd": "81" },
+    'batch': {
+        'state':    { 'id': '33', 'cmd': '81' },
 
-        "press":    { "id": "33", "cmd": "41", "ack": "C1" }
+        'press':    { 'id': '33', 'cmd': '41', 'ack': 'C1' }
     }
 }
 
 # MQTT Discovery를 위한 Preset 정보
 DISCOVERY_DEVICE = {
-    "ids": ["ezville_wallpad",],
-    "name": "ezville_wallpad",
-    "mf": "EzVille",
-    "mdl": "EzVille Wallpad",
-    "sw": "ktdo79/addons/ezville_wallpad",
+    'ids': ['ezville_wallpad',],
+    'name': 'ezville_wallpad',
+    'mf': 'EzVille',
+    'mdl': 'EzVille Wallpad',
+    'sw': 'ktdo79/addons/ezville_wallpad',
 }
 
 # MQTT Discovery를 위한 Payload 정보
 DISCOVERY_PAYLOAD = {
-    "light": [ {
-        "_intg": "light",
-        "~": "ezville/light_{:0>2d}_{:0>2d}",
-        "name": "ezville_light_{:0>2d}_{:0>2d}",
-        "opt": True,
-        "stat_t": "~/power/state",
-        "cmd_t": "~/power/command"
+    'light': [ {
+        '_intg': 'light',
+        '~': 'ezville/light_{:0>2d}_{:0>2d}',
+        'name': 'ezville_light_{:0>2d}_{:0>2d}',
+        'opt': True,
+        'stat_t': '~/power/state',
+        'cmd_t': '~/power/command'
     } ],
-    "thermostat": [ {
-        "_intg": "climate",
-        "~": "ezville/thermostat_{:0>2d}_{:0>2d}",
-        "name": "ezville_thermostat_{:0>2d}_{:0>2d}",
-        "mode_cmd_t": "~/power/command",
-        "mode_stat_t": "~/power/state",
-        "temp_stat_t": "~/setTemp/state",
-        "temp_cmd_t": "~/setTemp/command",
-        "curr_temp_t": "~/curTemp/state",
+    'thermostat': [ {
+        '_intg': 'climate',
+        '~': 'ezville/thermostat_{:0>2d}_{:0>2d}',
+        'name': 'ezville_thermostat_{:0>2d}_{:0>2d}',
+        'mode_cmd_t': '~/power/command',
+        'mode_stat_t': '~/power/state',
+        'temp_stat_t': '~/setTemp/state',
+        'temp_cmd_t': '~/setTemp/command',
+        'curr_temp_t': '~/curTemp/state',
 #        "modes": [ "off", "heat", "fan_only" ],     # 외출 모드는 fan_only로 매핑
-        "modes": [ "heat", "off" ],     # 외출 모드는 off로 매핑
-        "min_temp": "5",
-        "max_temp": 40
+        'modes': [ 'heat', 'off' ],     # 외출 모드는 off로 매핑
+        min_temp: '5',
+        max_temp: '40'
     } ],
-    "plug": [ {
-        "_intg": "switch",
-        "~": "ezville/plug_{:0>2d}_{:0>2d}",
-        "name": "ezville_plug_{:0>2d}_{:0>2d}",
-        "stat_t": "~/power/state",
-        "cmd_t": "~/power/command",
-        "icon": "mdi:leaf"
+    'plug': [ {
+        '_intg': 'switch',
+        '~': 'ezville/plug_{:0>2d}_{:0>2d}',
+        'name': 'ezville_plug_{:0>2d}_{:0>2d}',
+        'stat_t': '~/power/state',
+        'cmd_t': '~/power/command',
+        'icon': 'mdi:leaf'
     },
     {
-        "_intg": "binary_sensor",
-        "~": "ezville/plug_{:0>2d}_{:0>2d}",
-        "name": "ezville_plug-automode_{:0>2d}_{:0>2d}",
-        "stat_t": "~/auto/state",
-        "icon": "mdi:leaf"
+        '_intg': 'binary_sensor',
+        '~': 'ezville/plug_{:0>2d}_{:0>2d}',
+        'name': 'ezville_plug-automode_{:0>2d}_{:0>2d}',
+        'stat_t': '~/auto/state',
+        'icon': 'mdi:leaf'
     },
     {
-        "_intg": "sensor",
-        "~": "ezville/plug_{:0>2d}_{:0>2d}",
-        "name": "ezville_plug_{:0>2d}_{:0>2d}_powermeter",
-        "stat_t": "~/current/state",
-        "unit_of_meas": "W"
+        '_intg': 'sensor',
+        '~': 'ezville/plug_{:0>2d}_{:0>2d}',
+        'name': 'ezville_plug_{:0>2d}_{:0>2d}_powermeter',
+        'stat_t': '~/current/state',
+        'unit_of_meas': 'W'
     } ],
-    "gasvalve": [ {
-        "_intg": "switch",
-        "~": "ezville/gasvalve_{:0>2d}_{:0>2d}",
-        "name": "ezville_gasvalve_{:0>2d}_{:0>2d}",
-        "stat_t": "~/power/state",
-        "cmd_t": "~/power/command",
-        "icon": "mdi:valve"
+    'gasvalve': [ {
+        '_intg': 'switch',
+        '~': 'ezville/gasvalve_{:0>2d}_{:0>2d}',
+        'name': 'ezville_gasvalve_{:0>2d}_{:0>2d}',
+        'stat_t': '~/power/state',
+        'cmd_t': '~/power/command',
+        'icon': 'mdi:valve'
     } ],
-    "batch": [ {
-        "_intg": "button",
-        "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch-elevator-up_{:0>2d}_{:0>2d}",
-        "cmd_t": "~/elevator-up/command",
-        "icon": "mdi:elevator-up"
+    'batch': [ {
+        '_intg': 'button',
+        '~': 'ezville/batch_{:0>2d}_{:0>2d}',
+        'name': 'ezville_batch-elevator-up_{:0>2d}_{:0>2d}',
+        'cmd_t': '~/elevator-up/command',
+        'icon': 'mdi:elevator-up'
     },
     {
-        "_intg": "button",
-        "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch-elevator-down_{:0>2d}_{:0>2d}",
-        "cmd_t": "~/elevator-down/command",
-        "icon": "mdi:elevator-down"
+        '_intg': 'button',
+        '~': 'ezville/batch_{:0>2d}_{:0>2d}',
+        'name': 'ezville_batch-elevator-down_{:0>2d}_{:0>2d}',
+        'cmd_t': '~/elevator-down/command',
+        'icon': 'mdi:elevator-down'
     },
     {
-        "_intg": "binary_sensor",
-        "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch-groupcontrol_{:0>2d}_{:0>2d}",
-        "stat_t": "~/group/state",
-        "icon": "mdi:lightbulb-group"
+        '_intg': 'binary_sensor',
+        '~': 'ezville/batch_{:0>2d}_{:0>2d}',
+        'name': 'ezville_batch-groupcontrol_{:0>2d}_{:0>2d}',
+        'stat_t': '~/group/state',
+        'icon': 'mdi:lightbulb-group'
     },
     {
-        "_intg": "binary_sensor",
-        "~": "ezville/batch_{:0>2d}_{:0>2d}",
-        "name": "ezville_batch-outing_{:0>2d}_{:0>2d}",
-        "stat_t": "~/outing/state",
-        "icon": "mdi:home-circle"
+        '_intg': 'binary_sensor',
+        '~': 'ezville/batch_{:0>2d}_{:0>2d}',
+        'name': 'ezville_batch-outing_{:0>2d}_{:0>2d}',
+        'stat_t': '~/outing/state',
+        'icon': 'mdi:home-circle'
     } ]
 }
 
@@ -217,7 +217,7 @@ def ezville_loop(config):
     DISCOVERY_LIST = []
     
     # EW11 전달 패킷 중 처리 후 남은 짜투리 패킷 저장
-    RESIDUE = ""
+    RESIDUE = ''
     
     # 강제 주기적 업데이트 설정 - 매 force_update_period 마다 force_update_duration초간 HA 업데이트 실시
     FORCE_UPDATE = False
@@ -270,7 +270,7 @@ def ezville_loop(config):
     def on_connect(client, userdata, flags, rc):
 #        nonlocal comm_mode
         if rc == 0:
-            log("[INFO] MQTT Broker 연결 성공")
+            log('[INFO] MQTT Broker 연결 성공')
             # Socket인 경우 MQTT 장치의 명령 관련과 MQTT Status (Birth/Last Will Testament) Topic만 구독
             if comm_mode == 'socket':
                 client.subscribe([(HA_TOPIC + '/#', 0), ('homeassistant/status', 0)])
@@ -361,7 +361,7 @@ def ezville_loop(config):
         msg_length = len(raw_data)
         while k < msg_length:
             # F7로 시작하는 패턴을 패킷으로 분리
-            if raw_data[k:k + 2] == "F7":
+            if raw_data[k:k + 2] == 'F7':
                 # 남은 데이터가 최소 패킷 길이를 만족하지 못하면 RESIDUE에 저장 후 종료
                 if k + 10 > msg_length:
                     RESIDUE = raw_data[k:]
@@ -403,14 +403,14 @@ def ezville_loop(config):
                                 slc = int(packet[8:10], 16) 
                                 
                                 for id in range(1, slc):
-                                    discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, id)
+                                    discovery_name = '{}_{:0>2d}_{:0>2d}'.format(name, rid, id)
                                     
                                     if discovery_name not in DISCOVERY_LIST:
                                         DISCOVERY_LIST.append(discovery_name)
                                     
                                         payload = DISCOVERY_PAYLOAD[name][0].copy()
-                                        payload["~"] = payload["~"].format(rid, id)
-                                        payload["name"] = payload["name"].format(rid, id)
+                                        payload['~'] = payload['~'].format(rid, id)
+                                        payload['name'] = payload['name'].format(rid, id)
                                    
                                         # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                         await mqtt_discovery(payload)
@@ -435,14 +435,14 @@ def ezville_loop(config):
                                 away_state = bin(int(packet[14:16], 16))[2:].zfill(8)
                                 
                                 for rid in range(1, rc + 1):
-                                    discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, src)
+                                    discovery_name = '{}_{:0>2d}_{:0>2d}'.format(name, rid, src)
                                     
                                     if discovery_name not in DISCOVERY_LIST:
                                         DISCOVERY_LIST.append(discovery_name)
                                     
                                         payload = DISCOVERY_PAYLOAD[name][0].copy()
-                                        payload["~"] = payload["~"].format(rid, src)
-                                        payload["name"] = payload["name"].format(rid, src)
+                                        payload['~'] = payload['~'].format(rid, src)
+                                        payload['name'] = payload['name'].format(rid, src)
                                    
                                         # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                         await mqtt_discovery(payload)
@@ -481,15 +481,15 @@ def ezville_loop(config):
                                     spc = int(packet[10:12], 16) 
                                 
                                     for id in range(1, spc + 1):
-                                        discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, id)
+                                        discovery_name = '{}_{:0>2d}_{:0>2d}'.format(name, rid, id)
 
                                         if discovery_name not in DISCOVERY_LIST:
                                             DISCOVERY_LIST.append(discovery_name)
                                     
                                             for payload_template in DISCOVERY_PAYLOAD[name]:
                                                 payload = payload_template.copy()
-                                                payload["~"] = payload["~"].format(rid, id)
-                                                payload["name"] = payload["name"].format(rid, id)
+                                                payload['~'] = payload['~'].format(rid, id)
+                                                payload['name'] = payload['name'].format(rid, id)
                                    
                                                 # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                                 await mqtt_discovery(payload)
@@ -499,7 +499,7 @@ def ezville_loop(config):
                                         # 위와 같지만 일단 on-off 여부만 판단
                                         onoff = 'ON' if int(packet[7 + 6 * id], 16) > 0 else 'OFF'
                                         autoonoff = 'ON' if int(packet[6 + 6 * id], 16) > 0 else 'OFF'
-                                        power_num = "{:.2f}".format(int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100)
+                                        power_num = '{:.2f}'.format(int(packet[8 + 6 * id: 12 + 6 * id], 16) / 100)
                                         
                                         await update_state(name, 'power', rid, id, onoff)
                                         await update_state(name, 'auto', rid, id, onoff)
@@ -523,14 +523,14 @@ def ezville_loop(config):
                                 # Gas Value는 하나라서 강제 설정
                                 spc = 1 
                                 
-                                discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, spc)
+                                discovery_name = '{}_{:0>2d}_{:0>2d}'.format(name, rid, spc)
                                     
                                 if discovery_name not in DISCOVERY_LIST:
                                     DISCOVERY_LIST.append(discovery_name)
                                     
                                     payload = DISCOVERY_PAYLOAD[name][0].copy()
-                                    payload["~"] = payload["~"].format(rid, spc)
-                                    payload["name"] = payload["name"].format(rid, spc)
+                                    payload['~'] = payload['~'].format(rid, spc)
+                                    payload['name'] = payload['name'].format(rid, spc)
                                    
                                     # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                     await mqtt_discovery(payload)
@@ -551,15 +551,15 @@ def ezville_loop(config):
                                 # 일괄차단기는 하나라서 강제 설정
                                 sbc = 1
                                 
-                                discovery_name = "{}_{:0>2d}_{:0>2d}".format(name, rid, sbc)
+                                discovery_name = '{}_{:0>2d}_{:0>2d}'.format(name, rid, sbc)
                                 
                                 if discovery_name not in DISCOVERY_LIST:
                                     DISCOVERY_LIST.append(discovery_name)
                                     
                                     for payload_template in DISCOVERY_PAYLOAD[name]:
                                         payload = payload_template.copy()
-                                        payload["~"] = payload["~"].format(rid, sbc)
-                                        payload["name"] = payload["name"].format(rid, sbc)
+                                        payload['~'] = payload['~'].format(rid, sbc)
+                                        payload['name'] = payload['name'].format(rid, sbc)
                                    
                                         # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                         await mqtt_discovery(payload)
@@ -582,7 +582,7 @@ def ezville_loop(config):
                                 
                                 MSG_CACHE[packet[0:10]] = packet[10:]
                                                                                     
-                RESIDUE = ""
+                RESIDUE = ''
                 k = k + packet_length
                 
             else:
@@ -591,15 +591,15 @@ def ezville_loop(config):
     
     # MQTT Discovery로 장치 자동 등록
     async def mqtt_discovery(payload):
-        intg = payload.pop("_intg")
+        intg = payload.pop('_intg')
 
         # MQTT 통합구성요소에 등록되기 위한 추가 내용
-        payload["device"] = DISCOVERY_DEVICE
-        payload["uniq_id"] = payload["name"]
+        payload['device'] = DISCOVERY_DEVICE
+        payload['uniq_id'] = payload['name']
 
         # Discovery에 등록
-        topic = "homeassistant/{}/ezville_wallpad/{}/config".format(intg, payload["name"])
-        log("[INFO] 장치 등록:  {}".format(topic))
+        topic = 'homeassistant/{}/ezville_wallpad/{}/config'.format(intg, payload['name'])
+        log('[INFO] 장치 등록:  {}'.format(topic))
         mqtt_client.publish(topic, json.dumps(payload))
 
     
@@ -607,7 +607,7 @@ def ezville_loop(config):
     async def update_state(device, state, id1, id2, value):
         nonlocal DEVICE_STATE
 #        nonlocal FORCE_UPDATE
-        deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
+        deviceID = '{}_{:0>2d}_{:0>2d}'.format(device, id1, id2)
         key = deviceID + state
         
         if value != DEVICE_STATE.get(key) or FORCE_UPDATE:
@@ -686,7 +686,7 @@ def ezville_loop(config):
 #                        OUT = GROUPON
 #                        GPON = OUTING
                             
-                    CMD = "{:0>2X}".format(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
+                    CMD = '{:0>2X}'.format(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
                     
                     # 일괄 차단기는 state를 변경하여 제공해서 월패드에서 조작하도록 해야함
                     # 월패드의 ACK는 무시
@@ -884,14 +884,14 @@ def ezville_loop(config):
 
         ew11 = telnetlib.Telnet(ew11_server)
 
-        ew11.read_until(b"login:")
+        ew11.read_until(b'login:')
         ew11.write(ew11_id.encode('utf-8') + b'\n')
-        ew11.read_until(b"password:")
+        ew11.read_until(b'password:')
         ew11.write(ew11_password.encode('utf-8') + b'\n')
         ew11.write('Restart'.encode('utf-8') + b'\n')
-        ew11.read_until(b"Restart..")
+        ew11.read_until(b'Restart..')
         
-        log("[INFO] EW11 리셋 완료")
+        log('[INFO] EW11 리셋 완료')
         
         # 리셋 후 60초간 Delay
         await asyncio.sleep(60)
@@ -1003,14 +1003,14 @@ def ezville_loop(config):
         while True:
             if restart_flag or (not MQTT_ONLINE and ADDON_STARTED and REBOOT_CONTROL):
                 if restart_flag:
-                    log("[WARNING] EW11 재시작 확인")
+                    log('[WARNING] EW11 재시작 확인')
                 elif not MQTT_ONLINE and ADDON_STARTED and REBOOT_CONTROL:
-                    log("[WARNING] 동작 중 MQTT Integration Offline 변경")
+                    log('[WARNING] 동작 중 MQTT Integration Offline 변경')
                 
                 loop = asyncio.get_event_loop()
                 
                 # MTTQ 및 socket 연결 종료
-                log("[WARNING] 모든 통신 종료")
+                log('[WARNING] 모든 통신 종료')
                 mqtt_client.loop_stop()
                 if comm_mode == 'mixed' or comm_mode == 'socket':
                     nonlocal soc
@@ -1082,7 +1082,7 @@ def ezville_loop(config):
         loop.run_forever()
         
         # 이전 task는 취소
-        log("[INFO] 이전 실행 Task 종료")
+        log('[INFO] 이전 실행 Task 종료')
         for task in tasklist:
             task.cancel()
         ADDON_STARTED = False
@@ -1093,7 +1093,7 @@ def ezville_loop(config):
         DEVICE_STATE = {}
         MSG_CACHE = {}
         DISCOVERY_LIST = []
-        RESIDUE = ""
+        RESIDUE = ''
         ELEVUP = ''
         ELEVDOWN = ''
         GROUPON = ''
