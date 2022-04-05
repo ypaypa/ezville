@@ -1019,9 +1019,6 @@ def ezville_loop(config):
                 # flag 원복
                 restart_flag = False
                 MQTT_ONLINE = False
-                
-                # DISCOVERY_LIST 삭제 (다시 DISCOVERY 시작하게 함)
-                DISCOVERY_LIST = []
 
                 # asyncio loop 종료
                 log('[WARNING] asyncio loop 종료')
