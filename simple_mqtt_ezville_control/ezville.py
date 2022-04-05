@@ -202,6 +202,7 @@ def ezville_loop(config):
     
     # EW11 혹은 HA 전달 메시지 저장소
     MSG_QUEUE = Queue()
+    
     # EW11에 보낼 Command 및 예상 Acknowledge 패킷 
     CMD_QUEUE = []
     
@@ -1085,6 +1086,18 @@ def ezville_loop(config):
         for task in tasklist:
             task.cancel()
         ADDON_STARTED = False
+        
+        # 주요 변수     
+        MSG_QUEUE = Queue()
+        CMD_QUEUE = []
+        DEVICE_STATE = {}
+        MSG_CACHE = {}
+        DISCOVERY_LIST = []
+        RESIDUE = ""
+        ELEVUP = ''
+        ELEVDOWN = ''
+        GROUPON = ''
+        OUTING = ''
 
 
 if __name__ == '__main__':
