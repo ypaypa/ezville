@@ -70,7 +70,7 @@ DISCOVERY_PAYLOAD = {
         "temp_cmd_t": "~/setTemp/command",
         "curr_temp_t": "~/curTemp/state",
 #        "modes": [ "off", "heat", "fan_only" ],     # 외출 모드는 fan_only로 매핑
-        "modes": [ "heat", "fan_only" ],     # 외출 모드는 fan_only로 매핑
+        "modes": [ "heat", "off" ],     # 외출 모드는 off로 매핑
         "min_temp": "5",
         "max_temp": 40
     } ],
@@ -185,15 +185,18 @@ EW11_TOPIC = 'ew11'
 EW11_SEND_TOPIC = EW11_TOPIC + '/send'
 
 
+# Main Function
 def ezville_loop(config):
     
-    # config 
+    # Log 생성 Flag
     debug = config['DEBUG_LOG']
-    comm_mode = config['mode']
     mqtt_log = config['MQTT_LOG']
     ew11_log = config['EW11_LOG']
     
-    # SOCKET 정보
+    # 통신 모드 설정: mixed, socket, mqtt
+    comm_mode = config['mode']
+    
+    # Socket 정보
     SOC_ADDRESS = config['ew11_server']
     SOC_PORT = config['ew11_port']
     
@@ -202,7 +205,7 @@ def ezville_loop(config):
     # EW11에 보낼 Command 및 예상 Acknowledge 패킷 
     CMD_QUEUE = []
     
-    # 기존 STATE 저장용 공간
+    # State 저장용 공간
     DEVICE_STATE = {}
     
     # 이전에 전달된 패킷인지 판단을 위한 캐쉬
@@ -221,7 +224,7 @@ def ezville_loop(config):
     FORCE_PERIOD = config['force_update_period']
     FORCE_DURATION = config['force_update_duration']
     
-    # 현관스위치 요구 상태
+    # 현관스위치 요구 상태 - 현관스위치는 기존 스위치 상태를 포함하여 요구 필요
     ELEVUP = ''
     ELEVDOWN = ''
     GROUPON = ''
@@ -232,7 +235,7 @@ def ezville_loop(config):
     CMD_RETRY_COUNT = config['command_retry_count']
     RANDOM_BACKOFF = config['random_backoff']
     
-    # State 업데이트 루프와 Command 루프의 Delay Time 설정
+    # State 업데이트 루프 / Command 실행 루프 / Socket 통신으로 패킷 받아오는 루프 / Restart 필요한지 체크하는 루프의 Delay Time 설정
     STATE_LOOP_DELAY = config['state_loop_delay']
     COMMAND_LOOP_DELAY = config['command_loop_delay']
     SERIAL_RECV_DELAY = config['serial_recv_delay']
@@ -248,22 +251,22 @@ def ezville_loop(config):
     # EW11 재시작 확인용 Flag
     restart_flag = False
   
-    # MQTT Integration 활성화 확인 Flag
+    # MQTT Integration 활성화 확인 Flag - 단, 사용을 위해서는 MQTT Integration에서 Birth/Last Will Testament 설정 및 Retain 설정 필요
     MQTT_ONLINE = False
     
     # Addon 정상 시작 Flag
     ADDON_STARTED = False
  
-    # Reboot 연관 제어 Flag
+    # Reboot 이후 안정적인 동작을 위한 제어 Flag
     REBOOT_CONTROL = config['reboot_control']
     REBOOT_DELAY = config['reboot_delay']
 
     # 시작 시 인위적인 Delay 필요시 사용
     startup_delay = 0
    
-    
+    # MQTT 통신 연결 Callback
     def on_connect(client, userdata, flags, rc):
-        nonlocal comm_mode
+#        nonlocal comm_mode
         if rc == 0:
             log("[INFO] MQTT Broker 연결 성공")
             # Socket인 경우 MQTT 장치의 명령 관련과 MQTT Status (Birth/Last Will Testament) Topic만 구독
@@ -287,8 +290,8 @@ def ezville_loop(config):
     def on_message(client, userdata, msg):
         nonlocal MSG_QUEUE
         nonlocal MQTT_ONLINE
-        nonlocal REBOOT_CONTROL
-        nonlocal REBOOT_DELAY
+#        nonlocal REBOOT_CONTROL
+#        nonlocal REBOOT_DELAY
         nonlocal startup_delay
         
         MSG_QUEUE.put(msg)
@@ -338,14 +341,13 @@ def ezville_loop(config):
     # EW11 전달된 메시지 처리
     async def EW11_process(raw_data):
         nonlocal DISCOVERY_LIST
-        nonlocal DISCOVERY_DELAY
+#        nonlocal DISCOVERY_DELAY
         nonlocal RESIDUE
-        nonlocal CMD_QUEUE
+#        nonlocal CMD_QUEUE
         nonlocal MSG_CACHE
-        nonlocal FORCE_UPDATE
-        nonlocal ELEVUP, ELEVDOWN, GROUPON, OUTING
-        
-        nonlocal COMMAND_LOOP_DELAY
+#        nonlocal FORCE_UPDATE
+        nonlocal ELEVUP, ELEVDOWN, GROUPON, OUTING        
+#        nonlocal COMMAND_LOOP_DELAY
         
         raw_data = RESIDUE + raw_data
         
@@ -444,8 +446,10 @@ def ezville_loop(config):
                                         await mqtt_discovery(payload)
                                         await asyncio.sleep(DISCOVERY_DELAY)
                                     
-                                    setT = packet[16 + 4 * rid:18 + 4 * rid]
-                                    curT = packet[18 + 4 * rid:20 + 4 * rid]
+                                    setT = str(int(packet[16 + 4 * rid:18 + 4 * rid], 16))
+                                    curT = str(int(packet[18 + 4 * rid:20 + 4 * rid], 16))
+                                    
+                                    "{}".format(str(int(curTemp, 16))
                                     
                                     if onoff_state[8 - rid ] == '1':
                                         onoff = 'heat'
@@ -457,7 +461,11 @@ def ezville_loop(config):
 #                                        onoff = 'off'
 
                                     await update_state(name, 'power', rid, src, onoff)
-                                    await update_temperature(name, rid, src, curT, setT)
+                                    await update_state(name, 'curTemp', rid, src, curT)
+                                    await update_state(name, 'setTemp', rid, src, setT)
+            
+ #                                   await update_temperature(name, rid, src, curT, setT)
+ #                                   await update_temperature(name, rid, src, curT, setT)
                                     
                                     # 직전 처리 State 패킷은 저장
                                     if STATE_PACKET:
@@ -567,7 +575,7 @@ def ezville_loop(config):
                                 grouponoff = 'ON' if GROUPON == '1' else 'OFF'
                                 outingonoff = 'ON' if OUTING == '1' else 'OFF'
                                     
-                                # 스위치 구성은 업데이트
+                                # 일괄 조명 및 외출 모드는 상태 업데이트
                                 await update_state(name, 'group', rid, sbc, grouponoff)
                                 await update_state(name, 'outing', rid, sbc, outingonoff)
                                 
@@ -579,7 +587,8 @@ def ezville_loop(config):
             else:
                 k+=1
                 
-
+    
+    # MQTT Discovery로 장치 자동 등록
     async def mqtt_discovery(payload):
         intg = payload.pop("_intg")
 
@@ -592,42 +601,43 @@ def ezville_loop(config):
         log("[INFO] 장치 등록:  {}".format(topic))
         mqtt_client.publish(topic, json.dumps(payload))
 
-                                                                                    
-    async def update_state(device, state, id1, id2, onoff):
+    
+    # 장치 State를 MQTT로 Publish
+    async def update_state(device, state, id1, id2, value):
         nonlocal DEVICE_STATE
-        nonlocal FORCE_UPDATE
+#        nonlocal FORCE_UPDATE
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
         key = deviceID + state
         
         if onoff != DEVICE_STATE.get(key) or FORCE_UPDATE:
-            DEVICE_STATE[key] = onoff
+            DEVICE_STATE[key] = value
             
             topic = STATE_TOPIC.format(deviceID, state)
-            mqtt_client.publish(topic, onoff.encode())
+            mqtt_client.publish(topic, value.encode())
                     
             if mqtt_log:
-                log('[LOG] ->> HA : {} >> {}'.format(topic, onoff))
+                log('[LOG] ->> HA : {} >> {}'.format(topic, value))
 
         return
  
 
-    async def update_temperature(device, id1, id2, curTemp, setTemp):
-        nonlocal DEVICE_STATE
-        nonlocal FORCE_UPDATE
-        deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
-        temperature = {'curTemp': "{}".format(str(int(curTemp, 16))), 'setTemp': "{}".format(str(int(setTemp, 16)))}
-        for state in temperature:
-            key = deviceID + state
-            val = temperature[state]
-            if val != DEVICE_STATE.get(key) or FORCE_UPDATE:
-                DEVICE_STATE[key] = val
-                topic = STATE_TOPIC.format(deviceID, state)
-                mqtt_client.publish(topic, val.encode())
-                
-                if mqtt_log:
-                    log('[LOG] ->> HA : {} -> {}'.format(topic, val))
-                    
-        return  
+#    async def update_temperature(device, id1, id2, curTemp, setTemp):
+#        nonlocal DEVICE_STATE
+#        nonlocal FORCE_UPDATE
+#        deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
+#        temperature = {'curTemp': "{}".format(str(int(curTemp, 16))), 'setTemp': "{}".format(str(int(setTemp, 16)))}
+#        for state in temperature:
+#            key = deviceID + state
+#            val = temperature[state]
+#            if val != DEVICE_STATE.get(key) or FORCE_UPDATE:
+#                DEVICE_STATE[key] = val
+#                topic = STATE_TOPIC.format(deviceID, state)
+#                mqtt_client.publish(topic, val.encode())
+#                
+#                if mqtt_log:
+#                    log('[LOG] ->> HA : {} -> {}'.format(topic, val))
+#                    
+#        return  
 
     
     # HA에서 전달된 메시지 처리        
@@ -648,27 +658,32 @@ def ezville_loop(config):
                         
             if cur_state == None:
                 if device == 'batch':
+                    if ELEVUP == '' or ELEVDOWN == '' or GROUPON == '' or OUTING == '':
+                        log('[WARNING] ELEVUP = ' + ELEVUP + ', ELEVDOWN = ' + ELEVDOWN + ', GROUPON = ' + GROUPON + ', OUTING = ' + OUTING + ': Skipping Command')
+                        return
+                   
                     # 일괄 차단기는 4가지 모드로 조절               
                     if topics[2] == 'elevator-up':
-                        ELEVUP = '1' 
-                        ELEVDOWN = '0'
-                        OUTING = '0'
-                        GROUPON = '1'
+                        EUP = '1' 
+                        EDOWN = ELEVUP
+                        OUT = GROUPON
+                        GPON = OUTING
                     elif topics[2] == 'elevator-down':
-                        ELEVUP = '0' 
-                        ELEVDOWN = '1'
-                        OUTING = '0'
-                        GROUPON = '1'
-                    elif topics[2] == 'group':
-                        ELEVUP = '0' 
-                        ELEVDOWN = '0'
-                        OUTING = '0'
-                        GROUPON = '0'
-                    elif topics[2] == 'outing':
-                        ELEVUP = '0' 
-                        ELEVDOWN = '0'
-                        OUTING = '1'
-                        GROUPON = '1'
+                        EUP = ELEVDOWN 
+                        EDOWN = '1' 
+                        OUT = GROUPON
+                        GPON = OUTING
+# 그룹 조명과 외출 모드 설정은 테스트 후에 추가 구현                                                
+#                    elif topics[2] == 'group':
+#                        EUP = ELEVUP
+#                        EDOWN = ELEVDOWN
+#                        OUT = GROUPON
+#                        GPON = OUTING
+#                    elif topics[2] == 'outing':
+#                        EUP = ELEVUP
+#                        EDOWN = ELEVDOWN
+#                        OUT = GROUPON
+#                        GPON = OUTING
                             
                     CMD = "{:0>2X}".format(int('00' + ELEVDOWN + ELEVUP + '0' + GROUPON + OUTING + '0', 2))
                     
@@ -697,8 +712,8 @@ def ezville_loop(config):
                            
                             CMD_QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                         
-                        # Thermostat는 외출 모드를 Fan 모드로 연결
-                        elif value == 'fan_only':
+                        # Thermostat는 외출 모드를 Off 모드로 연결
+                        elif value == 'off':
  
                             sendcmd = checksum('F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['cmd'] + '01010000')
                             recvcmd = 'F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['ack']
@@ -782,14 +797,14 @@ def ezville_loop(config):
                                
                         if debug:
                             log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
-    
-    
+  
+                                                
+    # HA에서 전달된 명령을 EW11 패킷으로 전송
     async def send_to_ew11(send_data):
-        nonlocal comm_mode, soc
-        nonlocal CMD_QUEUE
-        nonlocal CMD_INTERVAL
-        nonlocal CMD_RETRY_COUNT
-        nonlocal RANDOM_BACKOFF
+        nonlocal soc
+#        nonlocal CMD_INTERVAL
+#        nonlocal CMD_RETRY_COUNT
+#        nonlocal RANDOM_BACKOFF
         nonlocal COMMAND_LOOP_DELAY
             
         for i in range(CMD_RETRY_COUNT):
@@ -811,9 +826,9 @@ def ezville_loop(config):
             if send_data['statcmd'][1] == 'NULL':
                 return
       
-            # 최소 0.2초는 ACK 처리를 기다림 (초당 30번 데이터가 들어오므로 ACK 못 받으면 시작)
+            # FIRST_WAITTIME초는 ACK 처리를 기다림 (초당 30번 데이터가 들어오므로 ACK 못 받으면 후속 처리 시작)
             if i == 0:
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(FIRST_WAITTIME)
             # 이후에는 정해진 간격 혹은 Random Backoff 시간 간격을 주고 ACK 확인
             else:
                 if RANDOM_BACKOFF:
@@ -835,7 +850,8 @@ def ezville_loop(config):
             COMMAND_LOOP_DELAY = config['command_loop_delay']
             return
         
-        
+                                                
+    # EW11 동작 상태를 체크해서 필요시 리셋 실시
     async def ew11_health_loop():
         nonlocal last_received_time
         nonlocal restart_flag
@@ -858,7 +874,8 @@ def ezville_loop(config):
                 log('[INFO] EW11 연결 상태 문제 없음')
             await asyncio.sleep(EW11_TIMEOUT)        
 
-            
+                                                
+    # Telnet 접속하여 EW11 리셋        
     async def reset_EW11(): 
         ew11_id = config['ew11_id']
         ew11_password = config['ew11_password']
@@ -979,9 +996,8 @@ def ezville_loop(config):
         nonlocal soc
         nonlocal DISCOVERY_LIST
         nonlocal MQTT_ONLINE
-        nonlocal ADDON_STARTED
-        nonlocal RESTART_CHECK_DELAY
-        nonlocal REBOOT_CONTROL
+#        nonlocal RESTART_CHECK_DELAY
+#        nonlocal REBOOT_CONTROL
         
         while True:
             if restart_flag or (not MQTT_ONLINE and ADDON_STARTED and REBOOT_CONTROL):
@@ -1002,7 +1018,6 @@ def ezville_loop(config):
                 # flag 원복
                 restart_flag = False
                 MQTT_ONLINE = False
-                ADDON_STARTED = False
                 
                 # DISCOVERY_LIST 삭제 (다시 DISCOVERY 시작하게 함)
                 DISCOVERY_LIST = []
@@ -1069,6 +1084,7 @@ def ezville_loop(config):
         log("[INFO] 이전 실행 Task 종료")
         for task in tasklist:
             task.cancel()
+        ADDON_STARTED = False
 
 
 if __name__ == '__main__':
