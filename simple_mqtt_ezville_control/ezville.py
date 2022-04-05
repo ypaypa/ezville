@@ -233,6 +233,7 @@ def ezville_loop(config):
     # Command를 EW11로 보내는 방식 설정 (동시 명령 횟수, 명령 간격 및 재시도 횟수)
     CMD_INTERVAL = config['command_interval']
     CMD_RETRY_COUNT = config['command_retry_count']
+    FIRST_WAITTIME = config['first_waittime']
     RANDOM_BACKOFF = config['random_backoff']
     
     # State 업데이트 루프 / Command 실행 루프 / Socket 통신으로 패킷 받아오는 루프 / Restart 필요한지 체크하는 루프의 Delay Time 설정
