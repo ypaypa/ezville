@@ -415,8 +415,6 @@ def ezville_loop(config):
                                         await mqtt_discovery(payload)
                                         await asyncio.sleep(DISCOVERY_DELAY)
                                     
-                                    log(name)
-                                    
                                     # State 업데이트까지 진행
                                     onoff = 'ON' if int(packet[10 + 2 * id: 12 + 2 * id], 16) > 0 else 'OFF'
                                         
@@ -448,8 +446,6 @@ def ezville_loop(config):
                                         # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                         await mqtt_discovery(payload)
                                         await asyncio.sleep(DISCOVERY_DELAY)
-                                    
-                                    log(name)
                                     
                                     setT = str(int(packet[16 + 4 * rid:18 + 4 * rid], 16))
                                     curT = str(int(packet[18 + 4 * rid:20 + 4 * rid], 16))
@@ -497,7 +493,6 @@ def ezville_loop(config):
                                                 # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                                 await mqtt_discovery(payload)
                                                 await asyncio.sleep(DISCOVERY_DELAY)  
-                                        log(name)
                                     
                                         # BIT0: 대기전력 On/Off, BIT1: 자동모드 On/Off
                                         # 위와 같지만 일단 on-off 여부만 판단
@@ -539,7 +534,7 @@ def ezville_loop(config):
                                     # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                     await mqtt_discovery(payload)
                                     await asyncio.sleep(DISCOVERY_DELAY)                                
-                                log(name)
+
                                 onoff = 'ON' if int(packet[12:14], 16) == 1 else 'OFF'
                                         
                                 await update_state(name, 'power', rid, spc, onoff)
@@ -568,7 +563,7 @@ def ezville_loop(config):
                                         # 장치 등록 후 DISCOVERY_DELAY초 후에 State 업데이트
                                         await mqtt_discovery(payload)
                                         await asyncio.sleep(DISCOVERY_DELAY)           
-                                log(name)
+
                                 # 일괄 차단기는 버튼 상태 변수 업데이트
                                 states = bin(int(packet[12:14], 16))[2:].zfill(8)
                                         
