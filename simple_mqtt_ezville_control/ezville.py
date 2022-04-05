@@ -854,16 +854,16 @@ def ezville_loop(config):
                                                 
     # EW11 동작 상태를 체크해서 필요시 리셋 실시
     async def ew11_health_loop():
-        nonlocal last_received_time
-        nonlocal restart_flag
-        nonlocal EW11_TIMEOUT
+ #       nonlocal last_received_time
+#        nonlocal restart_flag
+ #       nonlocal EW11_TIMEOUT
         
         while True:
             timestamp = time.time()
         
             # TIMEOUT 시간 동안 새로 받은 EW11 패킷이 없으면 재시작
             if timestamp - last_received_time > EW11_TIMEOUT:
-                log('[WARNING] {}초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.'.format(EW11_TIMEOUT))
+                log('[WARNING] {} {} {}초간 신호를 받지 못했습니다. ew11 기기를 재시작합니다.'.format(timestamp, last_received_time, EW11_TIMEOUT))
                 try:
                     await reset_EW11()
                     
