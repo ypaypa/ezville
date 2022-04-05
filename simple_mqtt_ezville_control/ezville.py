@@ -450,8 +450,6 @@ def ezville_loop(config):
                                     setT = str(int(packet[16 + 4 * rid:18 + 4 * rid], 16))
                                     curT = str(int(packet[18 + 4 * rid:20 + 4 * rid], 16))
                                     
-                                    "{}".format(str(int(curTemp, 16))
-                                    
                                     if onoff_state[8 - rid ] == '1':
                                         onoff = 'heat'
                                     # 외출 모드는 off로 
