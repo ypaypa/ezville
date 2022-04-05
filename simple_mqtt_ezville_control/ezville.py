@@ -614,7 +614,7 @@ def ezville_loop(config):
         deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
         key = deviceID + state
         
-        if onoff != DEVICE_STATE.get(key) or FORCE_UPDATE:
+        if value != DEVICE_STATE.get(key) or FORCE_UPDATE:
             DEVICE_STATE[key] = value
             
             topic = STATE_TOPIC.format(deviceID, state)
