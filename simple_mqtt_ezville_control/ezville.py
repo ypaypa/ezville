@@ -454,8 +454,9 @@ def ezville_loop(config):
                                     
                                     if onoff_state[8 - rid ] == '1':
                                         onoff = 'heat'
+                                    # 외출 모드는 off로 
                                     elif onoff_state[8 - rid] == '0' and away_state[8 - rid] == '1':
-                                        onoff = 'fan_only'
+                                        onoff = 'off'
 #                                    elif onoff_state[8 - rid] == '0' and away_state[8 - rid] == '0':
 #                                        onoff = 'off'
 #                                    else:
