@@ -336,6 +336,7 @@ def ezville_loop(config):
                 elif topics[0] == EW11_TOPIC and topics[-1] == 'recv':
                     # Que에서 확인된 시간 기준으로 EW11 Health Check함.
                     last_received_time = time.time()
+                    log(str(last_received_time) + msg.payload.hex().upper())
 
                     await EW11_process(msg.payload.hex().upper())
                    
