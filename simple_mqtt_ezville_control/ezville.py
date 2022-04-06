@@ -201,10 +201,10 @@ def ezville_loop(config):
     SOC_PORT = config['ew11_port']
     
     # EW11 혹은 HA 전달 메시지 저장소
-    MSG_QUEUE = Queue()
+    MSG_QUEUE = queue.Queue()
     
     # EW11에 보낼 Command 및 예상 Acknowledge 패킷 
-    CMD_QUEUE = Queue()
+    CMD_QUEUE = asyncio.Queue()
     
     # State 저장용 공간
     DEVICE_STATE = {}
@@ -677,7 +677,7 @@ def ezville_loop(config):
                             recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
                             statcmd = [key, value]
                            
-                            CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                            await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                         
                         # Thermostat는 외출 모드를 Off 모드로 연결
                         elif value == 'off':
@@ -686,7 +686,7 @@ def ezville_loop(config):
                             recvcmd = 'F7' + RS485_DEVICE[device]['away']['id'] + '1' + str(idx) + RS485_DEVICE[device]['away']['ack']
                             statcmd = [key, value]
                            
-                            CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                            await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                         
 #                        elif value == 'off':
 #                        
@@ -706,7 +706,7 @@ def ezville_loop(config):
                         recvcmd = 'F7' + RS485_DEVICE[device]['target']['id'] + '1' + str(idx) + RS485_DEVICE[device]['target']['ack']
                         statcmd = [key, str(value)]
 
-                        CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                        await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                                
                         if debug:
                             log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
@@ -736,7 +736,7 @@ def ezville_loop(config):
                     recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
                     statcmd = [key, value]
                     
-                    CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                    await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                                
                     if debug:
                         log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
@@ -748,7 +748,7 @@ def ezville_loop(config):
                     recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
                     statcmd = [key, value]
                         
-                    CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                    await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                                
                     if debug:
                         log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
@@ -760,7 +760,7 @@ def ezville_loop(config):
                         recvcmd = ['F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']]
                         statcmd = [key, value]
 
-                        CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                        await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                                
                         if debug:
                             log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
@@ -793,7 +793,7 @@ def ezville_loop(config):
                     recvcmd = 'NULL'
                     statcmd = [key, 'NULL']
                     
-                    CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                    await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
                     
                     if debug:
                         log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
@@ -958,11 +958,11 @@ def ezville_loop(config):
             
     async def command_loop():
         nonlocal CMD_QUEUE
-        nonlocal COMMAND_LOOP_DELAY
+ #       nonlocal COMMAND_LOOP_DELAY
         
         while True:
             if not CMD_QUEUE.empty():
-                send_data = CMD_QUEUE.pop()
+                send_data = await CMD_QUEUE.pop()
                 await send_to_ew11(send_data)               
             
             # COMMAND_LOOP_DELAY 초 대기 후 루프 진행
