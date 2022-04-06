@@ -959,7 +959,7 @@ def ezville_loop(config):
     async def command_loop():
         nonlocal CMD_QUEUE
  #       nonlocal COMMAND_LOOP_DELAY
-        
+        log('ssss')
         stop = False
         while not stop:
             log(str(CMD_QUEUE.qsize()))
