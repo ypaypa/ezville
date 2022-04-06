@@ -764,8 +764,9 @@ def ezville_loop(config):
                                
                         if debug:
                             log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
-                            if cur_state == None:
+                                
                 elif device == 'batch':
+                    # Batch는 Elevator 및 외출/그룹 조명 버튼 상태 고려 
                     elup_state = '1' if DEVICE_STATE.get(topics[1] + 'elevator-up') == 'ON' else '0'
                     eldown_state = '1' if DEVICE_STATE.get(topics[1] + 'elevator-down') == 'ON' else '0'
                     out_state = '1' if DEVICE_STATE.get(topics[1] + 'outing') == 'ON' else '0'
