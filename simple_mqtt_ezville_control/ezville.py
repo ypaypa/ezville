@@ -960,8 +960,12 @@ def ezville_loop(config):
         nonlocal CMD_QUEUE
  #       nonlocal COMMAND_LOOP_DELAY
         
-        while True:
-            if not CMD_QUEUE.empty():
+        stop = False
+        while not stop:
+            log(str(CMD_QUEUE.qsize()))
+            if CMD_QUEUE.empty():
+                stop = True
+            else:
                 send_data = await CMD_QUEUE.pop()
                 await send_to_ew11(send_data)               
             
