@@ -201,7 +201,7 @@ def ezville_loop(config):
     SOC_PORT = config['ew11_port']
     
     # EW11 혹은 HA 전달 메시지 저장소
-    MSG_QUEUE = queue.Queue()
+    MSG_QUEUE = Queue()
     
     # EW11에 보낼 Command 및 예상 Acknowledge 패킷 
     CMD_QUEUE = asyncio.Queue()
