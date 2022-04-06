@@ -336,7 +336,7 @@ def ezville_loop(config):
                 elif topics[0] == EW11_TOPIC and topics[-1] == 'recv':
                     # Que에서 확인된 시간 기준으로 EW11 Health Check함.
                     last_received_time = time.time()
-                    log(str(last_received_time) + msg.payload.hex().upper())
+                    log('local time = ' + str(last_received_time))
 
                     await EW11_process(msg.payload.hex().upper())
                    
@@ -860,6 +860,7 @@ def ezville_loop(config):
  #       nonlocal EW11_TIMEOUT
         
         while True:
+            log('global time = ' + str(last_received_time))
             timestamp = time.time()
         
             # TIMEOUT 시간 동안 새로 받은 EW11 패킷이 없으면 재시작
