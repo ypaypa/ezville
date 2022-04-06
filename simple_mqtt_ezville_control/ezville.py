@@ -960,6 +960,7 @@ def ezville_loop(config):
                 pass
             else:
                 send_data = CMD_QUEUE.pop()
+                log('$$$$')
                 await send_to_ew11(send_data)               
             
             # COMMAND_LOOP_DELAY 초 대기 후 루프 진행
