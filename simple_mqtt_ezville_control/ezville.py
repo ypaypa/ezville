@@ -952,15 +952,10 @@ def ezville_loop(config):
             
     async def command_loop():
         nonlocal CMD_QUEUE
- #       nonlocal COMMAND_LOOP_DELAY
         
         while True:
-            log(str(CMD_QUEUE.qsize()))
-            if CMD_QUEUE.empty():
-                pass
-            else:
+            if not CMD_QUEUE.empty():
                 send_data = await CMD_QUEUE.get()
-                log('$$$$')
                 await send_to_ew11(send_data)               
             
             # COMMAND_LOOP_DELAY 초 대기 후 루프 진행
@@ -1061,7 +1056,7 @@ def ezville_loop(config):
         
         # 주요 변수     
         MSG_QUEUE = Queue()
-        CMD_QUEUE = Queue()
+        CMD_QUEUE = asyncio.Queue()
         DEVICE_STATE = {}
         MSG_CACHE = {}
         DISCOVERY_LIST = []
