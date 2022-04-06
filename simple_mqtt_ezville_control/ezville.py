@@ -959,7 +959,7 @@ def ezville_loop(config):
             if CMD_QUEUE.empty():
                 pass
             else:
-                send_data = CMD_QUEUE.pop()
+                send_data = CMD_QUEUE.get()
                 log('$$$$')
                 await send_to_ew11(send_data)               
             
