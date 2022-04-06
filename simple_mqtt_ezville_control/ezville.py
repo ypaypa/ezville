@@ -959,12 +959,11 @@ def ezville_loop(config):
     async def command_loop():
         nonlocal CMD_QUEUE
  #       nonlocal COMMAND_LOOP_DELAY
-        log('ssss')
-        stop = False
-        while not stop:
+        
+        while True:
             log(str(CMD_QUEUE.qsize()))
             if CMD_QUEUE.empty():
-                stop = True
+                pass
             else:
                 send_data = await CMD_QUEUE.pop()
                 await send_to_ew11(send_data)               
