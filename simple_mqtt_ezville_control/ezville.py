@@ -560,15 +560,12 @@ def ezville_loop(config):
 
                                 # 일괄 차단기는 버튼 상태 변수 업데이트
                                 states = bin(int(packet[12:14], 16))[2:].zfill(8)
-                                log(packet)
-                                log(states)
                                         
-                                ELEVDOWN = states[5]                                        
-                                ELEVUP = states[4]
-                                GROUPON = states[2]
-                                OUTING = states[1]
-                                log(ELEVDOWN + ELEVUP + GROUPON + OUTING)
-                                    
+                                ELEVDOWN = states[2]                                        
+                                ELEVUP = states[3]
+                                GROUPON = states[5]
+                                OUTING = states[6]
+                                                                    
                                 grouponoff = 'ON' if GROUPON == '1' else 'OFF'
                                 outingonoff = 'ON' if OUTING == '1' else 'OFF'
                                 
@@ -748,8 +745,7 @@ def ezville_loop(config):
                     group_state = '1' if DEVICE_STATE.get(topics[1] + 'group') == 'ON' else '0'
 
                     cur_state = DEVICE_STATE.get(key)
-                    log(elup_state + eldown_state + out_state + group_state)
-                    log(DEVICE_STATE.get(topics[1] + 'elevator-up') + DEVICE_STATE.get(topics[1] + 'elevator-down') + DEVICE_STATE.get(topics[1] + 'outing') + DEVICE_STATE.get(topics[1] + 'group'))
+
                     # 일괄 차단기는 4가지 모드로 조절               
                     if topics[2] == 'elevator-up':
                         elup_state = '1'
