@@ -745,6 +745,7 @@ def ezville_loop(config):
                     group_state = '1' if DEVICE_STATE.get(topics[1] + 'group') == 'ON' else '0'
 
                     cur_state = DEVICE_STATE.get(key)
+                    log(elup_state + eldown_state + out_state + group_state)
                    
                     # 일괄 차단기는 4가지 모드로 조절               
                     if topics[2] == 'elevator-up':
@@ -765,8 +766,8 @@ def ezville_loop(config):
                     recvcmd = 'NULL'
                     statcmd = [key, 'NULL']
                     
-                    await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
-                    
+                    #await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
+                    log(sendcmd)
                     if debug:
                         log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
   
