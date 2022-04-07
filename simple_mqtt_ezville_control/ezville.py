@@ -746,7 +746,7 @@ def ezville_loop(config):
 
                     cur_state = DEVICE_STATE.get(key)
                     log(elup_state + eldown_state + out_state + group_state)
-                   
+                    log(DEVICE_STATE.get(topics[1] + 'elevator-up') + DEVICE_STATE.get(topics[1] + 'elevator-down') + DEVICE_STATE.get(topics[1] + 'outing') + DEVICE_STATE.get(topics[1] + 'group'))
                     # 일괄 차단기는 4가지 모드로 조절               
                     if topics[2] == 'elevator-up':
                         elup_state = '1'
