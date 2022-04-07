@@ -259,7 +259,8 @@ def ezville_loop(config):
 
     # 시작 시 인위적인 Delay 필요시 사용
     startup_delay = 0
-   
+  
+
     # MQTT 통신 연결 Callback
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -341,8 +342,7 @@ def ezville_loop(config):
         nonlocal DISCOVERY_LIST
         nonlocal RESIDUE
         nonlocal MSG_CACHE
-        nonlocal DEVICE_STATE
-#        nonlocal ELEVUP, ELEVDOWN, GROUPON, OUTING        
+        nonlocal DEVICE_STATE       
         
         raw_data = RESIDUE + raw_data
         
@@ -457,9 +457,6 @@ def ezville_loop(config):
                                     await update_state(name, 'power', rid, src, onoff)
                                     await update_state(name, 'curTemp', rid, src, curT)
                                     await update_state(name, 'setTemp', rid, src, setT)
-            
- #                                   await update_temperature(name, rid, src, curT, setT)
- #                                   await update_temperature(name, rid, src, curT, setT)
                                     
                                 # 직전 처리 State 패킷은 저장
                                 if STATE_PACKET:
@@ -622,25 +619,6 @@ def ezville_loop(config):
                 log('[LOG] ->> HA : {} >> {}'.format(topic, value))
 
         return
- 
-
-#    async def update_temperature(device, id1, id2, curTemp, setTemp):
-#        nonlocal DEVICE_STATE
-#        nonlocal FORCE_UPDATE
-#        deviceID = "{}_{:0>2d}_{:0>2d}".format(device, id1, id2)
-#        temperature = {'curTemp': "{}".format(str(int(curTemp, 16))), 'setTemp': "{}".format(str(int(setTemp, 16)))}
-#        for state in temperature:
-#            key = deviceID + state
-#            val = temperature[state]
-#            if val != DEVICE_STATE.get(key) or FORCE_UPDATE:
-#                DEVICE_STATE[key] = val
-#                topic = STATE_TOPIC.format(deviceID, state)
-#                mqtt_client.publish(topic, val.encode())
-#                
-#                if mqtt_log:
-#                    log('[LOG] ->> HA : {} -> {}'.format(topic, val))
-#                    
-#        return  
 
     
     # HA에서 전달된 메시지 처리        
@@ -688,7 +666,7 @@ def ezville_loop(config):
 #                            recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
 #                            statcmd = [key, value]
 #                           
-#                            CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})                    
+#                            await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})                    
                                                
                         if debug:
                             log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
@@ -1054,7 +1032,7 @@ def ezville_loop(config):
 
         ADDON_STARTED = False
         
-        # 주요 변수     
+        # 주요 변수 초기화    
         MSG_QUEUE = Queue()
         CMD_QUEUE = asyncio.Queue()
         DEVICE_STATE = {}
