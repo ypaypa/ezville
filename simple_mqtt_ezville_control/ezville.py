@@ -565,6 +565,7 @@ def ezville_loop(config):
                                 ELEVUP = states[4]
                                 GROUPON = states[2]
                                 OUTING = states[1]
+                                log(ELEVDOWN + ELEVUP + GROUPON + OUTING)
                                     
                                 grouponoff = 'ON' if GROUPON == '1' else 'OFF'
                                 outingonoff = 'ON' if OUTING == '1' else 'OFF'
