@@ -560,6 +560,8 @@ def ezville_loop(config):
 
                                 # 일괄 차단기는 버튼 상태 변수 업데이트
                                 states = bin(int(packet[12:14], 16))[2:].zfill(8)
+                                log(packet)
+                                log(states)
                                         
                                 ELEVDOWN = states[5]                                        
                                 ELEVUP = states[4]
