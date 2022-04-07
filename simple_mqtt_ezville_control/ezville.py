@@ -572,8 +572,8 @@ def ezville_loop(config):
                                 #ELEVDOWN과 ELEVUP은 직접 DEVICE_STATE에 저장
                                 elevdownonoff = 'ON' if ELEVDOWN == '1' else 'OFF'
                                 elevuponoff = 'ON' if ELEVUP == '1' else 'OFF'
-                                DEVICE_STATE['batch_01_01elevator-up'] = ELEVUP
-                                DEVICE_STATE['batch_01_01elevator-down'] = ELEVDOWN
+                                DEVICE_STATE['batch_01_01elevator-up'] = elevuponoff
+                                DEVICE_STATE['batch_01_01elevator-down'] = elevdownonoff
                                     
                                 # 일괄 조명 및 외출 모드는 상태 업데이트
                                 await update_state(name, 'group', rid, sbc, grouponoff)
