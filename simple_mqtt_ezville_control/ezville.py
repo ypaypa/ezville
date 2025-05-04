@@ -15,7 +15,7 @@ RS485_DEVICE = {
     'light': {
         'state':    { 'id': '0E', 'cmd': '81' },
 
-        'power':    { 'id': '0E', 'cmd': '41', 'ack': 'C1' }
+        'power':    { 'id': '0E', 'cmd': '42', 'ack': 'C1' }
     },
     'thermostat': {
         'state':    { 'id': '36', 'cmd': '81' },
