@@ -1,5 +1,7 @@
 # KT Add-ons for HAOS
- 
+
+ktdo79님의 애드온 중에서 callback error를 수정한 버전
+ ----------
 HAKorea Addon 및 일부 Addon을 개인 환경(Ezville)에 맞춰 수정 중
 
 
