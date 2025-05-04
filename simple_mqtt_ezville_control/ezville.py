@@ -13,9 +13,9 @@ from queue import Queue
 # DEVICE 별 패킷 정보
 RS485_DEVICE = {
     'light': {
-        'state':    { 'id': '0E', 'cmd': '81' },
+        'state':    { 'id': '0E', 'cmd': '40' },
 
-        'power':    { 'id': '0E', 'cmd': '42', 'ack': 'C1' }
+        'power':    { 'id': '0E', 'cmd': '81', 'ack': 'C1' }
     },
     'thermostat': {
         'state':    { 'id': '36', 'cmd': '81' },
@@ -659,14 +659,7 @@ def ezville_loop(config):
                             statcmd = [key, value]
                            
                             await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})
-                        
-#                        elif value == 'off':
-#                        
-#                            sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '01000000')
-#                            recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
-#                            statcmd = [key, value]
-#                           
-#                            await CMD_QUEUE.put({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'statcmd': statcmd})                    
+                           
                                                
                         if debug:
                             log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
@@ -683,28 +676,11 @@ def ezville_loop(config):
                         if debug:
                             log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}, statcmd: {}'.format(sendcmd, recvcmd, statcmd))
 
-#                    elif device == 'Fan':
-#                        if topics[2] == 'power':
-#                            sendcmd = DEVICE_LISTS[device][idx].get('command' + value)
-#                            recvcmd = DEVICE_LISTS[device][idx].get('state' + value) if value == 'ON' else [
-#                                DEVICE_LISTS[device][idx].get('state' + value)]
-#                            QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-#                            if debug:
-#                                log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
-#                        elif topics[2] == 'speed':
-#                            speed_list = ['LOW', 'MEDIUM', 'HIGH']
-#                            if value in speed_list:
-#                                index = speed_list.index(value)
-#                                sendcmd = DEVICE_LISTS[device][idx]['CHANGE'][index]
-#                                recvcmd = [DEVICE_LISTS[device][idx]['stateON'][index]]
-#                                QUEUE.append({'sendcmd': sendcmd, 'recvcmd': recvcmd, 'count': 0})
-#                                if debug:
-#                                    log('[DEBUG] Queued ::: sendcmd: {}, recvcmd: {}'.format(sendcmd, recvcmd))
 
                 elif device == 'light':                         
                     pwr = '01' if value == 'ON' else '00'
                         
-                    sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '030' + str(sid) + pwr + '000000')
+                    sendcmd = checksum('F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['cmd'] + '0500424200016392')
                     recvcmd = 'F7' + RS485_DEVICE[device]['power']['id'] + '1' + str(idx) + RS485_DEVICE[device]['power']['ack']
                     statcmd = [key, value]
                     
