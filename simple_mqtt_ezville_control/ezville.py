@@ -13,9 +13,9 @@ from queue import Queue
 # DEVICE 별 패킷 정보
 RS485_DEVICE = {
     'light': {
-        'state':    { 'id': '0E', 'cmd': '40' },
+        'state':    { 'id': '0E', 'cmd': '81' },
 
-        'power':    { 'id': '0E', 'cmd': '81', 'ack': 'C1' }
+        'power':    { 'id': '0E', 'cmd': '41', 'ack': 'C1' }
     },
     'thermostat': {
         'state':    { 'id': '36', 'cmd': '81' },
